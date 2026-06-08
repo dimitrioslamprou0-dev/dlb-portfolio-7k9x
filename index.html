@@ -1,69 +1,2449 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.2">
-  <style type="text/css">
-    body {background-color: #0a0b0d}
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 11.0px 'Helvetica Neue'; color: #383e51; -webkit-text-stroke: #383e51; min-height: 12.0px}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 11.0px 'Helvetica Neue'; color: #383e51; -webkit-text-stroke: #383e51}
-    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 10.0px 'Helvetica Neue'; color: #383e51; -webkit-text-stroke: #383e51}
-    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8}
-    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; color: #bc824f; -webkit-text-stroke: #bc824f}
-    p.p7 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; color: #383e51; -webkit-text-stroke: #383e51}
-    p.p8 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 11.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8; background-color: #0e1014}
-    p.p9 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8; min-height: 15.0px}
-    p.p10 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 11.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8}
-    p.p11 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 11.0px 'Helvetica Neue'; color: #383e51; -webkit-text-stroke: #383e51}
-    p.p12 {margin: 0.0px 0.0px 0.0px 0.0px; font: 18.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8}
-    p.p14 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8; min-height: 14.0px}
-    span.s1 {font-kerning: none}
-    span.s2 {font-kerning: none; color: #bc824f; -webkit-text-stroke: 0px #bc824f}
-    span.s3 {font: 11.0px Menlo; font-kerning: none}
-    span.s4 {font: 14.0px 'Helvetica Neue'; font-kerning: none; color: #bc824f; -webkit-text-stroke: 0px #bc824f}
-    span.s5 {font-kerning: none; background-color: #0e1014}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLB · Portfolio Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0d12; --bg-elev: #11151c; --bg-card: #151a23;
+    --border: #1f2531; --border-bright: #2a3142;
+    --text: #e8ecf1; --text-dim: #8b94a5; --text-faint: #5a6377;
+    --green: #4ade80; --green-dim: #22c55e22;
+    --red: #f87171; --red-dim: #ef444422;
+    --gold: #d4a574; --gold-dim: #d4a57422;
+    --blue: #7dd3fc; --purple: #c084fc;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; background-image: radial-gradient(ellipse at top, #14202d 0%, #0a0d12 50%); }
+  .container { max-width: 1600px; margin: 0 auto; padding: 24px 32px 80px; }
+
+  header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .brand h1 { font-family: 'Fraunces', serif; font-weight: 400; font-size: 32px; letter-spacing: -0.02em; font-style: italic; }
+  .brand h1 span { color: var(--gold); font-style: normal; }
+  .brand .sub { font-size: 11px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
+  .header-right { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .status { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .status .label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
+  .status .val { font-size: 13px; color: var(--text); }
+  .status .val.live { color: var(--green); }
+  .status .val.live::before { content: '●'; margin-right: 6px; animation: pulse 2s infinite; }
+  .status .val.warn { color: var(--gold); }
+  .status .val.warn::before { content: '●'; margin-right: 6px; }
+  .status .val.err { color: var(--red); }
+  .status .val.err::before { content: '●'; margin-right: 6px; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
+  button.refresh, button.gear { background: var(--bg-card); color: var(--text); border: 1px solid var(--border-bright); padding: 10px 16px; font-family: inherit; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  button.refresh:hover, button.gear:hover { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  button.refresh:disabled { opacity: 0.5; cursor: wait; }
+  button.gear { padding: 10px 12px; }
+
+  .banner { background: var(--bg-card); border: 1px solid var(--gold); padding: 12px 16px; margin-bottom: 24px; font-size: 12px; color: var(--text-dim); display: flex; gap: 12px; align-items: center; }
+  .banner.err { border-color: var(--red); }
+  .banner.ok { border-color: var(--green); }
+  .banner strong { color: var(--gold); }
+  .banner.err strong { color: var(--red); }
+  .banner.ok strong { color: var(--green); }
+  .banner button { background: transparent; border: 1px solid var(--border-bright); color: var(--text-dim); padding: 4px 10px; font-family: inherit; font-size: 10px; cursor: pointer; letter-spacing: 0.1em; margin-left: auto; }
+
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 24px; }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: var(--bg-card); border: 1px solid var(--border-bright); max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 32px; }
+  .modal h2 { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 400; font-style: italic; margin-bottom: 8px; color: var(--gold); }
+  .modal .modal-sub { font-size: 11px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 24px; }
+  .modal .key-block { margin-bottom: 24px; }
+  .modal .key-block h3 { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .modal .key-block .key-status { font-size: 9px; padding: 2px 8px; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; }
+  .modal .key-block .key-status.set { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .modal .key-block .key-status.unset { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+  .modal .key-block .key-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+  .modal .key-block .key-desc a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
+  .modal .key-block .key-desc a:hover { border-color: var(--gold); }
+  .modal input.key-input { width: 100%; background: var(--bg-elev); border: 1px solid var(--border-bright); color: var(--text); font-family: inherit; font-size: 13px; padding: 10px 12px; outline: none; transition: border 0.15s; }
+  .modal input.key-input:focus { border-color: var(--gold); }
+  .modal .key-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .modal button.btn { background: transparent; border: 1px solid var(--border-bright); color: var(--text-dim); padding: 8px 14px; font-family: inherit; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .modal button.btn:hover { color: var(--text); border-color: var(--text-dim); }
+  .modal button.btn.primary { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  .modal button.btn.primary:hover { background: #b8915d; border-color: #b8915d; }
+  .modal button.btn.danger { color: var(--red); border-color: rgba(248,113,113,0.3); }
+  .modal button.btn.danger:hover { background: var(--red-dim); border-color: var(--red); }
+  .modal-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .modal-info { background: var(--bg-elev); border: 1px solid var(--border); padding: 12px; font-size: 11px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.6; }
+  .modal-info strong { color: var(--gold); }
+
+  nav.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; flex-wrap: wrap; }
+  .tab { background: transparent; border: none; color: var(--text-faint); padding: 14px 20px; font-family: inherit; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; position: relative; transition: color 0.2s; }
+  .tab:hover { color: var(--text-dim); }
+  .tab.active { color: var(--text); }
+  .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--gold); }
+  .tab-num { font-family: 'Fraunces', serif; font-style: italic; color: var(--gold); margin-right: 8px; font-size: 14px; }
+
+  .panel { display: none; animation: fadeIn 0.4s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .kpi-grid.eight { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .kpi { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; position: relative; overflow: hidden; }
+  .kpi.small { padding: 16px; }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
+  .kpi.green::before { background: var(--green); }
+  .kpi.red::before { background: var(--red); }
+  .kpi.blue::before { background: var(--blue); }
+  .kpi.purple::before { background: var(--purple); }
+  .kpi .label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+  .kpi .value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 400; letter-spacing: -0.02em; }
+  .kpi.small .value { font-size: 22px; }
+  .kpi .sub-value { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .kpi .sub-value.green { color: var(--green); }
+  .kpi .sub-value.red { color: var(--red); }
+
+  .portfolio-kpis { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 16px; background: var(--bg-elev); border: 1px solid var(--border); padding: 14px; }
+  .portfolio-kpis.cols-6 { grid-template-columns: repeat(6, 1fr); }
+  .portfolio-kpis.cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .portfolio-kpis.cols-8 { grid-template-columns: repeat(8, 1fr); }
+  .portfolio-kpis .pk { display: flex; flex-direction: column; gap: 2px; }
+  .portfolio-kpis .pk .l { font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
+  .portfolio-kpis .pk .v { font-family: 'Fraunces', serif; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .portfolio-kpis .pk .v.pos { color: var(--green); }
+  .portfolio-kpis .pk .v.neg { color: var(--red); }
+
+  .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 400; margin: 32px 0 16px; color: var(--text); display: flex; align-items: baseline; gap: 12px; }
+  .section-title::before { content: '—'; color: var(--gold); }
+  .section-title .count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; }
+  .section-title button.add-trade-btn {
+    background: var(--gold); color: var(--bg); border: none; padding: 5px 12px;
+    font-family: inherit; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; font-weight: 600; margin-left: auto; transition: background 0.15s;
+  }
+  .section-title button.add-trade-btn:hover { background: #b8915d; }
+
+  .add-trade-form {
+    background: var(--bg-elev); border: 1px solid var(--gold); padding: 16px; margin-bottom: 16px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto auto; gap: 12px; align-items: end;
+  }
+  .add-trade-form .field { display: flex; flex-direction: column; gap: 4px; }
+  .add-trade-form label { font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
+  .add-trade-form input, .add-trade-form select {
+    background: var(--bg-card); border: 1px solid var(--border-bright); color: var(--text);
+    font-family: inherit; font-size: 13px; padding: 8px 10px; outline: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .add-trade-form input:focus, .add-trade-form select:focus { border-color: var(--gold); }
+  .add-trade-form button {
+    padding: 8px 16px; font-family: inherit; font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid;
+  }
+  .add-trade-form button.save { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  .add-trade-form button.save:hover { background: #b8915d; border-color: #b8915d; }
+  .add-trade-form button.cancel { background: transparent; color: var(--text-dim); border-color: var(--border-bright); }
+  .add-trade-form button.cancel:hover { color: var(--text); }
+  .add-trade-preview {
+    font-size: 11px; color: var(--text-dim); margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid var(--border); grid-column: 1 / -1;
+  }
+  .add-trade-preview strong { color: var(--gold); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); padding: 24px; }
+  .card h3 { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; margin-bottom: 16px; color: var(--text); letter-spacing: 0.02em; }
+  .card h3 small { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; font-weight: 400; }
+
+  /* Scroll wrapper for wide tables (fixes dividend portfolio overflow) */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll table { min-width: 100%; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { text-align: right; padding: 10px 12px; font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  thead th:first-child, thead th.l { text-align: left; }
+  tbody td { padding: 12px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  tbody td:first-child, tbody td.l { text-align: left; }
+  tbody tr:hover { background: rgba(212, 165, 116, 0.03); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.total td { font-weight: 600; border-top: 1px solid var(--border-bright); padding-top: 14px; background: rgba(212, 165, 116, 0.04); }
+  .symbol { font-weight: 600; color: var(--gold); letter-spacing: 0.05em; }
+  .name { color: var(--text-dim); font-size: 11px; }
+  .price { color: var(--text); font-variant-numeric: tabular-nums; }
+  .num { font-variant-numeric: tabular-nums; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+  .pill { display: inline-block; padding: 2px 8px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 2px; color: var(--text-dim); }
+
+  td input.edit { background: transparent; border: 1px solid transparent; color: var(--text); font-family: inherit; font-size: 12px; text-align: right; width: 95px; padding: 4px 6px; transition: all 0.15s; font-variant-numeric: tabular-nums; }
+  td input.edit:hover { border-color: var(--border); }
+  td input.edit:focus { outline: none; border-color: var(--gold); background: var(--bg-elev); }
+  td input.edit.live { color: var(--green); border-color: rgba(74,222,128,0.2); }
+  td input.edit.override { color: var(--gold); border-color: var(--gold-dim); }
+  td input.edit.empty { color: var(--text-faint); border-color: rgba(248,113,113,0.25); }
+
+  .source-tag { font-size: 8px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-left: 4px; padding: 1px 4px; background: var(--bg-elev); border-radius: 2px; border: 1px solid var(--border); }
+  .source-tag.finnhub { color: var(--green); border-color: rgba(74,222,128,0.3); }
+  .source-tag.twelve { color: var(--blue); border-color: rgba(125,211,252,0.3); }
+  .source-tag.yahoo { color: var(--purple); border-color: rgba(192,132,252,0.3); }
+  .source-tag.stooq { color: var(--gold); border-color: var(--gold-dim); }
+  .source-tag.coingecko { color: var(--gold); border-color: var(--gold-dim); }
+  .source-tag.manual { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
+  .source-tag.stale { color: var(--red); border-color: var(--red); }
+  .dash { color: var(--text-faint); }
+
+  /* DRIP indicator */
+  .drip-info { display: block; font-size: 9px; color: var(--gold); margin-top: 2px; letter-spacing: 0.05em; }
+
+  .alloc-bar { display: flex; height: 8px; background: var(--bg-elev); border-radius: 1px; overflow: hidden; margin: 4px 0; }
+  .alloc-bar-fill { height: 100%; transition: width 0.4s; }
+  .alloc-row { display: grid; grid-template-columns: 180px 1fr 110px 60px 70px; align-items: center; gap: 12px; padding: 8px 0; font-size: 11px; }
+  .alloc-row.no-ret { grid-template-columns: 180px 1fr 110px 60px; }
+  .alloc-row .alloc-label { color: var(--text-dim); }
+  .alloc-row .alloc-value { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+  .alloc-row .alloc-pct { text-align: right; color: var(--text-faint); font-variant-numeric: tabular-nums; font-size: 10px; }
+  .alloc-row .alloc-ret { text-align: right; font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 500; }
+
+  .pie3d-wrap { display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
+  .pie3d-container { position: relative; width: 440px; height: 340px; perspective: 1400px; flex-shrink: 0; }
+
+  .eq-donut-wrap { display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
+  .eq-donut-container { position: relative; width: 320px; height: 320px; flex-shrink: 0; }
+  .eq-donut-container canvas { width: 100% !important; height: 100% !important; }
+  .pie3d { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; transform: translate(-50%,-50%) rotateX(60deg); animation: pieSpin 90s linear infinite; }
+  @keyframes pieSpin { from { transform: translate(-50%,-50%) rotateX(60deg) rotateZ(0deg); } to { transform: translate(-50%,-50%) rotateX(60deg) rotateZ(360deg); } }
+  .pie3d:hover { animation-play-state: paused; }
+  .pie3d-container::after { content: ''; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 340px; height: 32px; background: radial-gradient(ellipse, rgba(0,0,0,0.5), transparent 70%); filter: blur(10px); }
+  .pie-legend { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 6px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 11px; padding: 6px 8px; border-radius: 2px; transition: background 0.2s; }
+  .legend-item:hover { background: rgba(255,255,255,0.03); }
+  .legend-dot { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+  .legend-name { flex: 1; color: var(--text-dim); }
+  .legend-name .pct { color: var(--text-faint); font-size: 10px; margin-left: 6px; }
+  .legend-val { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 500; }
+
+  .dvd-edit-grid { display: grid; grid-template-columns: 100px repeat(12, 1fr); gap: 4px; font-size: 10px; }
+  .dvd-edit-grid .h { color: var(--text-faint); padding: 4px; text-align: center; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9px; }
+  .dvd-edit-grid .h.l { text-align: left; }
+  .dvd-edit-grid .row-label { padding: 6px 4px; color: var(--gold); font-weight: 600; font-size: 11px; display: flex; align-items: center; }
+  .dvd-edit-grid .row-label.total { color: var(--text); }
+  .dvd-edit-grid .cell { padding: 0; text-align: center; background: var(--bg-elev); border-radius: 2px; position: relative; }
+  .dvd-edit-grid .cell input {
+    width: 100%; background: transparent; border: 1px solid transparent;
+    color: var(--text-dim); font-family: inherit; font-size: 11px; padding: 8px 2px;
+    text-align: center; font-variant-numeric: tabular-nums; outline: none;
+    border-radius: 2px;
+  }
+  .dvd-edit-grid .cell input:hover { border-color: var(--border-bright); }
+  .dvd-edit-grid .cell input:focus { border-color: var(--gold); background: var(--bg-card); color: var(--text); }
+  .dvd-edit-grid .cell input.has-val { color: var(--green); font-weight: 500; }
+  .dvd-edit-grid .cell.summary { background: rgba(212,165,116,0.06); }
+  .dvd-edit-grid .cell.summary .summary-val { padding: 8px 2px; color: var(--gold); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dvd-add-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .dvd-add-row label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+  .dvd-add-row input, .dvd-add-row select { background: var(--bg-elev); border: 1px solid var(--border-bright); color: var(--text); font-family: inherit; font-size: 11px; padding: 6px 8px; outline: none; }
+  .dvd-add-row input:focus, .dvd-add-row select:focus { border-color: var(--gold); }
+  .dvd-add-row button { background: var(--gold); color: var(--bg); border: none; padding: 6px 14px; font-family: inherit; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-weight: 600; }
+  .dvd-add-row button:hover { background: #b8915d; }
+
+  .proj-config { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 24px; }
+  .proj-input { background: var(--bg-card); border: 1px solid var(--border); padding: 12px; }
+  .proj-input.starting { border-left: 3px solid var(--gold); }
+  .proj-input.starting label { color: var(--gold); }
+  .proj-input label { display: block; font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; }
+  .proj-input input { width: 100%; background: transparent; border: none; color: var(--text); font-family: inherit; font-size: 18px; font-weight: 500; padding: 4px 0; outline: none; font-variant-numeric: tabular-nums; }
+
+  .chart-wrap { background: var(--bg-card); border: 1px solid var(--border); padding: 24px; height: 380px; position: relative; }
+  .chart-wrap.tall { height: 420px; }
+
+  .person-block { margin-bottom: 48px; }
+  .person-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-bright); }
+  .person-header h2 { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 400; font-style: italic; color: var(--gold); }
+  .person-header .meta { font-size: 11px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
+
+  footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; flex-wrap: wrap; gap: 16px; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+  .loading { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border-bright); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
-<p class="p1"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"></span><br></p>
-<p class="p2"><span class="s1">DLB INVESTMENTS</span></p>
-<h1 style="margin: 0.0px 0.0px 0.0px 0.0px; font: 32.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8"><span class="s1">Portfolio </span><span class="s2">Terminal</span></h1>
-<p class="p4"><span class="s1">EUR/USD</span></p>
-<p class="p5"><span class="s1">—</span></p>
-<p class="p4"><span class="s1">LIVE PRICES</span></p>
-<p class="p6"><span class="s1">Idle</span></p>
-<p class="p4"><span class="s1">CLOUD SYNC</span></p>
-<p class="p7"><span class="s1">—</span></p>
-<p class="p4"><span class="s1">LAST UPDATE</span></p>
-<p class="p5"><span class="s1">—</span></p>
-<p class="p8"><span class="s3">⚙</span><span class="s1"> SETTINGS</span></p>
-<p class="p8"><span class="s3">↻</span><span class="s1"> REFRESH PRICES</span></p>
-<p class="p9"><span class="s1"></span><br></p>
-<p class="p10"><span class="s4">01</span><span class="s1">OVERVIEW</span></p>
-<p class="p11"><span class="s4">02</span><span class="s1">DIVIDENDS</span></p>
-<p class="p11"><span class="s4">03</span><span class="s1">POSITIONS</span></p>
-<p class="p11"><span class="s4">04</span><span class="s1">PROJECTIONS</span></p>
-<p class="p11"><span class="s4">05</span><span class="s1">ANNA &amp; VAS</span></p>
-<p class="p12"><span class="s1">Sector Allocation</span></p>
-<p class="p2"><span class="s1">3D Distribution</span></p>
-<p class="p9"><span class="s1"></span><br></p>
-<p class="p12"><span class="s1">Equity Portfolio Allocation</span></p>
-<p class="p2"><span class="s1">Asset Class Breakdown</span></p>
-<p class="p9"><span class="s1"></span><br></p>
-<h3 style="margin: 0.0px 0.0px 16.0px 0.0px; font: 14.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8"><span class="s5">Portfolio Breakdown</span></h3>
-<p class="p4"><span class="s5">BY SUB-PORTFOLIO</span></p>
-<p class="p9"><span class="s1"></span><br></p>
-<h3 style="margin: 0.0px 0.0px 16.0px 0.0px; font: 14.0px 'Helvetica Neue'; color: #dbe1e8; -webkit-text-stroke: #dbe1e8"><span class="s5">Sector Detail</span></h3>
-<p class="p4"><span class="s5">BAR DISTRIBUTION</span></p>
-<p class="p9"><span class="s1"></span><br></p>
-<p class="p12"><span class="s1">Top Holdings</span></p>
-<p class="p2"><span class="s1">—</span></p>
-<p class="p14"><span class="s1"></span><br></p>
-<p class="p4"><span class="s1">DLB PORTFOLIO TERMINAL V11.0</span></p>
-<p class="p4"><span class="s1">FINNHUB · TWELVE DATA · COINGECKO · FRANKFURTER</span></p>
+<div class="container">
+
+  <header>
+    <div class="brand">
+      <div class="sub">DLB Investments</div>
+      <h1><em>Portfolio</em> <span>Terminal</span></h1>
+    </div>
+    <div class="header-right">
+      <div class="status"><span class="label">EUR/USD</span><span class="val" id="fx-rate">—</span></div>
+      <div class="status"><span class="label">Live Prices</span><span class="val warn" id="status">Idle</span></div>
+      <div class="status"><span class="label">Cloud Sync</span><span class="val" id="sync-indicator" style="color: var(--text-faint);">—</span></div>
+      <div class="status"><span class="label">Last Update</span><span class="val" id="last-update">—</span></div>
+      <button class="gear" id="settings-btn" onclick="openSettings()" title="API key settings">⚙ Settings</button>
+      <button class="refresh" id="refresh-btn" onclick="refreshAll()">↻ Refresh Prices</button>
+    </div>
+  </header>
+
+  <div id="banner-area"></div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="overview"><span class="tab-num">01</span>Overview</button>
+    <button class="tab" data-tab="dividends"><span class="tab-num">02</span>Dividends</button>
+    <button class="tab" data-tab="positions"><span class="tab-num">03</span>Positions</button>
+    <button class="tab" data-tab="projections"><span class="tab-num">04</span>Projections</button>
+    <button class="tab" data-tab="annavas"><span class="tab-num">05</span>Anna &amp; Vas</button>
+  </nav>
+
+  <section class="panel active" id="overview">
+    <div class="kpi-grid eight" id="kpi-grid"></div>
+    <h2 class="section-title">Sector Allocation <span class="count">3D Distribution</span></h2>
+    <div class="card">
+      <div class="pie3d-wrap">
+        <div class="pie3d-container"><div class="pie3d" id="pie3d"></div></div>
+        <div class="pie-legend" id="pie-legend"></div>
+      </div>
+    </div>
+    <h2 class="section-title">Equity Portfolio Allocation <span class="count">Asset Class Breakdown</span></h2>
+    <div class="card">
+      <div class="eq-donut-wrap">
+        <div class="eq-donut-container"><canvas id="eq-donut"></canvas></div>
+        <div class="pie-legend" id="eq-donut-legend"></div>
+      </div>
+    </div>
+    <div class="two-col" style="margin-top: 32px;">
+      <div class="card"><h3>Portfolio Breakdown<small>By Sub-Portfolio</small></h3><div id="subport-bars"></div></div>
+      <div class="card"><h3>Sector Detail<small>Bar Distribution</small></h3><div id="sector-bars"></div></div>
+    </div>
+    <h2 class="section-title">Top Holdings <span class="count" id="holdings-count">—</span></h2>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="top-holdings"></table></div></div>
+  </section>
+
+  <section class="panel" id="dividends">
+    <div class="kpi-grid" id="dvd-kpi"></div>
+    <h2 class="section-title">Monthly Dividend Income <span class="count">Bar Chart · Net USD</span></h2>
+    <div class="chart-wrap tall"><canvas id="dvd-monthly-chart"></canvas></div>
+
+    <h2 class="section-title">Yearly Dividend Income <span class="count">Total Net per Year</span></h2>
+    <div class="chart-wrap tall"><canvas id="dvd-yearly-chart"></canvas></div>
+
+    <h2 class="section-title">DRIP Performance <span class="count">Reinvested Dividends</span><button class="add-trade-btn" onclick="toggleAddDripForm()">+ Add DRIP</button></h2>
+    <div id="drip-add-form-container"></div>
+    <div class="card" style="padding:0"><div class="table-scroll"><table id="drip-table"></table></div></div>
+
+    <h2 class="section-title">Dividend Income Calendar <span class="count">Click any cell to edit · Net USD</span></h2>
+    <div class="card">
+      <div class="dvd-edit-grid" id="dvd-edit-grid"></div>
+      <div class="dvd-add-row">
+        <label>Add row:</label>
+        <select id="dvd-add-year">
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+          <option value="2027">2027</option>
+          <option value="2028">2028</option>
+        </select>
+        <label>Symbol:</label>
+        <input type="text" id="dvd-add-symbol" placeholder="e.g. AAPL" style="width: 100px; text-transform: uppercase;">
+        <button onclick="addDvdRow()">+ Add</button>
+      </div>
+    </div>
+    <div class="two-col" style="margin-top: 32px;">
+      <div class="card"><h3>Top Dividend Payers<small>By Total Received (Net)</small></h3><table id="dvd-top"></table></div>
+      <div class="card"><h3>Per-Position Income<small>Projected Annual</small></h3><table id="dvd-positions"></table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="positions">
+    <h2 class="section-title">Equity Portfolio <span class="count" id="eq-count">—</span><button class="add-trade-btn" onclick="toggleAddTradeForm('eq')">+ Add Buy</button></h2>
+    <div id="eq-add-form-container"></div>
+    <div class="portfolio-kpis cols-6" id="eq-kpis"></div>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="eq-table"></table></div></div>
+
+    <h2 class="section-title">Dividend Portfolio <span class="count" id="dvd-count">—</span><button class="add-trade-btn" onclick="toggleAddTradeForm('dvd')">+ Add Buy</button></h2>
+    <div id="dvd-add-form-container"></div>
+    <div class="portfolio-kpis cols-8" id="dvd-kpis-bar"></div>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="dvd-table"></table></div></div>
+
+    <h2 class="section-title">Crypto Portfolio <span class="count" id="cr-count">—</span><button class="add-trade-btn" onclick="toggleAddTradeForm('crypto')">+ Add Buy</button></h2>
+    <div id="crypto-add-form-container"></div>
+    <div class="portfolio-kpis cols-5" id="cr-kpis"></div>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="cr-table"></table></div></div>
+
+    <h2 class="section-title">Realized P&L <span class="count">Closed Transactions</span></h2>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="closed-table"></table></div></div>
+  </section>
+
+  <section class="panel" id="projections">
+    <div class="proj-config" id="proj-config"></div>
+    <div class="chart-wrap"><canvas id="proj-chart"></canvas></div>
+    <h2 class="section-title">Year-by-Year Projection <span class="count">30 Years</span></h2>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="proj-table"></table></div></div>
+  </section>
+
+  <section class="panel" id="annavas"><div id="annavas-body"></div></section>
+
+  <footer>
+    <span>DLB Portfolio Terminal v11.0</span>
+    <span>Finnhub · Twelve Data · CoinGecko · Frankfurter</span>
+  </footer>
+</div>
+
+<div class="modal-backdrop" id="settings-modal">
+  <div class="modal">
+    <h2>API Settings</h2>
+    <div class="modal-sub">Configure price data sources</div>
+    <div class="modal-info">
+      Prices try APIs in order: <strong>Finnhub</strong> (US stocks, 60/min) → <strong>Twelve Data</strong> (incl. EU ETFs, 800/day) → proxy fallbacks → manual entry. Crypto via <strong>CoinGecko</strong>.
+    </div>
+    <div class="key-block">
+      <h3>Finnhub API Key <span class="key-status" id="finnhub-status">UNSET</span></h3>
+      <div class="key-desc">Real-time US stocks. Sign up at <a href="https://finnhub.io/register" target="_blank">finnhub.io/register</a>.</div>
+      <input type="password" class="key-input" id="finnhub-key" placeholder="Paste Finnhub API key">
+      <div class="key-actions">
+        <button class="btn" onclick="toggleKeyVisibility('finnhub-key')">Show/Hide</button>
+        <button class="btn danger" onclick="clearKey('finnhub')">Clear</button>
+      </div>
+    </div>
+    <div class="key-block">
+      <h3>Twelve Data API Key <span class="key-status" id="twelve-status">UNSET</span></h3>
+      <div class="key-desc">Global + EU ETFs. Sign up at <a href="https://twelvedata.com/pricing" target="_blank">twelvedata.com</a>.</div>
+      <input type="password" class="key-input" id="twelve-key" placeholder="Paste Twelve Data API key">
+      <div class="key-actions">
+        <button class="btn" onclick="toggleKeyVisibility('twelve-key')">Show/Hide</button>
+        <button class="btn danger" onclick="clearKey('twelve')">Clear</button>
+      </div>
+    </div>
+    <div class="key-block" style="border-top: 1px solid var(--border-bright); padding-top: 20px;">
+      <h3>Cloud Sync via GitHub Gist <span class="key-status" id="sync-status">OFF</span></h3>
+      <div class="key-desc">
+        Sync portfolio data across all your devices. Uses a private GitHub Gist (only you can see it).
+        <a href="https://github.com/settings/tokens?type=beta" target="_blank">Create token →</a>
+        Required: "Gists" permission (Read &amp; Write).
+        <details style="margin-top: 8px;">
+          <summary style="cursor: pointer; color: var(--gold); font-size: 11px;">Setup instructions</summary>
+          <ol style="margin: 8px 0 0 16px; font-size: 11px; line-height: 1.7;">
+            <li>Click "Create token →" above</li>
+            <li>Name it (e.g. "Portfolio Terminal")</li>
+            <li>Expiration: pick how long you want (or "No expiration")</li>
+            <li>Account permissions: leave alone</li>
+            <li>Scroll to <strong>Gists</strong> → set to "Read and write"</li>
+            <li>Click "Generate token", copy it (starts with <code>github_pat_</code>)</li>
+            <li>Paste it below, click "Connect &amp; Save to Gist"</li>
+            <li>The dashboard creates a private gist and remembers the ID</li>
+            <li>On other devices: paste same token + paste Gist ID → "Load from Gist"</li>
+          </ol>
+        </details>
+      </div>
+      <input type="password" class="key-input" id="github-token" placeholder="github_pat_... (your token)" style="margin-bottom: 8px;">
+      <input type="text" class="key-input" id="gist-id" placeholder="Gist ID (auto-filled after first save)">
+      <div class="key-actions" style="flex-wrap: wrap;">
+        <button class="btn" onclick="toggleKeyVisibility('github-token')">Show/Hide Token</button>
+        <button class="btn primary" onclick="syncSaveToGist()">↑ Save to Gist</button>
+        <button class="btn" onclick="syncLoadFromGist()">↓ Load from Gist</button>
+        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; padding: 8px 14px; border: 1px solid var(--border-bright);">
+          <input type="checkbox" id="auto-sync" onchange="toggleAutoSync(this.checked)" style="margin: 0;">
+          Auto-sync
+        </label>
+        <button class="btn danger" onclick="clearGistConfig()">Disconnect</button>
+      </div>
+      <div id="sync-msg" style="font-size: 10px; color: var(--text-faint); margin-top: 8px; min-height: 14px;"></div>
+    </div>
+
+    <div class="key-block" style="border-top: 1px solid var(--border-bright); padding-top: 20px;">
+      <h3>Reset Portfolio Data</h3>
+      <div class="key-desc">Reset to latest defaults. API keys stay. Cannot be undone.</div>
+      <div class="key-actions"><button class="btn danger" onclick="resetPortfolioData()">Reset to Defaults</button></div>
+    </div>
+    <div class="modal-footer">
+      <span style="font-size: 10px; color: var(--text-faint);">Keys stored locally · never sent except to their respective APIs</span>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="closeSettings()">Cancel</button>
+        <button class="btn primary" onclick="saveKeys()">Save &amp; Refresh</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PORTFOLIO TERMINAL v8
+   - DRIP tracking from IBKR trade report (manual + drip lots)
+   - Updated dividend calendar with net amounts (from Excel)
+   - SOL/XRP display in EUR (their purchase currency)
+   - Table overflow fix (scroll wrappers)
+   - Closed positions (PFLT, OBDC, SAR, WHF, HAFN) added to Closed P&L
+   ============================================================ */
+
+const DEFAULT_DATA = {
+  fx: { eurusd: 1.166 },
+  eq: [
+    { symbol: 'NVDA', name: 'NVIDIA Corp',                       broker: 'REV',  shares: 20,    avgCost: 123.15,  currency: 'USD', sector: 'Technology',       yahoo: 'NVDA',     stooq: 'nvda.us', tdataSymbol: 'NVDA', finnhub: 'NVDA' },
+    { symbol: 'QDVE', name: 'iShares S&P 500 IT UCITS ETF',      broker: 'IBKR', shares: 88,    avgCost: 32.947,  currency: 'EUR', sector: 'Technology',       yahoo: 'QDVE.DE',  stooq: 'qdve.de', tdataSymbol: 'QDVE', tdataEx: 'XETR' },
+    { symbol: 'VUAA', name: 'Vanguard S&P 500 UCITS',            broker: 'IBKR', shares: 60.8,  avgCost: 107.9622,  currency: 'EUR', sector: 'US Large Cap',     yahoo: 'VUAA.DE',  stooq: 'vuaa.de', tdataSymbol: 'VUAA', tdataEx: 'XETR' },
+    { symbol: 'EIMI', name: 'iShares Core MSCI EM IMI',          broker: 'IBKR', shares: 45,    avgCost: 45.9775, currency: 'USD', sector: 'Emerging Markets', yahoo: 'EIMI.L',   stooq: 'eimi.uk', tdataSymbol: 'EIMI', tdataEx: 'LSE' },
+    { symbol: 'WSML', name: 'iShares MSCI World Small-Cap',      broker: 'IBKR', shares: 300,   avgCost: 9.227,   currency: 'USD', sector: 'Global Small Cap', yahoo: 'WSML.L',   stooq: 'wsml.uk', tdataSymbol: 'WSML', tdataEx: 'LSE' }
+  ],
+  // Dividend Portfolio — totals match Excel; each has manual + drip lot history
+  dvd: [
+    { symbol: 'ABBV', name: 'AbbVie',            broker: 'IBKR', shares: 20.1473, avgCost: 210.2450, manualShares: 20.0000, manualCost: 4204.70, currency: 'USD', sector: 'Healthcare',             dvdPerShare: 6.92,  yahoo: 'ABBV', stooq: 'abbv.us', tdataSymbol: 'ABBV', finnhub: 'ABBV' },
+    { symbol: 'TXN',  name: 'Texas Instruments', broker: 'IBKR', shares: 23.0912, avgCost: 194.5921, manualShares: 23.0000, manualCost: 4465.56, currency: 'USD', sector: 'Technology',             dvdPerShare: 5.68,  yahoo: 'TXN',  stooq: 'txn.us',  tdataSymbol: 'TXN',  finnhub: 'TXN' },
+    { symbol: 'TGT',  name: 'Target Corp',       broker: 'IBKR', shares: 40.1176, avgCost: 113.0200, manualShares: 40.0000, manualCost: 4521.93, currency: 'USD', sector: 'Consumer Discretionary', dvdPerShare: 4.56,  yahoo: 'TGT',  stooq: 'tgt.us',  tdataSymbol: 'TGT',  finnhub: 'TGT' },
+    { symbol: 'O',    name: 'Realty Income',     broker: 'IBKR', shares: 85.7776, avgCost: 61.2859,  manualShares: 85.0000, manualCost: 5208.67, currency: 'USD', sector: 'Real Estate',            dvdPerShare: 3.246, yahoo: 'O',    stooq: 'o.us',    tdataSymbol: 'O',    finnhub: 'O' },
+    { symbol: 'MO',   name: 'Altria Group',      broker: 'IBKR', shares: 70.7202, avgCost: 64.2722,  manualShares: 69.8000, manualCost: 4481.51, currency: 'USD', sector: 'Consumer Staples',       dvdPerShare: 4.24,  yahoo: 'MO',   stooq: 'mo.us',   tdataSymbol: 'MO',   finnhub: 'MO' },
+    { symbol: 'BLK',  name: 'BlackRock',         broker: 'IBKR', shares: 4.3041,  avgCost: 990.0304, manualShares: 4.3000,  manualCost: 4257.14, currency: 'USD', sector: 'Financials',             dvdPerShare: 22.92, yahoo: 'BLK',  stooq: 'blk.us',  tdataSymbol: 'BLK',  finnhub: 'BLK' },
+    { symbol: 'CVX',  name: 'Chevron Corp',      broker: 'IBKR', shares: 17.0946, avgCost: 193.4745, manualShares: 17.0500, manualCost: 3298.98, currency: 'USD', sector: 'Energy',                 dvdPerShare: 7.12,  yahoo: 'CVX',  stooq: 'cvx.us',  tdataSymbol: 'CVX',  finnhub: 'CVX' },
+    { symbol: 'PEP',  name: 'PepsiCo',           broker: 'IBKR', shares: 32.1161, avgCost: 151.4962, manualShares: 32.0000, manualCost: 4848.48, currency: 'USD', sector: 'Consumer Staples',       dvdPerShare: 5.69,  yahoo: 'PEP',  stooq: 'pep.us',  tdataSymbol: 'PEP',  finnhub: 'PEP' },
+    { symbol: 'JPM',  name: 'JPMorgan Chase',    broker: 'IBKR', shares: 16.0693, avgCost: 296.5753, manualShares: 16.0000, manualCost: 4744.10, currency: 'USD', sector: 'Financials',             dvdPerShare: 6.00,  yahoo: 'JPM',  stooq: 'jpm.us',  tdataSymbol: 'JPM',  finnhub: 'JPM' },
+    { symbol: 'ARCC', name: 'Ares Capital',      broker: 'IBKR', shares: 300,     avgCost: 18.0903,  manualShares: 300,     manualCost: 5427.09, currency: 'USD', sector: 'Financials',             dvdPerShare: 1.92,  yahoo: 'ARCC', stooq: 'arcc.us', tdataSymbol: 'ARCC', finnhub: 'ARCC' }
+  ],
+  // DRIP transactions per ticker (from Sheet3 with code "R")
+  dripHistory: {
+    ABBV: [
+      { date: '2026-02-18', shares: 0.0075, price: 234.00, cost: 1.76 },
+      { date: '2026-05-18', shares: 0.1398, price: 210.37, cost: 29.41 }
+    ],
+    BLK: [
+      { date: '2026-03-25', shares: 0.0041, price: 988.00, cost: 4.05 }
+    ],
+    CVX: [
+      { date: '2026-03-11', shares: 0.0446, price: 188.05, cost: 8.39 }
+    ],
+    JPM: [
+      { date: '2026-02-03', shares: 0.0122, price: 312.46, cost: 3.81 },
+      { date: '2026-05-01', shares: 0.0571, price: 312.605, cost: 17.85 }
+    ],
+    MO: [
+      { date: '2026-01-12', shares: 0.247,  price: 57.65, cost: 14.24 },
+      { date: '2026-05-01', shares: 0.6732, price: 73.67, cost: 49.59 }
+    ],
+    O: [
+      { date: '2025-11-17', shares: 0.0521, price: 57.00,  cost: 2.97 },
+      { date: '2025-12-16', shares: 0.0514, price: 58.17,  cost: 2.99 },
+      { date: '2026-01-16', shares: 0.0496, price: 60.65,  cost: 3.01 },
+      { date: '2026-02-17', shares: 0.0457, price: 66.03,  cost: 3.02 },
+      { date: '2026-03-16', shares: 0.0535, price: 65.04,  cost: 3.48 },
+      { date: '2026-04-16', shares: 0.2058, price: 63.99,  cost: 13.17 },
+      { date: '2026-05-18', shares: 0.3195, price: 61.49,  cost: 19.65 }
+    ],
+    TXN: [
+      { date: '2026-05-19', shares: 0.0912, price: 304.88, cost: 27.81 }
+    ],
+    PEP: [
+      { date: '2026-01-07', shares: 0.0608, price: 139.19, cost: 8.46 },
+      { date: '2026-04-01', shares: 0.0553, price: 154.19, cost: 8.53 }
+    ],
+    TGT: [
+      { date: '2025-12-02', shares: 0.0584, price: 91.12,  cost: 5.32 },
+      { date: '2026-03-03', shares: 0.0592, price: 115.50, cost: 6.84 }
+    ]
+  },
+  crypto: [
+    // priceCurrency = display currency; for SOL/XRP it's EUR (your purchase currency)
+    { symbol: 'SOL',   name: 'Solana',         broker: 'CoinBase', shares: 15.073977019, avgCost: 103.02,     currency: 'EUR', cgId: 'solana',          priceCurrency: 'EUR' },
+    { symbol: 'XRP',   name: 'XRP',            broker: 'CoinBase', shares: 120.83112,    avgCost: 0.9138,     currency: 'EUR', cgId: 'ripple',          priceCurrency: 'EUR' },
+    { symbol: 'PEPE',  name: 'Pepe',           broker: 'Revolut',  shares: 22000000,     avgCost: 0.000018,   currency: 'EUR', cgId: 'pepe',            priceCurrency: 'EUR' },
+    { symbol: 'TURBO', name: 'Turbo',          broker: 'Binance',  shares: 15743.35,     avgCost: 0.00999,    currency: 'USD', cgId: 'turbo',           priceCurrency: 'USD' },
+    { symbol: 'TRUMP', name: 'Official Trump', broker: 'Binance',  shares: 6.16383,      avgCost: 7.30,       currency: 'USD', cgId: 'official-trump',  priceCurrency: 'USD' },
+    { symbol: 'FLOKI', name: 'Floki',          broker: 'Revolut',  shares: 1600000.82,   avgCost: 0.00015109, currency: 'EUR', cgId: 'floki',           priceCurrency: 'EUR' },
+    { symbol: 'SHIB',  name: 'Shiba Inu',      broker: 'Revolut',  shares: 10000000.70,  avgCost: 0.00002008, currency: 'EUR', cgId: 'shiba-inu',       priceCurrency: 'EUR' }
+  ],
+  // Dividend Income Calendar — populated from Excel (NET amounts, after tax)
+  dividendsReceived: {
+    '2025-08': { O: 2.42, PFLT: 1.02, SAR: 2.55 },
+    '2025-09': { HAFN: 9.68, O: 2.42, OBDC: 1.37, PFLT: 6.06, SAR: 2.55, TGT: 1.94 },
+    '2025-10': { MO: 9.91, O: 3.15, OBDC: 25.40, PFLT: 6.06, SAR: 2.55, WHF: 19.63 },
+    '2025-11': { O: 3.15, PFLT: 7.08, SAR: 2.55 },
+    '2025-12': { HAFN: 11.76, O: 3.17, PFLT: 7.08, SAR: 4.20, TGT: 5.33, WHF: 1.78 },
+    '2026-01': { JPM: 3.82, MO: 14.24, O: 3.01, OBDC: 29.19, PEP: 8.47, PFLT: 7.14, SAR: 2.55, WHF: 12.75 },
+    '2026-02': { ABBV: 1.77, O: 3.02, PFLT: 6.21 },
+    '2026-03': { BLK: 4.14, CVX: 8.40, O: 3.48, PEP: 8.53, PFLT: 7.45, TGT: 6.84 },
+    '2026-04': { JPM: 17.87, MO: 49.60, O: 13.17 },
+    '2026-05': { ABBV: 29.42, O: 19.65, TXN: 27.76 },
+    '2026-06': { TGT: 38.87 }
+  },
+  // Closed positions — from Sheet3 sells
+  closed: [
+    { name: 'NVIDIA Corp', country: 'US', pnl: 542.28 },
+    { name: 'Super Micro Computer Inc', country: 'US', pnl: 446.98 },
+    { name: 'The Vita Coco Company', country: 'US', pnl: 279.07 },
+    { name: 'Uxin', country: 'US', pnl: 191.35 },
+    { name: 'Viking Therapeutics', country: 'US', pnl: 169.12 },
+    { name: 'Amundi Nasdaq-100 II UCITS ETF', country: 'EU', pnl: 153.24 },
+    { name: 'iShares S&P 500 IT UCITS ETF', country: 'EU', pnl: 152.14 },
+    { name: 'Intel', country: 'US', pnl: 67.44 },
+    { name: 'Global X SuperDividend UCITS ETF', country: 'EU', pnl: 67.23 },
+    { name: 'PennantPark Floating Rate Cap (PFLT)', country: 'US', pnl: -149.76 },
+    { name: 'Enbridge', country: 'US', pnl: 25.92 },
+    { name: 'Altria', country: 'US', pnl: 24.89 },
+    { name: 'Hafnia Ltd (HAFN)', country: 'US', pnl: 23.58 },
+    { name: 'Blue Owl Capital Corp', country: 'US', pnl: 20.21 },
+    { name: 'Vanguard S&P 500 UCITS ETF', country: 'EU', pnl: 7.35 },
+    { name: 'Oxford Square Capital Corp', country: 'US', pnl: 4.14 },
+    { name: 'Ares Capital', country: 'US', pnl: 3.62 },
+    { name: 'McDonald\'s Corp', country: 'US', pnl: -1.03 },
+    { name: 'Global X Nasdaq 100 Covered Call', country: 'EU', pnl: -1.84 },
+    { name: 'Global X S&P 500 Covered Call', country: 'EU', pnl: -2.03 },
+    { name: 'Maxeon Solar Technologies', country: 'US', pnl: -4.27 },
+    { name: 'Nikola Corporation', country: 'US', pnl: -14.25 },
+    { name: 'Saratoga (SAR)', country: 'US', pnl: -25.70 },
+    { name: 'WhiteHorse Finance Inc (WHF)', country: 'US', pnl: -133.79 },
+    { name: 'Blue Owl Capital (OBDC)', country: 'US', pnl: -228.71 }
+  ],
+  projection: { years: 30, startingBalanceEUR: null, annualDeposit: 3000, dvdYield: 0.048, dvdGrowth: 0.071, marketGrowth: 0.06, taxRate: 0.15 },
+  annaVas: {
+    anna: {
+      startingBalanceUSD: 8511.58,
+      unrealized: [
+        { broker: 'IBKR', symbol: 'NVDA', name: 'NVIDIA Corp',             shares: 15,  avgCost: 182.46, currency: 'USD', yahoo: 'NVDA', stooq: 'nvda.us', tdataSymbol: 'NVDA', finnhub: 'NVDA' },
+        { broker: 'IBKR', symbol: 'PATH', name: 'UiPath Inc',              shares: 120, avgCost: 16.44,  currency: 'USD', yahoo: 'PATH', stooq: 'path.us', tdataSymbol: 'PATH', finnhub: 'PATH' },
+        { broker: 'IBKR', symbol: 'PLTR', name: 'Palantir Technologies',   shares: 12,  avgCost: 180.35, currency: 'USD', yahoo: 'PLTR', stooq: 'pltr.us', tdataSymbol: 'PLTR', finnhub: 'PLTR' },
+        { broker: 'IBKR', symbol: 'COIN', name: 'Coinbase Global',         shares: 8.6, avgCost: 229.19, currency: 'USD', yahoo: 'COIN', stooq: 'coin.us', tdataSymbol: 'COIN', finnhub: 'COIN' }
+      ],
+      realized: [
+        { broker: 'REV',  symbol: 'VUAA', name: 'Vanguard S&P 500 UCITS',  shares: 70.18893854, currency: 'USD', rpl: 140.95774 },
+        { broker: 'REV',  symbol: 'QDVE', name: 'iShares S&P 500 IT',      shares: 67.48428662, currency: 'USD', rpl: 47.66608 },
+        { broker: 'REV',  symbol: 'LYMS', name: 'Amundi Nasdaq-100 II',    shares: 10.23907675, currency: 'USD', rpl: 445.51694 },
+        { broker: 'IBKR', symbol: 'INTC', name: 'Intel Corp',              shares: 44, avgCost: 37.22, closePrice: 52.175, currency: 'USD', rpl: 658.02 }
+      ]
+    },
+    vas: {
+      startingBalanceUSD: 6503.0278814707,
+      unrealized: [
+        { broker: 'REV', symbol: 'NVDA', name: 'NVIDIA Corp',         shares: 12.44627274, avgCost: 173.49, currency: 'USD', yahoo: 'NVDA', stooq: 'nvda.us', tdataSymbol: 'NVDA', finnhub: 'NVDA' },
+        { broker: 'REV', symbol: 'COIN', name: 'Coinbase Global',     shares: 8.31412404,  avgCost: 229.75, currency: 'USD', yahoo: 'COIN', stooq: 'coin.us', tdataSymbol: 'COIN', finnhub: 'COIN' },
+        { broker: 'REV', symbol: 'PATH', name: 'UiPath Inc',          shares: 162.6206323, avgCost: 12.02,  currency: 'USD', yahoo: 'PATH', stooq: 'path.us', tdataSymbol: 'PATH', finnhub: 'PATH' },
+        { broker: 'REV', symbol: 'MU',   name: 'Micron Technology',   shares: 2.56811472,  avgCost: 795.17, currency: 'USD', yahoo: 'MU',   stooq: 'mu.us',   tdataSymbol: 'MU',   finnhub: 'MU' },
+        { broker: 'REV', symbol: 'TMC',  name: 'TMC the metals company', shares: 302.02841918, avgCost: 5.63, currency: 'USD', yahoo: 'TMC',  stooq: 'tmc.us', tdataSymbol: 'TMC', finnhub: 'TMC' }
+      ],
+      realized: [
+        { broker: 'REV', symbol: 'INTC', name: 'Intel Corp',                shares: 62.84852591, avgCost: 37.37,  closePrice: 53.6,   currency: 'USD', rpl: 1020.03 },
+        { broker: 'REV', symbol: 'VUAA', name: 'Vanguard S&P 500 UCITS',    shares: 23.2774566,  currency: 'USD', rpl: 207.38 },
+        { broker: 'REV', symbol: 'CRWV', name: 'CoreWeave Inc',             shares: 29.50420897, avgCost: 67.62,  closePrice: 103.59, currency: 'USD', rpl: 1061.27 },
+        { broker: 'REV', symbol: 'SNDK', name: 'SanDisk Corp',              shares: 3.1329648,   avgCost: 477.57, closePrice: 625.39, currency: 'USD', rpl: 463.11 },
+        { broker: 'REV', symbol: 'AVGO', name: 'Broadcom Inc',              shares: 9.2706162,   avgCost: 328.14, closePrice: 403.65, currency: 'USD', rpl: 700.02 }
+      ]
+    }
+  }
+};
+
+const STORAGE_KEY = 'dlb_portfolio_v11';
+const PRICE_KEY   = 'dlb_prices_v11';
+const MANUAL_KEY  = 'dlb_manual';        // unversioned: manual overrides persist across upgrades
+const APIKEYS_KEY = 'dlb_apikeys';
+const SYNC_KEY    = 'dlb_sync';  // GitHub Gist sync config
+
+let data = loadData();
+let prices = loadPrices();
+let manualPrices = JSON.parse(localStorage.getItem(MANUAL_KEY) || '{}');
+// One-time migration: merge any old versioned manualPrices into the new unversioned key
+for (const oldKey of ['dlb_manual_v11', 'dlb_manual_v10', 'dlb_manual_v9', 'dlb_manual_v8', 'dlb_manual_v7', 'dlb_manual_v6', 'dlb_manual_v5']) {
+  try {
+    const old = localStorage.getItem(oldKey);
+    if (old) {
+      const oldObj = JSON.parse(old);
+      for (const k in oldObj) if (manualPrices[k] === undefined) manualPrices[k] = oldObj[k];
+      localStorage.removeItem(oldKey);
+    }
+  } catch(e) {}
+}
+try { localStorage.setItem(MANUAL_KEY, JSON.stringify(manualPrices)); } catch(e) {}
+let apiKeys = JSON.parse(localStorage.getItem(APIKEYS_KEY) || '{"finnhub":"","twelve":""}');
+let syncConfig = JSON.parse(localStorage.getItem(SYNC_KEY) || '{"token":"","gistId":"","autoSync":false,"lastSync":null}');
+let activeTab = 'overview';
+let chartInstances = {};
+let syncTimer = null;  // debounce timer for auto-sync
+
+function loadData() { try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch(e) {} return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem('dlb_last_local_save', String(Date.now()));
+  } catch(e){}
+  if (syncConfig.autoSync && syncConfig.token && syncConfig.gistId) {
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncSaveToGist(true), 2500);  // debounce 2.5s
+  }
+}
+function loadPrices() { try { const s = localStorage.getItem(PRICE_KEY); if (s) return JSON.parse(s); } catch(e) {} return {}; }
+function savePrices() { try { localStorage.setItem(PRICE_KEY, JSON.stringify(prices)); } catch(e){} }
+function saveManual() {
+  try { localStorage.setItem(MANUAL_KEY, JSON.stringify(manualPrices)); } catch(e){}
+  if (syncConfig.autoSync && syncConfig.token && syncConfig.gistId) {
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncSaveToGist(true), 2500);
+  }
+}
+function saveApiKeys() { try { localStorage.setItem(APIKEYS_KEY, JSON.stringify(apiKeys)); } catch(e){} }
+
+const fmtMoney = (v, ccy='$') => {
+  if (v === null || v === undefined || isNaN(v)) return '<span class="dash">—</span>';
+  const sign = v < 0 ? '-' : '';
+  return sign + ccy + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+};
+const fmtPct = (v) => (v === null || v === undefined || isNaN(v)) ? '<span class="dash">—</span>' : (v >= 0 ? '+' : '') + (v*100).toFixed(2) + '%';
+const fmtNum = (v, dp=2) => v === null || v === undefined || isNaN(v) ? '<span class="dash">—</span>' : v.toLocaleString('en-US', {minimumFractionDigits: dp, maximumFractionDigits: dp});
+const fmtShares = (v) => {
+  if (v === null || isNaN(v)) return '—';
+  if (v >= 1000) return v.toLocaleString('en-US', {maximumFractionDigits: 0});
+  if (v >= 1) return v.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 4});
+  return v.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 8});
+};
+const cls = (v) => (v === null || isNaN(v)) ? '' : (v >= 0 ? 'pos' : 'neg');
+
+/* ===================== SETTINGS ===================== */
+function openSettings() {
+  document.getElementById('finnhub-key').value = apiKeys.finnhub || '';
+  document.getElementById('twelve-key').value = apiKeys.twelve || '';
+  document.getElementById('github-token').value = syncConfig.token || '';
+  document.getElementById('gist-id').value = syncConfig.gistId || '';
+  document.getElementById('auto-sync').checked = !!syncConfig.autoSync;
+  updateKeyStatusBadges();
+  updateSyncStatusBadge();
+  document.getElementById('settings-modal').classList.add('show');
+}
+function closeSettings() { document.getElementById('settings-modal').classList.remove('show'); }
+function toggleKeyVisibility(id) { const inp = document.getElementById(id); inp.type = inp.type === 'password' ? 'text' : 'password'; }
+function clearKey(name) { document.getElementById(name === 'finnhub' ? 'finnhub-key' : 'twelve-key').value = ''; }
+function updateKeyStatusBadges() {
+  const fb = document.getElementById('finnhub-status');
+  const tb = document.getElementById('twelve-status');
+  fb.textContent = apiKeys.finnhub ? 'SET' : 'UNSET';
+  fb.className = 'key-status ' + (apiKeys.finnhub ? 'set' : 'unset');
+  tb.textContent = apiKeys.twelve ? 'SET' : 'UNSET';
+  tb.className = 'key-status ' + (apiKeys.twelve ? 'set' : 'unset');
+}
+function saveKeys() {
+  apiKeys.finnhub = document.getElementById('finnhub-key').value.trim();
+  apiKeys.twelve = document.getElementById('twelve-key').value.trim();
+  saveApiKeys(); updateKeyStatusBadges(); closeSettings(); refreshAll();
+}
+function resetPortfolioData() {
+  if (!confirm('Reset all portfolio data to defaults? Your manual prices and dividend records will be cleared. API keys will remain.')) return;
+  localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(PRICE_KEY); localStorage.removeItem(MANUAL_KEY);
+  data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  prices = {}; manualPrices = {};
+  closeSettings(); refreshAll();
+}
+document.getElementById('settings-modal').addEventListener('click', (e) => { if (e.target.id === 'settings-modal') closeSettings(); });
+
+/* ===================== GITHUB GIST SYNC ===================== */
+function saveSyncConfig() { try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncConfig)); } catch(e){} }
+
+function updateSyncStatusBadge() {
+  const badge = document.getElementById('sync-status');
+  const ind = document.getElementById('sync-indicator');
+  if (!syncConfig.token || !syncConfig.gistId) {
+    badge.textContent = 'OFF'; badge.className = 'key-status unset';
+    ind.textContent = 'Off'; ind.style.color = 'var(--text-faint)';
+  } else if (syncConfig.autoSync) {
+    badge.textContent = 'AUTO'; badge.className = 'key-status set';
+    ind.textContent = 'Auto'; ind.style.color = 'var(--green)';
+  } else {
+    badge.textContent = 'MANUAL'; badge.className = 'key-status set';
+    ind.textContent = 'Manual'; ind.style.color = 'var(--gold)';
+  }
+}
+
+function setSyncMsg(text, isErr) {
+  const el = document.getElementById('sync-msg');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isErr ? 'var(--red)' : 'var(--green)';
+}
+
+function clearGistConfig() {
+  if (!confirm('Disconnect cloud sync? Your local data stays. The gist on GitHub is NOT deleted (delete it manually if you want).')) return;
+  syncConfig = { token: '', gistId: '', autoSync: false, lastSync: null };
+  saveSyncConfig();
+  document.getElementById('github-token').value = '';
+  document.getElementById('gist-id').value = '';
+  document.getElementById('auto-sync').checked = false;
+  updateSyncStatusBadge();
+  setSyncMsg('Disconnected. Local data preserved.', false);
+}
+
+function toggleAutoSync(on) {
+  syncConfig.autoSync = on;
+  saveSyncConfig();
+  updateSyncStatusBadge();
+  if (on && (!syncConfig.token || !syncConfig.gistId)) {
+    setSyncMsg('Auto-sync enabled, but no gist connected yet. Click "Save to Gist" first.', true);
+  }
+}
+
+function getSyncPayload() {
+  // Bundle everything that should sync (NOT API keys or prices cache)
+  return {
+    version: 9,
+    timestamp: Date.now(),
+    data: data,
+    manualPrices: manualPrices
+  };
+}
+
+function applySyncPayload(payload) {
+  if (!payload || !payload.data) throw new Error('Invalid payload');
+  data = payload.data;
+  if (payload.manualPrices) manualPrices = payload.manualPrices;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
+  try { localStorage.setItem(MANUAL_KEY, JSON.stringify(manualPrices)); } catch(e){}
+}
+
+async function syncSaveToGist(silent) {
+  const token = document.getElementById('github-token')?.value.trim() || syncConfig.token;
+  if (!token) { setSyncMsg('Enter a GitHub token first', true); return; }
+  syncConfig.token = token;
+  const gistId = document.getElementById('gist-id')?.value.trim() || syncConfig.gistId;
+
+  const payload = getSyncPayload();
+  const filename = 'portfolio.json';
+  const body = {
+    description: 'DLB Portfolio Terminal — auto sync',
+    files: { [filename]: { content: JSON.stringify(payload, null, 2) } }
+  };
+
+  try {
+    if (!silent) setSyncMsg('Saving to Gist...', false);
+    let res;
+    if (gistId) {
+      // Update existing gist
+      res = await fetch(`https://api.github.com/gists/${gistId}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
+        body: JSON.stringify(body)
+      });
+    } else {
+      // Create new private gist
+      body.public = false;
+      res = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
+        body: JSON.stringify(body)
+      });
+    }
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errText.slice(0, 200)}`);
+    }
+    const j = await res.json();
+    syncConfig.gistId = j.id;
+    syncConfig.lastSync = Date.now();
+    saveSyncConfig();
+    if (document.getElementById('gist-id')) document.getElementById('gist-id').value = j.id;
+    updateSyncStatusBadge();
+    setSyncMsg(`Saved · ${new Date().toLocaleTimeString('en-GB')} · gist ${j.id.slice(0,8)}...`, false);
+  } catch(e) {
+    setSyncMsg('Save failed: ' + e.message, true);
+    console.error(e);
+  }
+}
+
+async function syncLoadFromGist() {
+  const token = document.getElementById('github-token').value.trim();
+  const gistId = document.getElementById('gist-id').value.trim();
+  if (!token || !gistId) { setSyncMsg('Token and Gist ID both required', true); return; }
+  try {
+    setSyncMsg('Loading from Gist...', false);
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errText.slice(0, 200)}`);
+    }
+    const j = await res.json();
+    const filename = Object.keys(j.files)[0];
+    const content = j.files[filename].content;
+    const payload = JSON.parse(content);
+    if (!confirm(`Replace your current local data with the gist from ${new Date(payload.timestamp).toLocaleString()}? This will overwrite your current positions, dividends, and DRIP history.`)) {
+      setSyncMsg('Load cancelled', true);
+      return;
+    }
+    applySyncPayload(payload);
+    syncConfig.token = token;
+    syncConfig.gistId = gistId;
+    syncConfig.lastSync = Date.now();
+    saveSyncConfig();
+    updateSyncStatusBadge();
+    setSyncMsg(`Loaded · gist saved ${new Date(payload.timestamp).toLocaleString()}`, false);
+    render();
+  } catch(e) {
+    setSyncMsg('Load failed: ' + e.message, true);
+    console.error(e);
+  }
+}
+
+/* ===================== PRICE FETCHING ===================== */
+const PROXIES = [
+  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  url => 'https://api.codetabs.com/v1/proxy/?quest=' + url
+];
+async function proxyFetch(url, asJson = true) {
+  try { const r = await fetch(url, { cache: 'no-store' }); if (r.ok) return asJson ? await r.json() : await r.text(); } catch(e) {}
+  for (const p of PROXIES) {
+    try {
+      const r = await fetch(p(url), { cache: 'no-store' });
+      if (r.ok) { const t = await r.text(); if (asJson) { try { return JSON.parse(t); } catch(e) { continue; } } return t; }
+    } catch(e) { continue; }
+  }
+  return null;
+}
+async function fetchFinnhubOne(symbol) {
+  if (!apiKeys.finnhub) return null;
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKeys.finnhub}`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (j.c && j.c !== 0) return { price: j.c, currency: 'USD', ts: Date.now(), source: 'finnhub' };
+    return null;
+  } catch(e) { return null; }
+}
+let lastTwelveError = null;  // global: captures last error from Twelve Data so banner can show it
+
+async function fetchTwelveOne(symbol, exchange, currency) {
+  if (!apiKeys.twelve) return null;
+  try {
+    let url = `https://api.twelvedata.com/price?symbol=${encodeURIComponent(symbol)}&apikey=${apiKeys.twelve}`;
+    if (exchange) url += `&exchange=${encodeURIComponent(exchange)}`;
+    const r = await fetch(url);
+    if (!r.ok) { lastTwelveError = `HTTP ${r.status}`; return null; }
+    const j = await r.json();
+    if (j.price && !isNaN(parseFloat(j.price))) return { price: parseFloat(j.price), currency: currency || 'USD', ts: Date.now(), source: 'twelve' };
+    // Capture error message (rate limit, symbol not found, etc.)
+    if (j.code || j.message || j.status === 'error') {
+      lastTwelveError = `${symbol}${exchange?'/'+exchange:''}: ${j.message || j.code || 'unknown error'}`;
+    }
+    return null;
+  } catch(e) { lastTwelveError = e.message; return null; }
+}
+async function fetchStooqOne(stooqSymbol, currency) {
+  const url = `https://stooq.com/q/l/?s=${encodeURIComponent(stooqSymbol)}&f=sd2t2ohlcv&h&e=csv`;
+  const text = await proxyFetch(url, false);
+  if (!text) return null;
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return null;
+  const cols = lines[1].split(',');
+  if (cols.length < 7) return null;
+  const close = parseFloat(cols[6]);
+  if (isNaN(close) || close === 0) return null;
+  return { price: close, currency: currency || 'USD', ts: Date.now(), source: 'stooq' };
+}
+async function fetchYahooOne(symbol) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+  const j = await proxyFetch(url, true);
+  if (!j) return null;
+  const r = j?.chart?.result?.[0]; if (!r) return null;
+  const m = r.meta;
+  let price = m.regularMarketPrice ?? m.previousClose;
+  if (!price) return null;
+  let currency = m.currency || 'USD';
+  if (currency === 'GBp') { price /= 100; currency = 'GBP'; }
+  return { price, currency, ts: Date.now(), source: 'yahoo' };
+}
+async function fetchStockPrice(pos) {
+  if (pos.finnhub && apiKeys.finnhub && pos.currency === 'USD') {
+    const r = await fetchFinnhubOne(pos.finnhub); if (r) return r;
+  }
+  if (pos.tdataSymbol && apiKeys.twelve) {
+    const r = await fetchTwelveOne(pos.tdataSymbol, pos.tdataEx, pos.currency); if (r) return r;
+  }
+  if (pos.stooq) { const r = await fetchStooqOne(pos.stooq, pos.currency); if (r) return r; }
+  if (pos.yahoo) { const r = await fetchYahooOne(pos.yahoo); if (r) return r; }
+  return null;
+}
+async function fetchCrypto(ids) {
+  if (!ids.length) return {};
+  // Fetch both USD and EUR
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd,eur&include_24hr_change=true`;
+  const j = await proxyFetch(url, true);
+  if (!j) return {};
+  const out = {};
+  for (const id in j) {
+    if (j[id].usd !== undefined) {
+      out[id] = {
+        price: j[id].usd,         // canonical USD price
+        priceEUR: j[id].eur,      // optional EUR price
+        currency: 'USD',
+        changePct: (j[id].usd_24h_change || 0)/100,
+        ts: Date.now(),
+        source: 'coingecko'
+      };
+    }
+  }
+  return out;
+}
+async function fetchFx() {
+  let j = await proxyFetch('https://api.frankfurter.app/latest?from=EUR&to=USD');
+  if (j?.rates?.USD) { data.fx.eurusd = j.rates.USD; saveData(); return; }
+  j = await proxyFetch('https://open.er-api.com/v6/latest/EUR');
+  if (j?.rates?.USD) { data.fx.eurusd = j.rates.USD; saveData(); return; }
+}
+async function refreshAll() {
+  const btn = document.getElementById('refresh-btn');
+  const status = document.getElementById('status');
+  btn.disabled = true; btn.innerHTML = '<span class="loading"></span> Fetching';
+  status.className = 'val warn'; status.textContent = 'Fetching';
+  lastTwelveError = null;  // reset error capture
+  await fetchFx();
+  document.getElementById('fx-rate').textContent = data.fx.eurusd.toFixed(4);
+  const allStockPositions = [];
+  const seen = new Set();
+  for (const p of [...data.eq, ...data.dvd, ...data.annaVas.anna.unrealized, ...data.annaVas.vas.unrealized]) {
+    const k = priceKey(p);
+    if (!seen.has(k)) { seen.add(k); allStockPositions.push(p); }
+  }
+  const cgList = data.crypto.map(c => c.cgId).filter(Boolean);
+  const totalNeeded = allStockPositions.length + cgList.length;
+  const sourceCounts = { finnhub: 0, twelve: 0, stooq: 0, yahoo: 0, failed: 0 };
+  const failedSymbols = [];   // Track which symbols couldn't be fetched
+  let okCount = 0;
+  const batchSize = 5;
+  const clearedManual = [];  // track manual overrides replaced by live data
+  for (let i = 0; i < allStockPositions.length; i += batchSize) {
+    const batch = allStockPositions.slice(i, i + batchSize);
+    const results = await Promise.allSettled(batch.map(p => fetchStockPrice(p)));
+    results.forEach((res, j) => {
+      if (res.status === 'fulfilled' && res.value) {
+        const k = priceKey(batch[j]);
+        prices[k] = res.value;
+        sourceCounts[res.value.source]++;
+        okCount++;
+        // If a manual override existed, clear it — live price wins on refresh
+        if (manualPrices[k] !== undefined && manualPrices[k] !== null && manualPrices[k] !== '') {
+          clearedManual.push(batch[j].symbol);
+          delete manualPrices[k];
+        }
+      } else {
+        sourceCounts.failed++;
+        const p = batch[j];
+        let label = p.symbol;
+        if (p.tdataEx) label += `(${p.tdataEx})`;
+        else if (p.currency && p.currency !== 'USD') label += `(${p.currency})`;
+        failedSymbols.push(label);
+      }
+    });
+    if (i + batchSize < allStockPositions.length) await new Promise(r => setTimeout(r, 200));
+  }
+  const cres = await fetchCrypto(cgList);
+  for (const id in cres) {
+    const k = 'cg:' + id;
+    prices[k] = cres[id];
+    okCount++;
+    if (manualPrices[k] !== undefined && manualPrices[k] !== null && manualPrices[k] !== '') {
+      // find symbol for nicer message
+      const c = data.crypto.find(x => x.cgId === id);
+      clearedManual.push(c ? c.symbol : id);
+      delete manualPrices[k];
+    }
+  }
+  if (clearedManual.length > 0) saveManual();
+  // Track failed crypto too
+  for (const c of data.crypto) {
+    if (c.cgId && !cres[c.cgId]) failedSymbols.push(c.symbol);
+  }
+  savePrices();
+  document.getElementById('last-update').textContent = new Date().toLocaleTimeString('en-GB');
+  const parts = [];
+  if (sourceCounts.finnhub) parts.push(`${sourceCounts.finnhub} FH`);
+  if (sourceCounts.twelve) parts.push(`${sourceCounts.twelve} TD`);
+  if (sourceCounts.stooq) parts.push(`${sourceCounts.stooq} SQ`);
+  if (sourceCounts.yahoo) parts.push(`${sourceCounts.yahoo} YH`);
+  parts.push(`${Object.keys(cres).length} CG`);
+  const clearedHint = clearedManual.length > 0
+    ? ` <span style="color: var(--gold);">Manual override replaced with live price for: <strong>${[...new Set(clearedManual)].join(', ')}</strong>.</span>`
+    : '';
+  // Surface Twelve Data API error if any (e.g. rate limit, symbol not found)
+  const tdErrorHint = lastTwelveError
+    ? ` <span style="color: var(--red);">Twelve Data error: <strong>${lastTwelveError}</strong>.</span>`
+    : '';
+  if (okCount === 0) {
+    status.className = 'val err'; status.textContent = 'Offline';
+    showBanner('<strong>No live prices.</strong> Add API keys in ⚙ Settings, or type prices manually.', true);
+  } else if (okCount < totalNeeded) {
+    status.className = 'val warn'; status.textContent = `${okCount}/${totalNeeded}`;
+    const uniqueFailed = [...new Set(failedSymbols)];
+    const failedHint = uniqueFailed.length > 0
+      ? ` Failed: <strong style="color: var(--red);">${uniqueFailed.join(', ')}</strong>.`
+      : '';
+    const keysHint = (!apiKeys.finnhub && !apiKeys.twelve)
+      ? ' Add API keys in <strong>⚙ Settings</strong> for better coverage.'
+      : ' Type missing prices manually on the Positions tab.';
+    showBanner(`Fetched <strong>${okCount}/${totalNeeded}</strong> prices (${parts.join(', ')}).${failedHint}${clearedHint}${tdErrorHint}${keysHint}`, false);
+    // Don't auto-hide so user can read which failed
+  } else {
+    status.className = 'val live'; status.textContent = 'Live';
+    showBanner(`All ${totalNeeded} prices fetched (${parts.join(', ')}).${clearedHint}${tdErrorHint}`, false, true);
+    setTimeout(hideBanner, (clearedManual.length > 0 || lastTwelveError) ? 8000 : 4000);
+  }
+  btn.disabled = false; btn.innerHTML = '↻ Refresh Prices';
+  render();
+}
+function showBanner(html, isErr, isOk) {
+  document.getElementById('banner-area').innerHTML = `<div class="banner ${isErr?'err':isOk?'ok':''}"><strong>${isErr?'⚠':isOk?'✓':'ℹ'}</strong> <span>${html}</span><button onclick="hideBanner()">Dismiss</button></div>`;
+}
+function hideBanner() { document.getElementById('banner-area').innerHTML = ''; }
+
+function priceKey(pos) { if (pos.cgId) return 'cg:' + pos.cgId; return 'sym:' + pos.symbol + (pos.currency || ''); }
+
+function getPrice(pos) {
+  const k = priceKey(pos);
+  // Resolve underlying live price (if any) — useful even when a manual override exists
+  let livePrice = null, liveSource = null, liveCurrency = null, liveTs = null;
+  const p = prices[k];
+  if (p && p.price !== undefined && p.price !== null && !isNaN(p.price)) {
+    if (pos.priceCurrency === 'EUR' && p.priceEUR !== undefined && !isNaN(p.priceEUR)) {
+      livePrice = p.priceEUR; liveCurrency = 'EUR';
+    } else {
+      livePrice = p.price; liveCurrency = p.currency || pos.currency;
+    }
+    liveSource = p.source || 'live';
+    liveTs = p.ts;
+  }
+  // Manual override takes priority for display
+  if (manualPrices[k] !== undefined && manualPrices[k] !== null && manualPrices[k] !== '') {
+    return {
+      price: parseFloat(manualPrices[k]),
+      currency: pos.priceCurrency || pos.currency,
+      source: 'manual',
+      ts: null,
+      livePrice, liveSource, liveCurrency, liveTs   // expose the live price too
+    };
+  }
+  if (livePrice !== null) {
+    return { price: livePrice, currency: liveCurrency, source: liveSource, ts: liveTs, livePrice, liveSource, liveCurrency, liveTs };
+  }
+  return { price: null, currency: pos.priceCurrency || pos.currency, source: 'none', ts: null, livePrice: null, liveSource: null };
+}
+
+function toUSD(amount, currency) {
+  if (amount === null || amount === undefined) return null;
+  if (currency === 'USD') return amount;
+  if (currency === 'EUR') return amount * data.fx.eurusd;
+  if (currency === 'GBP') return amount * data.fx.eurusd * 1.166;
+  return amount;
+}
+function marketValueUSD(pos) {
+  // For crypto with EUR price, we need the USD price for aggregation
+  const k = priceKey(pos);
+  // Try to get USD price from cache directly for aggregation purposes
+  if (pos.priceCurrency === 'EUR' && prices[k] && prices[k].price !== undefined) {
+    // Use canonical USD price for the aggregation
+    return prices[k].price * pos.shares;
+  }
+  const { price, currency } = getPrice(pos);
+  if (price === null) return null;
+  return toUSD(price * pos.shares, currency);
+}
+function costBasisUSD(pos) { return toUSD(pos.avgCost * pos.shares, pos.currency); }
+function uplUSD(pos) { const mv = marketValueUSD(pos); if (mv === null) return null; return mv - costBasisUSD(pos); }
+function returnPct(pos) { const upl = uplUSD(pos), cb = costBasisUSD(pos); if (upl === null || cb === 0) return null; return upl/cb; }
+
+function render() {
+  document.getElementById('fx-rate').textContent = data.fx.eurusd.toFixed(4);
+  renderOverview();
+  renderDividends();
+  renderPositions();
+  renderProjections();
+  renderAnnaVas();
+}
+
+function sumDef(list, fn) {
+  let s = 0; let missing = 0;
+  for (const x of list) {
+    const v = fn(x);
+    if (v === null || v === undefined || isNaN(v)) missing++; else s += v;
+  }
+  return { sum: s, missing };
+}
+function sourceTag(src, ts) {
+  let tag = '';
+  if (src === 'finnhub') tag = '<span class="source-tag finnhub">FH</span>';
+  else if (src === 'twelve') tag = '<span class="source-tag twelve">TD</span>';
+  else if (src === 'stooq') tag = '<span class="source-tag stooq">SQ</span>';
+  else if (src === 'yahoo') tag = '<span class="source-tag yahoo">YH</span>';
+  else if (src === 'coingecko') tag = '<span class="source-tag coingecko">CG</span>';
+  else if (src === 'manual') tag = '<span class="source-tag manual">M</span>';
+  else return '';
+  // If price is older than 24 hours, mark as stale
+  if (ts && src !== 'manual' && (Date.now() - ts) > 24 * 60 * 60 * 1000) {
+    const hrs = Math.floor((Date.now() - ts) / (60 * 60 * 1000));
+    tag += ` <span class="source-tag stale" title="Price is ${hrs} hours old — last fetch may have failed">STALE ${hrs}h</span>`;
+  }
+  return tag;
+}
+
+/* ----- OVERVIEW ----- */
+function renderOverview() {
+  const eq = sumDef(data.eq, marketValueUSD), eqCb = sumDef(data.eq, costBasisUSD);
+  const dv = sumDef(data.dvd, marketValueUSD), dvCb = sumDef(data.dvd, costBasisUSD);
+  const cr = sumDef(data.crypto, marketValueUSD), crCb = sumDef(data.crypto, costBasisUSD);
+  const totalMv = eq.sum + dv.sum + cr.sum;
+  const totalCb = eqCb.sum + dvCb.sum + crCb.sum;
+  const totalUpl = totalMv - totalCb;
+  const totalReturnPct = totalCb === 0 ? 0 : totalUpl / totalCb;
+  const totalMissing = eq.missing + dv.missing + cr.missing;
+  const totalPositions = data.eq.length + data.dvd.length + data.crypto.length;
+  const all = [...data.eq, ...data.dvd, ...data.crypto].map(p => ({ p, upl: uplUSD(p), ret: returnPct(p) })).filter(r => r.upl !== null);
+  let best = null, worst = null;
+  for (const r of all) {
+    if (!best || r.upl > best.upl) best = r;
+    if (!worst || r.upl < worst.upl) worst = r;
+  }
+  const annualDvd = data.dvd.reduce((s,p) => s + (p.dvdPerShare||0)*p.shares, 0);
+  const realizedPnl = data.closed.reduce((s,t) => s + t.pnl, 0);
+  const totalDvdReceived = Object.values(data.dividendsReceived).reduce((s, m) => s + Object.values(m).reduce((a,b)=>a+b, 0), 0);
+  const portfolioYieldOnMv = dv.sum === 0 ? 0 : annualDvd / dv.sum;
+  const yieldOnCost = dvCb.sum === 0 ? 0 : annualDvd / dvCb.sum;
+
+  const kpis = [
+    { label: 'Total Market Value', value: fmtMoney(totalMv), sub: fmtMoney(totalCb)+' cost' + (totalMissing ? ` · ${totalMissing} need price` : ''), cls: 'blue' },
+    { label: 'Total UPL', value: fmtMoney(totalUpl), sub: fmtPct(totalReturnPct), cls: totalUpl>=0?'green':'red', subCls: totalUpl>=0?'green':'red' },
+    { label: 'Realized P&L', value: fmtMoney(realizedPnl), sub: data.closed.length+' closed', cls: realizedPnl>=0?'green':'red' },
+    { label: 'Lifetime P&L', value: fmtMoney(totalUpl + realizedPnl), sub: 'unrealized + realized', cls: (totalUpl+realizedPnl)>=0?'green':'red' },
+    { label: 'Annual Dividend', value: fmtMoney(annualDvd), sub: fmtMoney(annualDvd/12)+' / month', cls: 'green' },
+    { label: 'Dividends Received', value: fmtMoney(totalDvdReceived), sub: 'all-time net', cls: 'gold' },
+    { label: 'Portfolio Yield', value: fmtPct(portfolioYieldOnMv), sub: 'YoC ' + fmtPct(yieldOnCost), cls: 'purple' },
+    { label: 'Positions / Sectors', value: totalPositions + ' / ' + new Set([...data.eq, ...data.dvd].map(p=>p.sector)).size, sub: (best ? `Best: ${best.p.symbol} ` : '') + (worst ? `· Worst: ${worst.p.symbol}` : ''), cls: '' }
+  ];
+  document.getElementById('kpi-grid').innerHTML = kpis.map(k =>
+    `<div class="kpi small ${k.cls||''}"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="sub-value ${k.subCls||''}">${k.sub}</div></div>`
+  ).join('');
+
+  const sectors = {};
+  for (const p of [...data.eq, ...data.dvd]) {
+    const mv = marketValueUSD(p); if (mv === null) continue;
+    const s = p.sector || 'Other';
+    sectors[s] = (sectors[s] || 0) + mv;
+  }
+  if (cr.sum > 0) sectors['Crypto'] = cr.sum;
+  const sectorList = Object.entries(sectors).sort((a,b) => b[1]-a[1]);
+  // Distinct palette: each color is ≥40° apart in hue for clear separation
+  const palette = [
+    '#d4a574',  // gold (warm beige)
+    '#3b82f6',  // strong blue
+    '#a855f7',  // strong purple
+    '#22c55e',  // green
+    '#ef4444',  // red
+    '#f59e0b',  // amber/orange
+    '#06b6d4',  // cyan/teal
+    '#ec4899',  // pink/magenta
+    '#84cc16',  // lime
+    '#8b5cf6',  // violet
+    '#f97316'   // orange
+  ];
+  drawPie3D(sectorList, totalMv || 1, palette);
+  drawEqDonut(palette);
+  document.getElementById('pie-legend').innerHTML = sectorList.map(([name, val], i) => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${palette[i%palette.length]}"></span>
+      <span class="legend-name">${name}<span class="pct">${((val/totalMv)*100).toFixed(1)}%</span></span>
+      <span class="legend-val">${fmtMoney(val)}</span>
+    </div>`).join('');
+
+  const subs = [
+    { name: 'Dividend Portfolio', value: dv.sum, cost: dvCb.sum, color: '#d4a574' },
+    { name: 'Equity Portfolio', value: eq.sum, cost: eqCb.sum, color: '#7dd3fc' },
+    { name: 'Crypto Portfolio', value: cr.sum, cost: crCb.sum, color: '#c084fc' }
+  ];
+  const maxSub = Math.max(...subs.map(s=>s.value), 1);
+  document.getElementById('subport-bars').innerHTML = subs.map(s => {
+    const ret = s.cost === 0 ? 0 : (s.value - s.cost) / s.cost;
+    return `
+    <div class="alloc-row">
+      <span class="alloc-label">${s.name}</span>
+      <div class="alloc-bar"><div class="alloc-bar-fill" style="width:${(s.value/maxSub)*100}%; background:${s.color}"></div></div>
+      <span class="alloc-value">${fmtMoney(s.value)}</span>
+      <span class="alloc-pct">${totalMv>0?((s.value/totalMv)*100).toFixed(1):0}%</span>
+      <span class="alloc-ret ${ret>=0?'pos':'neg'}">${fmtPct(ret)}</span>
+    </div>`;
+  }).join('');
+
+  const maxSector = Math.max(...sectorList.map(([_,v]) => v), 1);
+  document.getElementById('sector-bars').innerHTML = sectorList.map(([name, val], i) => `
+    <div class="alloc-row no-ret">
+      <span class="alloc-label">${name}</span>
+      <div class="alloc-bar"><div class="alloc-bar-fill" style="width:${(val/maxSector)*100}%; background:${palette[i%palette.length]}"></div></div>
+      <span class="alloc-value">${fmtMoney(val)}</span>
+      <span class="alloc-pct">${totalMv>0?((val/totalMv)*100).toFixed(1):0}%</span>
+    </div>`).join('');
+
+  const holdings = [...data.eq, ...data.dvd, ...data.crypto].map(p => ({
+    p, mv: marketValueUSD(p), upl: uplUSD(p), ret: returnPct(p), px: getPrice(p)
+  })).sort((a,b) => (b.mv || -Infinity) - (a.mv || -Infinity));
+  document.getElementById('holdings-count').textContent = `${holdings.length} positions`;
+  document.getElementById('top-holdings').innerHTML = `
+    <thead><tr><th class="l">Symbol</th><th class="l">Name</th><th>Sector</th><th>Shares</th><th>Avg Cost</th><th>Price</th><th>Market Value</th><th>UPL</th><th>Return</th><th>Weight</th></tr></thead>
+    <tbody>${holdings.map(r => {
+      const p = r.p;
+      return `<tr>
+        <td class="l"><span class="symbol">${p.symbol}</span></td>
+        <td class="l"><span class="name">${p.name}</span></td>
+        <td><span class="pill">${p.sector || 'Crypto'}</span></td>
+        <td class="num">${fmtShares(p.shares)}</td>
+        <td class="num">${fmtNum(p.avgCost, p.avgCost<1?6:2)} ${p.currency}</td>
+        <td class="num price">${r.px.price !== null ? fmtNum(r.px.price, r.px.price<1?6:2) + ' ' + r.px.currency : '<span class="dash">—</span>'} ${sourceTag(r.px.source, r.px.ts)}</td>
+        <td class="num">${r.mv !== null ? fmtMoney(r.mv) : '<span class="dash">—</span>'}</td>
+        <td class="num ${cls(r.upl)}">${r.upl !== null ? fmtMoney(r.upl) : '<span class="dash">—</span>'}</td>
+        <td class="num ${cls(r.ret)}">${r.ret !== null ? fmtPct(r.ret) : '<span class="dash">—</span>'}</td>
+        <td class="num">${r.mv !== null && totalMv>0 ? ((r.mv/totalMv)*100).toFixed(2)+'%' : '—'}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+function drawPie3D(sectorList, total, palette) {
+  const container = document.getElementById('pie3d');
+  if (!container) return;
+  const DISK_SIZE = 340;          // pie disk diameter (matches CSS)
+  const LAYERS = 16; const LAYER_OFFSET = 3.5;
+  const segs = sectorList.map(([n,v], i) => ({ name: n, value: v, color: palette[i % palette.length] }));
+  let html = '';
+
+  // Stacked conic-gradient layers (depth)
+  for (let li = LAYERS - 1; li >= 0; li--) {
+    const z = -li * LAYER_OFFSET; const isTop = li === 0;
+    let cg = 'conic-gradient(from 0deg'; let acc = 0;
+    for (const s of segs) {
+      const frac = s.value / total;
+      const start = acc * 360; const end = (acc + frac) * 360;
+      const col = isTop ? s.color : shadeColor(s.color, -28);
+      cg += `, ${col} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
+      acc += frac;
+    }
+    cg += ')';
+    html += `<div style="position:absolute; left:50%; top:50%; transform: translate(-50%,-50%) translateZ(${z}px); width:${DISK_SIZE}px; height:${DISK_SIZE}px; border-radius:50%; background:${cg}; ${isTop ? 'box-shadow: 0 0 28px rgba(0,0,0,0.4) inset, 0 0 14px rgba(212,165,116,0.15);' : ''}"></div>`;
+  }
+
+  // Overlay SVG with % labels — adaptive placement per slice size.
+  // For each slice we compute a position that stays inside, using:
+  //   - chord length at the label radius vs ~40px text width budget
+  //   - smaller slices get pulled toward the slice midline and closer to outer edge
+  const r = DISK_SIZE / 2;  // 170
+  const labelsSvg = [];
+  let acc = 0;
+  for (const s of segs) {
+    const frac = s.value / total;
+    const pct = frac * 100;
+    const midAngle = (acc + frac/2) * 2 * Math.PI;
+    acc += frac;
+
+    // Don't label very small slices (would be cramped/illegible)
+    if (pct < 3) continue;
+
+    // For slices ≥10%: place at 55% radius (comfortable center)
+    // For slices 3-10%: place at 70% radius (further out where slice is wider)
+    // Font scales down for smaller slices
+    let labelR, fontSize;
+    if (pct >= 15) { labelR = r * 0.50; fontSize = 17; }
+    else if (pct >= 8) { labelR = r * 0.58; fontSize = 14; }
+    else if (pct >= 5) { labelR = r * 0.68; fontSize = 12; }
+    else { labelR = r * 0.76; fontSize = 11; }
+
+    // Sanity check: at labelR, the chord/arc length must be > ~text width
+    // Arc length at radius labelR for this slice = labelR * frac * 2π
+    const arcLen = labelR * frac * 2 * Math.PI;
+    const textWidth = String(pct.toFixed(pct >= 10 ? 0 : 1)).length * fontSize * 0.7 + 8;  // approx "12%" width
+    // If text would not fit, push further out and shrink
+    let attempts = 0;
+    while (arcLen < textWidth && attempts < 3) {
+      labelR = Math.min(r * 0.82, labelR * 1.1);
+      fontSize = Math.max(9, fontSize - 1);
+      attempts++;
+    }
+
+    const x = labelR * Math.sin(midAngle);
+    const y = -labelR * Math.cos(midAngle);
+    const txt = pct >= 10 ? `${pct.toFixed(0)}%` : `${pct.toFixed(1)}%`;
+    labelsSvg.push(`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="#0a0d12" font-family="JetBrains Mono, monospace" font-weight="700" font-size="${fontSize}" text-anchor="middle" dominant-baseline="middle" stroke="rgba(255,255,255,0.5)" stroke-width="0.6" paint-order="stroke">${txt}</text>`);
+  }
+
+  const svgViewBox = `${-r} ${-r} ${DISK_SIZE} ${DISK_SIZE}`;
+  html += `<div style="position:absolute; left:0; top:0; width:100%; height:100%; transform-style:preserve-3d; pointer-events:none;">
+    <svg style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:${DISK_SIZE}px; height:${DISK_SIZE}px;" viewBox="${svgViewBox}">${labelsSvg.join('')}</svg>
+  </div>`;
+
+  container.innerHTML = html;
+}
+function shadeColor(hex, percent) {
+  let r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+  r = Math.max(0, Math.min(255, r + (r*percent/100)));
+  g = Math.max(0, Math.min(255, g + (g*percent/100)));
+  b = Math.max(0, Math.min(255, b + (b*percent/100)));
+  return '#' + [r,g,b].map(x => Math.round(x).toString(16).padStart(2,'0')).join('');
+}
+
+/* ----- EQUITY PORTFOLIO DONUT (Asset Class Breakdown) ----- */
+// Maps each EQ position to one of four asset classes
+const EQ_BUCKETS = {
+  'VUAA': 'US Large Cap',
+  'QDVE': 'Technology',
+  'NVDA': 'Technology',
+  'EIMI': 'Emerging Markets',
+  'WSML': 'Global Small Cap'
+};
+
+function drawEqDonut(palette) {
+  const ctx = document.getElementById('eq-donut');
+  if (!ctx) return;
+  if (chartInstances.eqDonut) chartInstances.eqDonut.destroy();
+
+  // Aggregate EQ holdings into the 4 buckets
+  // (NVDA is in data.eq even though it's a single tech stock; QDVE is the tech ETF)
+  const buckets = {};
+  let total = 0;
+  for (const p of data.eq) {
+    const bucketName = EQ_BUCKETS[p.symbol] || p.sector || 'Other';
+    const mv = marketValueUSD(p);
+    if (mv === null || isNaN(mv)) continue;
+    buckets[bucketName] = (buckets[bucketName] || 0) + mv;
+    total += mv;
+  }
+  // Ordered consistently
+  const order = ['US Large Cap', 'Technology', 'Emerging Markets', 'Global Small Cap', 'Other'];
+  const entries = order.filter(k => buckets[k] !== undefined).map(k => [k, buckets[k]]);
+  // Also include any unexpected buckets
+  for (const k in buckets) if (!order.includes(k)) entries.push([k, buckets[k]]);
+
+  if (entries.length === 0 || total === 0) {
+    ctx.parentElement.innerHTML = '<div style="color: var(--text-faint); padding: 40px; text-align: center;">No equity holdings to display</div>';
+    document.getElementById('eq-donut-legend').innerHTML = '';
+    return;
+  }
+
+  // Distinct color picks from the palette
+  const bucketColors = {
+    'US Large Cap': '#3b82f6',         // blue
+    'Technology': '#d4a574',           // gold
+    'Emerging Markets': '#22c55e',     // green
+    'Global Small Cap': '#a855f7',     // purple
+    'Other': '#8b94a5'                 // gray
+  };
+  const colors = entries.map(([k]) => bucketColors[k] || palette[order.indexOf(k) % palette.length] || '#8b94a5');
+
+  chartInstances.eqDonut = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: entries.map(([k]) => k),
+      datasets: [{
+        data: entries.map(([_, v]) => v),
+        backgroundColor: colors,
+        borderColor: '#0a0d12',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#11151c',
+          borderColor: '#d4a574',
+          borderWidth: 1,
+          titleColor: '#e8ecf1',
+          bodyColor: '#d4a574',
+          padding: 12,
+          callbacks: {
+            label: (c) => {
+              const v = c.parsed;
+              const pct = (v / total * 100).toFixed(1);
+              return `${c.label}: $${v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Legend
+  document.getElementById('eq-donut-legend').innerHTML = entries.map(([k, v], i) => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${colors[i]}"></span>
+      <span class="legend-name">${k}<span class="pct">${((v/total)*100).toFixed(1)}%</span></span>
+      <span class="legend-val">${fmtMoney(v)}</span>
+    </div>`).join('') + `
+    <div class="legend-item" style="border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px; font-weight: 600;">
+      <span class="legend-dot" style="background: transparent"></span>
+      <span class="legend-name" style="color: var(--text);">Total Equity Portfolio</span>
+      <span class="legend-val" style="color: var(--gold);">${fmtMoney(total)}</span>
+    </div>`;
+}
+
+/* ----- DIVIDENDS ----- */
+function renderDividends() {
+  const received = data.dividendsReceived || {};
+  const monthTotals = {};
+  let grandTotal = 0;
+  for (const ym in received) {
+    let m = 0;
+    for (const sym in received[ym]) m += received[ym][sym];
+    monthTotals[ym] = m;
+    grandTotal += m;
+  }
+  const today = new Date(); const curYear = today.getFullYear();
+  let ytdTotal = 0;
+  for (const ym in monthTotals) { const [y] = ym.split('-').map(Number); if (y === curYear) ytdTotal += monthTotals[ym]; }
+  const annualProjected = data.dvd.reduce((s,p) => s + (p.dvdPerShare||0)*p.shares, 0);
+  const dvdMv = data.dvd.reduce((s,p) => { const mv = marketValueUSD(p); return s + (mv||0); }, 0);
+  const dvdCb = data.dvd.reduce((s,p) => s + costBasisUSD(p), 0);
+  const portfolioYield = dvdMv === 0 ? 0 : annualProjected/dvdMv;
+  const yieldOnCost = dvdCb === 0 ? 0 : annualProjected/dvdCb;
+  document.getElementById('dvd-kpi').innerHTML = [
+    { label: 'Annual Projected', value: fmtMoney(annualProjected), sub: fmtMoney(annualProjected/12)+' / month' },
+    { label: 'YTD Received (Net)', value: fmtMoney(ytdTotal), sub: fmtMoney(grandTotal)+' all-time' },
+    { label: 'Portfolio Yield', value: fmtPct(portfolioYield), sub: 'on market value' },
+    { label: 'Yield on Cost', value: fmtPct(yieldOnCost), sub: 'on cost basis', subCls: yieldOnCost>=portfolioYield?'green':'' }
+  ].map(k => `<div class="kpi"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="sub-value ${k.subCls||''}">${k.sub}</div></div>`).join('');
+
+  // Fill all months from earliest data through current month (so future months auto-appear when added)
+  const allMonthKeys = [];
+  const dataKeys = Object.keys(received).filter(k => received[k] && Object.keys(received[k]).length > 0);
+  // Also include explicitly-defined empty months (like 2026-06)
+  const allDefinedKeys = Object.keys(received);
+  const allKeys = [...new Set([...dataKeys, ...allDefinedKeys])];
+  if (allKeys.length > 0) {
+    const sortedKeys = allKeys.sort();
+    const earliest = sortedKeys[0]; // e.g. "2025-08"
+    const latestExplicit = sortedKeys[sortedKeys.length - 1];
+    // Extend through current month, but also include any later explicit months
+    const [ey, em] = earliest.split('-').map(Number);
+    let cyEnd = today.getFullYear(); let cmEnd = today.getMonth() + 1;
+    const [ly, lm] = latestExplicit.split('-').map(Number);
+    if (ly > cyEnd || (ly === cyEnd && lm > cmEnd)) { cyEnd = ly; cmEnd = lm; }
+    let cy = ey, cm = em;
+    while (cy < cyEnd || (cy === cyEnd && cm <= cmEnd)) {
+      allMonthKeys.push(`${cy}-${String(cm).padStart(2,'0')}`);
+      cm++;
+      if (cm > 12) { cm = 1; cy++; }
+    }
+  }
+  // Build a complete monthTotals including zero-valued months
+  const fullMonthTotals = {};
+  for (const k of allMonthKeys) fullMonthTotals[k] = monthTotals[k] || 0;
+
+  drawMonthlyDvdChart(fullMonthTotals);
+  drawYearlyDvdChart(monthTotals);
+  renderEditableDvdGrid(received);
+  renderDripTable();
+
+  const perSym = {};
+  for (const ym in received) for (const sym in received[ym]) perSym[sym] = (perSym[sym]||0) + received[ym][sym];
+  const top = Object.entries(perSym).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('dvd-top').innerHTML = `
+    <thead><tr><th class="l">Symbol</th><th>Total Received (Net)</th><th>% of Total</th></tr></thead>
+    <tbody>${top.map(([s,v]) => `<tr><td class="l"><span class="symbol">${s}</span></td><td class="num">${fmtMoney(v)}</td><td class="num">${grandTotal>0?((v/grandTotal)*100).toFixed(1)+'%':'—'}</td></tr>`).join('')}
+    <tr class="total"><td class="l">Total</td><td class="num">${fmtMoney(grandTotal)}</td><td class="num">100%</td></tr></tbody>`;
+
+  document.getElementById('dvd-positions').innerHTML = `
+    <thead><tr><th class="l">Symbol</th><th>Yield</th><th>YoC</th><th>Annual</th></tr></thead>
+    <tbody>${data.dvd.map(p => {
+      const px = getPrice(p);
+      const annual = (p.dvdPerShare||0)*p.shares;
+      const y = (px.price && px.price > 0) ? (p.dvdPerShare||0)/px.price : null;
+      const yoc = (p.avgCost > 0) ? (p.dvdPerShare||0)/p.avgCost : null;
+      return `<tr><td class="l"><span class="symbol">${p.symbol}</span></td><td class="num">${fmtPct(y)}</td><td class="num ${y!==null && yoc>=y?'pos':''}">${fmtPct(yoc)}</td><td class="num">${fmtMoney(annual)}</td></tr>`;
+    }).join('')}
+    <tr class="total"><td class="l">Total</td><td></td><td></td><td class="num">${fmtMoney(annualProjected)}</td></tr></tbody>`;
+}
+
+function renderDripTable() {
+  const drips = data.dripHistory || {};
+  // For each DRIP-eligible stock, compute lifetime DRIP shares, cost, current value
+  const rows = [];
+  let totalDripShares = 0, totalDripCost = 0, totalDripValue = 0;
+  for (const pos of data.dvd) {
+    const sym = pos.symbol;
+    const history = drips[sym] || [];
+    if (history.length === 0) continue;
+    const px = getPrice(pos);
+    const sharesAccum = history.reduce((s,d) => s + d.shares, 0);
+    const costAccum = history.reduce((s,d) => s + d.cost, 0);
+    const avgPrice = sharesAccum > 0 ? costAccum / sharesAccum : 0;
+    const currentValue = px.price !== null ? sharesAccum * px.price : null;
+    const gain = currentValue !== null ? currentValue - costAccum : null;
+    const pctPosition = pos.shares > 0 ? sharesAccum / pos.shares : 0;
+    totalDripShares += sharesAccum;
+    totalDripCost += costAccum;
+    if (currentValue !== null) totalDripValue += currentValue;
+    rows.push({ sym, history, sharesAccum, costAccum, avgPrice, currentValue, gain, pctPosition, count: history.length });
+  }
+  rows.sort((a,b) => b.costAccum - a.costAccum);
+
+  const totalGain = totalDripValue > 0 ? totalDripValue - totalDripCost : null;
+  document.getElementById('drip-table').innerHTML = `
+    <thead><tr>
+      <th class="l">Symbol</th>
+      <th>Reinvests</th>
+      <th>DRIP Shares</th>
+      <th>Avg Reinvest Price</th>
+      <th>Total Reinvested</th>
+      <th>Current Value</th>
+      <th>Gain</th>
+      <th>% of Position</th>
+    </tr></thead>
+    <tbody>${rows.map(r => `
+      <tr>
+        <td class="l"><span class="symbol">${r.sym}</span></td>
+        <td class="num">${r.count}</td>
+        <td class="num">${fmtShares(r.sharesAccum)}</td>
+        <td class="num">${fmtMoney(r.avgPrice)}</td>
+        <td class="num">${fmtMoney(r.costAccum)}</td>
+        <td class="num">${r.currentValue !== null ? fmtMoney(r.currentValue) : '<span class="dash">—</span>'}</td>
+        <td class="num ${cls(r.gain)}">${r.gain !== null ? fmtMoney(r.gain) : '<span class="dash">—</span>'}</td>
+        <td class="num">${(r.pctPosition*100).toFixed(2)}%</td>
+      </tr>`).join('')}
+    <tr class="total">
+      <td class="l">Total</td>
+      <td class="num">${rows.reduce((s,r)=>s+r.count,0)}</td>
+      <td class="num">${fmtShares(totalDripShares)}</td>
+      <td class="num">—</td>
+      <td class="num">${fmtMoney(totalDripCost)}</td>
+      <td class="num">${totalDripValue > 0 ? fmtMoney(totalDripValue) : '<span class="dash">—</span>'}</td>
+      <td class="num ${cls(totalGain)}">${totalGain !== null ? fmtMoney(totalGain) : '<span class="dash">—</span>'}</td>
+      <td class="num"></td>
+    </tr></tbody>`;
+}
+
+function renderEditableDvdGrid(received) {
+  const allSymbols = new Set(); const allYears = new Set();
+  for (const ym in received) { allYears.add(ym.split('-')[0]); for (const sym in received[ym]) allSymbols.add(sym); }
+  const years = [...allYears].sort();
+  const symbols = [...allSymbols].sort();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let html = '';
+  for (const year of years) {
+    html += `<div class="h l">${year}</div>` + months.map(m => `<div class="h">${m}</div>`).join('');
+    const yearTotals = months.map(() => 0);
+    for (const sym of symbols) {
+      const hasAny = months.some((_, i) => { const k = `${year}-${String(i+1).padStart(2,'0')}`; return received[k] && received[k][sym] !== undefined; });
+      if (!hasAny) continue;
+      html += `<div class="row-label">${sym}</div>`;
+      for (let m = 1; m <= 12; m++) {
+        const k = `${year}-${String(m).padStart(2,'0')}`;
+        const v = received[k]?.[sym];
+        const valStr = v !== undefined && v !== null ? v : '';
+        if (v) yearTotals[m-1] += v;
+        html += `<div class="cell"><input type="number" step="any" value="${valStr}" placeholder="—" class="${v ? 'has-val' : ''}" data-y="${year}" data-m="${m}" data-sym="${sym}" onchange="updateDvdCell(this)"></div>`;
+      }
+    }
+    html += `<div class="row-label total">${year} Total</div>`;
+    for (let m = 0; m < 12; m++) {
+      html += `<div class="cell summary"><div class="summary-val">${yearTotals[m] > 0 ? yearTotals[m].toFixed(2) : '—'}</div></div>`;
+    }
+  }
+  document.getElementById('dvd-edit-grid').innerHTML = html;
+}
+function updateDvdCell(input) {
+  const year = input.dataset.y; const month = input.dataset.m.padStart(2,'0'); const sym = input.dataset.sym;
+  const ym = `${year}-${month}`; const val = input.value.trim();
+  if (!data.dividendsReceived[ym]) data.dividendsReceived[ym] = {};
+  if (val === '' || val === '0' || isNaN(parseFloat(val))) {
+    delete data.dividendsReceived[ym][sym];
+    if (Object.keys(data.dividendsReceived[ym]).length === 0) delete data.dividendsReceived[ym];
+  } else data.dividendsReceived[ym][sym] = parseFloat(val);
+  saveData(); renderDividends();
+}
+function addDvdRow() {
+  const year = document.getElementById('dvd-add-year').value;
+  const sym = document.getElementById('dvd-add-symbol').value.trim().toUpperCase();
+  if (!sym) return;
+  const ym = `${year}-01`;
+  if (!data.dividendsReceived[ym]) data.dividendsReceived[ym] = {};
+  if (data.dividendsReceived[ym][sym] === undefined) data.dividendsReceived[ym][sym] = 0;
+  document.getElementById('dvd-add-symbol').value = '';
+  saveData(); renderDividends();
+}
+function drawMonthlyDvdChart(monthTotals) {
+  const ctx = document.getElementById('dvd-monthly-chart');
+  if (!ctx) return;
+  if (chartInstances.dvd) chartInstances.dvd.destroy();
+  const sortedKeys = Object.keys(monthTotals).sort();
+  if (!sortedKeys.length) return;
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const labels = sortedKeys.map(k => { const [y,m] = k.split('-'); return monthNames[parseInt(m)-1] + " '" + y.slice(2); });
+  const values = sortedKeys.map(k => monthTotals[k]);
+  const currentYear = String(new Date().getFullYear());
+
+  // Sophisticated palette: muted gold for current year, deep teal for prior years
+  // Each bar gets a vertical gradient to give depth
+  const c2d = ctx.getContext('2d');
+  const h = ctx.height || 380;
+  const goldGrad = c2d.createLinearGradient(0, 0, 0, h);
+  goldGrad.addColorStop(0, 'rgba(212, 165, 116, 0.95)');   // gold top
+  goldGrad.addColorStop(1, 'rgba(184, 134, 92, 0.55)');    // darker gold bottom
+  const tealGrad = c2d.createLinearGradient(0, 0, 0, h);
+  tealGrad.addColorStop(0, 'rgba(56, 142, 142, 0.90)');    // deep teal top
+  tealGrad.addColorStop(1, 'rgba(38, 100, 100, 0.45)');    // dark teal bottom
+
+  const bgColors = sortedKeys.map(k => k.startsWith(currentYear) ? goldGrad : tealGrad);
+  const borderColors = sortedKeys.map(k => k.startsWith(currentYear) ? '#d4a574' : '#4a9999');
+
+  chartInstances.dvd = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{
+      label: 'Dividends Received (Net USD)',
+      data: values,
+      backgroundColor: bgColors,
+      borderColor: borderColors,
+      borderWidth: 1.5,
+      borderRadius: 4,
+      borderSkipped: false
+    }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#11151c',
+          borderColor: '#d4a574',
+          borderWidth: 1,
+          titleColor: '#e8ecf1',
+          bodyColor: '#d4a574',
+          padding: 12,
+          titleFont: { family: 'JetBrains Mono', size: 11 },
+          bodyFont: { family: 'JetBrains Mono', size: 12, weight: 600 },
+          callbacks: { label: c => '$' + c.parsed.y.toFixed(2) }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 } }, grid: { display: false } },
+        y: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 }, callback: v => '$' + v }, grid: { color: 'rgba(31, 37, 49, 0.6)' } }
+      }
+    }
+  });
+}
+
+function drawYearlyDvdChart(monthTotals) {
+  const ctx = document.getElementById('dvd-yearly-chart');
+  if (!ctx) return;
+  if (chartInstances.dvdYearly) chartInstances.dvdYearly.destroy();
+  const yearTotals = {};
+  for (const ym in monthTotals) {
+    const y = ym.split('-')[0];
+    yearTotals[y] = (yearTotals[y] || 0) + monthTotals[ym];
+  }
+  const years = Object.keys(yearTotals).sort();
+  if (!years.length) return;
+  const values = years.map(y => yearTotals[y]);
+  const currentYear = String(new Date().getFullYear());
+
+  // Same professional palette, scaled for yearly view:
+  // Past years: muted navy
+  // Current year: gold
+  // Future years: deep teal
+  const c2d = ctx.getContext('2d');
+  const h = ctx.height || 380;
+  const goldGrad = c2d.createLinearGradient(0, 0, 0, h);
+  goldGrad.addColorStop(0, 'rgba(212, 165, 116, 0.95)');
+  goldGrad.addColorStop(1, 'rgba(184, 134, 92, 0.55)');
+  const navyGrad = c2d.createLinearGradient(0, 0, 0, h);
+  navyGrad.addColorStop(0, 'rgba(74, 110, 153, 0.88)');    // muted navy top
+  navyGrad.addColorStop(1, 'rgba(48, 78, 117, 0.45)');     // dark navy bottom
+  const tealGrad = c2d.createLinearGradient(0, 0, 0, h);
+  tealGrad.addColorStop(0, 'rgba(56, 142, 142, 0.88)');
+  tealGrad.addColorStop(1, 'rgba(38, 100, 100, 0.45)');
+
+  const bgColors = years.map(y => {
+    if (y < currentYear) return navyGrad;
+    if (y === currentYear) return goldGrad;
+    return tealGrad;
+  });
+  const borderColors = years.map(y => {
+    if (y < currentYear) return '#6388b8';
+    if (y === currentYear) return '#d4a574';
+    return '#4a9999';
+  });
+
+  chartInstances.dvdYearly = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [{
+        label: 'Yearly Net Dividends (USD)',
+        data: values,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 1.5,
+        borderRadius: 5,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#11151c',
+          borderColor: '#d4a574',
+          borderWidth: 1,
+          titleColor: '#e8ecf1',
+          bodyColor: '#d4a574',
+          padding: 12,
+          titleFont: { family: 'JetBrains Mono', size: 12 },
+          bodyFont: { family: 'JetBrains Mono', size: 13, weight: 600 },
+          callbacks: {
+            label: c => '$' + c.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:12, weight: 500 } },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 }, callback: v => '$' + v },
+          grid: { color: 'rgba(31, 37, 49, 0.6)' }
+        }
+      }
+    }
+  });
+}
+
+/* ----- POSITION KPIs ----- */
+function renderEqKpis(list) {
+  const cost = list.reduce((s,p) => s + costBasisUSD(p), 0);
+  const mvList = list.map(marketValueUSD);
+  const hasMissing = mvList.some(v => v === null);
+  const mv = mvList.reduce((s,v) => s + (v||0), 0);
+  const upl = hasMissing ? null : (mv - cost);
+  const ret = (upl === null || cost === 0) ? null : upl/cost;
+  const enriched = list.map(p => ({ p, mv: marketValueUSD(p), ret: returnPct(p), upl: uplUSD(p) })).filter(r => r.upl !== null);
+  let best = null, worst = null;
+  for (const r of enriched) {
+    if (!best || r.ret > best.ret) best = r;
+    if (!worst || r.ret < worst.ret) worst = r;
+  }
+  const items = [
+    { l: 'Cost Basis', v: fmtMoney(cost), c: '' },
+    { l: 'Market Value', v: fmtMoney(mv) + (hasMissing ? ' *' : ''), c: '' },
+    { l: 'UPL', v: upl !== null ? fmtMoney(upl) : '<span class="dash">—</span>', c: cls(upl) },
+    { l: 'Return %', v: ret !== null ? fmtPct(ret) : '<span class="dash">—</span>', c: cls(ret) },
+    { l: 'Best Performer', v: best ? `${best.p.symbol} ${fmtPct(best.ret).replace(/<[^>]+>/g,'')}` : '—', c: 'pos' },
+    { l: 'Worst Performer', v: worst ? `${worst.p.symbol} ${fmtPct(worst.ret).replace(/<[^>]+>/g,'')}` : '—', c: worst && worst.ret >= 0 ? 'pos' : 'neg' }
+  ];
+  document.getElementById('eq-kpis').innerHTML = items.map(i => `<div class="pk"><span class="l">${i.l}</span><span class="v ${i.c}">${i.v}</span></div>`).join('');
+}
+function renderDvdKpis(list) {
+  const cost = list.reduce((s,p) => s + costBasisUSD(p), 0);
+  const manualCost = list.reduce((s,p) => s + (p.manualCost || costBasisUSD(p)), 0);
+  const mvList = list.map(marketValueUSD);
+  const hasMissing = mvList.some(v => v === null);
+  const mv = mvList.reduce((s,v) => s + (v||0), 0);
+  const upl = hasMissing ? null : (mv - cost);
+  const ret = (upl === null || cost === 0) ? null : upl/cost;
+  const annualIncome = list.reduce((s,p) => s + (p.dvdPerShare||0)*p.shares, 0);
+  const yieldNow = mv === 0 ? 0 : annualIncome / mv;
+  const yoc = manualCost === 0 ? 0 : annualIncome / manualCost; // YoC on real money invested
+  // Total DRIP value
+  let dripShares = 0, dripCost = 0;
+  for (const sym in data.dripHistory) {
+    for (const d of data.dripHistory[sym]) { dripShares += d.shares; dripCost += d.cost; }
+  }
+  // Drip ratio = drip cost / total annual income (% of annual that came from compounding so far)
+  const items = [
+    { l: 'Cost Basis (Manual)', v: fmtMoney(manualCost), c: '' },
+    { l: 'Market Value', v: fmtMoney(mv) + (hasMissing ? ' *' : ''), c: '' },
+    { l: 'UPL', v: upl !== null ? fmtMoney(upl) : '<span class="dash">—</span>', c: cls(upl) },
+    { l: 'Return %', v: ret !== null ? fmtPct(ret) : '<span class="dash">—</span>', c: cls(ret) },
+    { l: 'Annual Income', v: fmtMoney(annualIncome), c: 'pos' },
+    { l: 'Yield', v: fmtPct(yieldNow), c: '' },
+    { l: 'YoC', v: fmtPct(yoc), c: 'pos' },
+    { l: 'DRIP Reinvested', v: fmtMoney(dripCost), c: 'pos' }
+  ];
+  document.getElementById('dvd-kpis-bar').innerHTML = items.map(i => `<div class="pk"><span class="l">${i.l}</span><span class="v ${i.c}">${i.v}</span></div>`).join('');
+}
+function renderCryptoKpis(list) {
+  const cost = list.reduce((s,p) => s + costBasisUSD(p), 0);
+  const mvList = list.map(marketValueUSD);
+  const hasMissing = mvList.some(v => v === null);
+  const mv = mvList.reduce((s,v) => s + (v||0), 0);
+  const upl = hasMissing ? null : (mv - cost);
+  const ret = (upl === null || cost === 0) ? null : upl/cost;
+  const items = [
+    { l: 'Cost Basis', v: fmtMoney(cost), c: '' },
+    { l: 'Market Value', v: fmtMoney(mv) + (hasMissing ? ' *' : ''), c: '' },
+    { l: 'UPL', v: upl !== null ? fmtMoney(upl) : '<span class="dash">—</span>', c: cls(upl) },
+    { l: 'Return %', v: ret !== null ? fmtPct(ret) : '<span class="dash">—</span>', c: cls(ret) },
+    { l: 'Positions', v: list.length, c: '' }
+  ];
+  document.getElementById('cr-kpis').innerHTML = items.map(i => `<div class="pk"><span class="l">${i.l}</span><span class="v ${i.c}">${i.v}</span></div>`).join('');
+}
+
+function positionTable(list, listName, includeDvdCols = false) {
+  let header = '<thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Price (editable)</th><th>Src</th><th>Curr</th><th>Cost (USD)</th><th>Market (USD)</th><th>UPL</th><th>Return</th>';
+  if (includeDvdCols) header += '<th>Div/Sh</th><th>Annual Inc</th><th>Yield</th><th>YoC</th>';
+  header += '</tr></thead>';
+  let rows = list.map((p, idx) => {
+    const px = getPrice(p);
+    const cost = costBasisUSD(p);
+    const mv = marketValueUSD(p);
+    const upl = mv === null ? null : (mv - cost);
+    const ret = (upl === null || cost === 0) ? null : upl / cost;
+    const y = (px.price && px.price > 0 && p.dvdPerShare) ? p.dvdPerShare / px.price : null;
+    // YoC on manual cost (true performance)
+    const manualAvg = p.manualCost && p.manualShares ? p.manualCost / p.manualShares : p.avgCost;
+    const yoc = (p.dvdPerShare && manualAvg) ? p.dvdPerShare / manualAvg : null;
+    const annualInc = (p.dvdPerShare || 0) * p.shares;
+    const k = priceKey(p);
+    const priceCls = px.source === 'manual' ? 'override' : (['finnhub','twelve','stooq','yahoo','coingecko'].includes(px.source) ? 'live' : 'empty');
+    const priceVal = px.price !== null ? px.price : '';
+    // DRIP indicator for dividend stocks
+    let sharesCell = `<input class="edit" type="number" step="any" value="${p.shares}" onchange="updateField('${listName}', ${idx}, 'shares', this.value)">`;
+    if (includeDvdCols && data.dripHistory && data.dripHistory[p.symbol]) {
+      const dripShares = data.dripHistory[p.symbol].reduce((s,d) => s + d.shares, 0);
+      if (dripShares > 0) {
+        sharesCell += `<span class="drip-info">+${dripShares.toFixed(4)} DRIP</span>`;
+      }
+    }
+    // Live-price hint to show when a manual override is active but a live price exists
+    let priceCell = `<input class="edit ${priceCls}" type="number" step="any" value="${priceVal}" placeholder="type price" onchange="setManualPrice('${k}', this.value)">`;
+    if (px.source === 'manual' && px.livePrice !== null && px.livePrice !== undefined) {
+      const liveSrcShort = (px.liveSource || 'live').slice(0, 2).toUpperCase();
+      priceCell += `<span class="drip-info" title="A live price is available — clear the manual override to use it">live ${px.liveSource ? liveSrcShort + ': ' : ''}${fmtNum(px.livePrice, px.livePrice<1?6:2)}</span>`;
+    }
+    let row = `<tr>
+      <td class="l"><span class="pill">${p.broker||'—'}</span></td>
+      <td class="l"><span class="symbol">${p.symbol}</span></td>
+      <td class="l"><span class="name">${p.name}</span></td>
+      <td class="num">${sharesCell}</td>
+      <td class="num"><input class="edit" type="number" step="any" value="${p.avgCost}" onchange="updateField('${listName}', ${idx}, 'avgCost', this.value)"></td>
+      <td class="num">${priceCell}</td>
+      <td>${sourceTag(px.source, px.ts)}</td>
+      <td><span class="pill">${px.currency || p.currency}</span></td>
+      <td class="num">${fmtMoney(cost)}</td>
+      <td class="num">${mv !== null ? fmtMoney(mv) : '<span class="dash">—</span>'}</td>
+      <td class="num ${cls(upl)}">${upl !== null ? fmtMoney(upl) : '<span class="dash">—</span>'}</td>
+      <td class="num ${cls(ret)}">${ret !== null ? fmtPct(ret) : '<span class="dash">—</span>'}</td>`;
+    if (includeDvdCols) row += `
+      <td class="num"><input class="edit" type="number" step="any" value="${p.dvdPerShare||0}" onchange="updateField('${listName}', ${idx}, 'dvdPerShare', this.value)"></td>
+      <td class="num pos">${fmtMoney(annualInc)}</td>
+      <td class="num">${fmtPct(y)}</td>
+      <td class="num ${y!==null && yoc>=y?'pos':''}">${fmtPct(yoc)}</td>`;
+    row += '</tr>';
+    return row;
+  }).join('');
+  const totCost = list.reduce((s,p) => s + costBasisUSD(p), 0);
+  const mvList = list.map(marketValueUSD);
+  const hasMissing = mvList.some(v => v === null);
+  const totMv = mvList.reduce((s,v) => s + (v||0), 0);
+  const totUpl = hasMissing ? null : totMv - totCost;
+  const totRet = (totUpl === null || totCost === 0) ? null : totUpl/totCost;
+  const totIncome = list.reduce((s,p) => s + (p.dvdPerShare||0)*p.shares, 0);
+  rows += `<tr class="total">
+    <td class="l" colspan="8">Total${hasMissing ? ' (partial)' : ''}</td>
+    <td class="num">${fmtMoney(totCost)}</td>
+    <td class="num">${fmtMoney(totMv)}</td>
+    <td class="num ${cls(totUpl)}">${totUpl !== null ? fmtMoney(totUpl) : '—'}</td>
+    <td class="num ${cls(totRet)}">${totRet !== null ? fmtPct(totRet) : '—'}</td>
+    ${includeDvdCols ? `<td></td><td class="num pos">${fmtMoney(totIncome)}</td><td></td><td></td>` : ''}
+  </tr>`;
+  return header + '<tbody>' + rows + '</tbody>';
+}
+function renderPositions() {
+  document.getElementById('eq-count').textContent = data.eq.length + ' positions';
+  document.getElementById('dvd-count').textContent = data.dvd.length + ' positions';
+  document.getElementById('cr-count').textContent = data.crypto.length + ' positions';
+  renderEqKpis(data.eq);
+  renderDvdKpis(data.dvd);
+  renderCryptoKpis(data.crypto);
+  document.getElementById('eq-table').innerHTML = positionTable(data.eq, 'eq');
+  document.getElementById('dvd-table').innerHTML = positionTable(data.dvd, 'dvd', true);
+  document.getElementById('cr-table').innerHTML = positionTable(data.crypto, 'crypto');
+  const totalClosed = data.closed.reduce((s,t)=>s+t.pnl,0);
+  document.getElementById('closed-table').innerHTML = `
+    <thead><tr><th class="l">Security</th><th class="l">Country</th><th>Net P&L (USD)</th></tr></thead>
+    <tbody>${data.closed.map(t=>`<tr><td class="l">${t.name}</td><td class="l"><span class="pill">${t.country}</span></td><td class="num ${cls(t.pnl)}">${fmtMoney(t.pnl)}</td></tr>`).join('')}
+    <tr class="total"><td class="l" colspan="2">Total</td><td class="num ${cls(totalClosed)}">${fmtMoney(totalClosed)}</td></tr></tbody>`;
+}
+function updateField(list, idx, field, val) { data[list][idx][field] = parseFloat(val) || 0; saveData(); render(); }
+function setManualPrice(key, val) {
+  if (val === '' || val === null || isNaN(parseFloat(val))) delete manualPrices[key];
+  else manualPrices[key] = parseFloat(val);
+  saveManual(); render();
+}
+
+/* ===================== ADD BUY FORM ===================== */
+function toggleAddTradeForm(listName) {
+  const container = document.getElementById(`${listName}-add-form-container`);
+  if (!container) return;
+  if (container.innerHTML.trim()) {
+    container.innerHTML = '';
+    return;
+  }
+  const list = data[listName];
+  // Build symbol dropdown from current positions
+  const options = list.map((p, i) => `<option value="${i}">${p.symbol} — ${p.name}</option>`).join('');
+  container.innerHTML = `
+    <div class="add-trade-form">
+      <div class="field">
+        <label>Position</label>
+        <select id="${listName}-add-idx">${options}</select>
+      </div>
+      <div class="field">
+        <label>Quantity</label>
+        <input type="number" step="any" id="${listName}-add-qty" placeholder="e.g. 2.0">
+      </div>
+      <div class="field">
+        <label>Price per Share</label>
+        <input type="number" step="any" id="${listName}-add-price" placeholder="e.g. 297.6986">
+      </div>
+      <div class="field">
+        <label>Trade Type</label>
+        <select id="${listName}-add-type">
+          <option value="manual">Manual Buy</option>
+          ${listName === 'dvd' ? '<option value="drip">DRIP (auto-reinvest)</option>' : ''}
+        </select>
+      </div>
+      <button class="save" onclick="submitAddTrade('${listName}')">Add</button>
+      <button class="cancel" onclick="toggleAddTradeForm('${listName}')">Cancel</button>
+      <div class="add-trade-preview" id="${listName}-add-preview">
+        Fill in quantity and price to preview the impact on shares and avg cost.
+      </div>
+    </div>
+  `;
+  // Live preview
+  const update = () => updateAddTradePreview(listName);
+  document.getElementById(`${listName}-add-idx`).addEventListener('change', update);
+  document.getElementById(`${listName}-add-qty`).addEventListener('input', update);
+  document.getElementById(`${listName}-add-price`).addEventListener('input', update);
+  document.getElementById(`${listName}-add-type`)?.addEventListener('change', update);
+  update();
+}
+
+function updateAddTradePreview(listName) {
+  const list = data[listName];
+  const idx = parseInt(document.getElementById(`${listName}-add-idx`).value);
+  const qty = parseFloat(document.getElementById(`${listName}-add-qty`).value);
+  const price = parseFloat(document.getElementById(`${listName}-add-price`).value);
+  const type = document.getElementById(`${listName}-add-type`)?.value || 'manual';
+  const preview = document.getElementById(`${listName}-add-preview`);
+  if (isNaN(qty) || isNaN(price) || qty <= 0 || price <= 0) {
+    preview.innerHTML = 'Fill in quantity and price to preview the impact on shares and avg cost.';
+    return;
+  }
+  const pos = list[idx];
+  const addCost = qty * price;
+  const newShares = pos.shares + qty;
+  const oldTotalCost = pos.shares * pos.avgCost;
+  const newTotalCost = oldTotalCost + addCost;
+  const newAvg = newTotalCost / newShares;
+  let extra = '';
+  if (listName === 'dvd') {
+    const manualSh = pos.manualShares || 0;
+    const manualCost = pos.manualCost || 0;
+    if (type === 'manual') {
+      const newManualSh = manualSh + qty;
+      const newManualCost = manualCost + addCost;
+      const newManualAvg = newManualCost / newManualSh;
+      extra = ` · Manual cost: <strong>${fmtMoney(manualCost)} → ${fmtMoney(newManualCost)}</strong> (avg ${fmtMoney(newManualAvg)})`;
+    } else {
+      extra = ` · DRIP transaction (no cash out) · Manual cost unchanged at <strong>${fmtMoney(manualCost)}</strong>`;
+    }
+  }
+  preview.innerHTML = `
+    Adding <strong>${qty} sh @ ${fmtMoney(price, pos.currency==='EUR'?'€':'$')}</strong> = ${fmtMoney(addCost, pos.currency==='EUR'?'€':'$')} ·
+    Shares: <strong>${fmtShares(pos.shares)} → ${fmtShares(newShares)}</strong> ·
+    Avg Cost: <strong>${fmtNum(pos.avgCost, 4)} → ${fmtNum(newAvg, 4)}</strong>${extra}
+  `;
+}
+
+function submitAddTrade(listName) {
+  const list = data[listName];
+  const idx = parseInt(document.getElementById(`${listName}-add-idx`).value);
+  const qty = parseFloat(document.getElementById(`${listName}-add-qty`).value);
+  const price = parseFloat(document.getElementById(`${listName}-add-price`).value);
+  const type = document.getElementById(`${listName}-add-type`)?.value || 'manual';
+  if (isNaN(qty) || isNaN(price) || qty <= 0 || price <= 0) {
+    alert('Enter a valid quantity and price.');
+    return;
+  }
+  const pos = list[idx];
+  const addCost = qty * price;
+  const oldTotalCost = pos.shares * pos.avgCost;
+  const newTotalCost = oldTotalCost + addCost;
+  const newShares = pos.shares + qty;
+  pos.shares = newShares;
+  pos.avgCost = newTotalCost / newShares;
+
+  // For dividend portfolio: separately track manual vs DRIP
+  if (listName === 'dvd') {
+    if (type === 'manual') {
+      pos.manualShares = (pos.manualShares || 0) + qty;
+      pos.manualCost = (pos.manualCost || 0) + addCost;
+    } else {
+      // DRIP — record in dripHistory
+      if (!data.dripHistory) data.dripHistory = {};
+      if (!data.dripHistory[pos.symbol]) data.dripHistory[pos.symbol] = [];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      data.dripHistory[pos.symbol].push({ date: todayStr, shares: qty, price: price, cost: addCost });
+    }
+  }
+  saveData();
+  toggleAddTradeForm(listName);  // close form
+  render();
+}
+
+/* ===================== ADD DRIP FORM (Dividends tab) ===================== */
+function toggleAddDripForm() {
+  const container = document.getElementById('drip-add-form-container');
+  if (!container) return;
+  if (container.innerHTML.trim()) {
+    container.innerHTML = '';
+    return;
+  }
+  // Only dividend stocks can have DRIP
+  const options = data.dvd.map((p, i) => `<option value="${i}">${p.symbol} — ${p.name}</option>`).join('');
+  container.innerHTML = `
+    <div class="add-trade-form">
+      <div class="field">
+        <label>Position</label>
+        <select id="drip-add-idx">${options}</select>
+      </div>
+      <div class="field">
+        <label>DRIP Quantity</label>
+        <input type="number" step="any" id="drip-add-qty" placeholder="e.g. 0.0912">
+      </div>
+      <div class="field">
+        <label>Reinvest Price</label>
+        <input type="number" step="any" id="drip-add-price" placeholder="e.g. 304.88">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="drip-add-date" value="${new Date().toISOString().slice(0,10)}">
+      </div>
+      <button class="save" onclick="submitAddDrip()">Add DRIP</button>
+      <button class="cancel" onclick="toggleAddDripForm()">Cancel</button>
+      <div class="add-trade-preview" id="drip-add-preview">
+        Fill in quantity and price to preview the impact on the position.
+      </div>
+    </div>
+  `;
+  const update = () => updateAddDripPreview();
+  document.getElementById('drip-add-idx').addEventListener('change', update);
+  document.getElementById('drip-add-qty').addEventListener('input', update);
+  document.getElementById('drip-add-price').addEventListener('input', update);
+  update();
+}
+
+function updateAddDripPreview() {
+  const idx = parseInt(document.getElementById('drip-add-idx').value);
+  const qty = parseFloat(document.getElementById('drip-add-qty').value);
+  const price = parseFloat(document.getElementById('drip-add-price').value);
+  const preview = document.getElementById('drip-add-preview');
+  if (isNaN(qty) || isNaN(price) || qty <= 0 || price <= 0) {
+    preview.innerHTML = 'Fill in quantity and price to preview the impact on the position.';
+    return;
+  }
+  const pos = data.dvd[idx];
+  const addCost = qty * price;
+  const newShares = pos.shares + qty;
+  const oldTotalCost = pos.shares * pos.avgCost;
+  const newTotalCost = oldTotalCost + addCost;
+  const newAvg = newTotalCost / newShares;
+  // Current DRIP totals for this stock
+  const dripList = data.dripHistory?.[pos.symbol] || [];
+  const currentDripShares = dripList.reduce((s, d) => s + d.shares, 0);
+  const newDripShares = currentDripShares + qty;
+  preview.innerHTML = `
+    Adding <strong>${qty} sh @ ${fmtMoney(price)}</strong> = ${fmtMoney(addCost)} reinvested ·
+    Total shares: <strong>${fmtShares(pos.shares)} → ${fmtShares(newShares)}</strong> ·
+    Avg cost: <strong>${fmtNum(pos.avgCost, 4)} → ${fmtNum(newAvg, 4)}</strong> ·
+    DRIP shares: <strong>${fmtShares(currentDripShares)} → ${fmtShares(newDripShares)}</strong> ·
+    Manual cost unchanged at <strong>${fmtMoney(pos.manualCost || 0)}</strong>
+  `;
+}
+
+function submitAddDrip() {
+  const idx = parseInt(document.getElementById('drip-add-idx').value);
+  const qty = parseFloat(document.getElementById('drip-add-qty').value);
+  const price = parseFloat(document.getElementById('drip-add-price').value);
+  const date = document.getElementById('drip-add-date').value || new Date().toISOString().slice(0,10);
+  if (isNaN(qty) || isNaN(price) || qty <= 0 || price <= 0) {
+    alert('Enter a valid quantity and price.');
+    return;
+  }
+  const pos = data.dvd[idx];
+  const addCost = qty * price;
+  // Update total shares + avg cost
+  const oldTotalCost = pos.shares * pos.avgCost;
+  pos.shares = pos.shares + qty;
+  pos.avgCost = (oldTotalCost + addCost) / pos.shares;
+  // Record DRIP transaction
+  if (!data.dripHistory) data.dripHistory = {};
+  if (!data.dripHistory[pos.symbol]) data.dripHistory[pos.symbol] = [];
+  data.dripHistory[pos.symbol].push({ date: date, shares: qty, price: price, cost: addCost });
+  // Sort by date
+  data.dripHistory[pos.symbol].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  saveData();
+  toggleAddDripForm();
+  render();
+}
+
+function renderProjections() {
+  const cfg = data.projection;
+  const dvdMvUSD = data.dvd.reduce((s,p) => { const mv = marketValueUSD(p); return s + (mv||0); }, 0);
+  const autoStartEUR = dvdMvUSD / data.fx.eurusd;
+  const startBalEUR = (cfg.startingBalanceEUR !== null && cfg.startingBalanceEUR !== undefined && !isNaN(cfg.startingBalanceEUR)) ? cfg.startingBalanceEUR : autoStartEUR;
+  const isAutoStart = cfg.startingBalanceEUR === null || cfg.startingBalanceEUR === undefined;
+  document.getElementById('proj-config').innerHTML = [
+    {key:'startingBalanceEUR', label:`Start Balance (€)${isAutoStart ? ' · auto' : ''}`, val:startBalEUR.toFixed(2), fmt:'num', cls:'starting'},
+    {key:'years', label:'Years', val:cfg.years, fmt:'int'},
+    {key:'annualDeposit', label:'Annual Deposit (€)', val:cfg.annualDeposit, fmt:'num'},
+    {key:'dvdYield', label:'Dividend Yield %', val:(cfg.dvdYield*100).toFixed(2), fmt:'pct'},
+    {key:'dvdGrowth', label:'Div Growth %', val:(cfg.dvdGrowth*100).toFixed(2), fmt:'pct'},
+    {key:'marketGrowth', label:'Price Growth %', val:(cfg.marketGrowth*100).toFixed(2), fmt:'pct'},
+    {key:'taxRate', label:'Dividend Tax %', val:(cfg.taxRate*100).toFixed(2), fmt:'pct'},
+  ].map(c => `<div class="proj-input ${c.cls||''}"><label>${c.label}</label><input type="number" step="any" value="${c.val}" onchange="updateProj('${c.key}','${c.fmt}', this.value)"></div>`).join('');
+
+  let price = 1.0;
+  let shares = startBalEUR / price;
+  let dvdPerShare = cfg.dvdYield * price;
+  const rows = [];
+  let totalNetDvd = 0, totalGrossDvd = 0;
+  for (let n = 1; n <= cfg.years; n++) {
+    const startBalance = shares * price;
+    const grossDvd = shares * dvdPerShare;
+    const netDvd = grossDvd * (1 - cfg.taxRate);
+    totalNetDvd += netDvd; totalGrossDvd += grossDvd;
+    price = price * (1 + cfg.marketGrowth);
+    const deposit = cfg.annualDeposit;
+    shares += (deposit + netDvd) / price;
+    const endBalance = shares * price;
+    const priceGain = endBalance - startBalance - deposit - netDvd;
+    const effectiveYield = dvdPerShare / (price / (1 + cfg.marketGrowth));
+    rows.push({ year: n, startBalance, effectiveYield, grossDvd, netDvd, priceGain, deposit, value: endBalance, monthlyNet: netDvd/12 });
+    dvdPerShare = dvdPerShare * (1 + cfg.dvdGrowth);
+  }
+  const finalRow = rows[rows.length - 1];
+  const totalPriceGain = rows.reduce((s,r) => s + r.priceGain, 0);
+  drawProjChart(rows);
+  document.getElementById('proj-table').innerHTML = `
+    <thead><tr>
+      <th class="l">Year</th><th>Start (€)</th><th>Effective Yield</th><th>Gross Div (€)</th><th>Net Div (€)</th><th>+ Price Gain</th><th>+ Deposit</th><th>End Balance (€)</th><th>Monthly Net (€)</th>
+    </tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td class="l">Y${r.year}</td>
+      <td class="num">${fmtMoney(r.startBalance,'€')}</td>
+      <td class="num">${(r.effectiveYield*100).toFixed(2)}%</td>
+      <td class="num">${fmtMoney(r.grossDvd,'€')}</td>
+      <td class="num pos">${fmtMoney(r.netDvd,'€')}</td>
+      <td class="num">${fmtMoney(r.priceGain,'€')}</td>
+      <td class="num">${fmtMoney(r.deposit,'€')}</td>
+      <td class="num">${fmtMoney(r.value,'€')}</td>
+      <td class="num pos">${fmtMoney(r.monthlyNet,'€')}</td>
+    </tr>`).join('')}
+    <tr class="total">
+      <td class="l">Total</td><td class="num">—</td><td class="num">—</td>
+      <td class="num">${fmtMoney(totalGrossDvd,'€')}</td>
+      <td class="num pos">${fmtMoney(totalNetDvd,'€')}</td>
+      <td class="num">${fmtMoney(totalPriceGain,'€')}</td>
+      <td class="num">${fmtMoney(cfg.years * cfg.annualDeposit,'€')}</td>
+      <td class="num">${fmtMoney(finalRow.value,'€')}</td>
+      <td class="num pos">${fmtMoney(finalRow.netDvd/12,'€')}</td>
+    </tr></tbody>`;
+}
+function updateProj(key, fmt, val) {
+  if (key === 'startingBalanceEUR' && (val === '' || val === null)) { data.projection.startingBalanceEUR = null; saveData(); renderProjections(); return; }
+  const v = parseFloat(val) || 0;
+  if (fmt === 'pct') data.projection[key] = v / 100;
+  else if (fmt === 'int') data.projection[key] = Math.round(v);
+  else data.projection[key] = v;
+  saveData(); renderProjections();
+}
+function drawProjChart(rows) {
+  const ctx = document.getElementById('proj-chart');
+  if (!ctx) return;
+  if (chartInstances.proj) chartInstances.proj.destroy();
+  chartInstances.proj = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: rows.map(r => 'Y'+r.year),
+      datasets: [
+        { type: 'line', label: 'Portfolio Value (€)', data: rows.map(r=>r.value), borderColor: '#d4a574', backgroundColor: 'rgba(212,165,116,0.15)', fill: true, tension: 0.3, pointRadius: 0, yAxisID: 'y' },
+        { type: 'bar', label: 'Net Dividend / Year (€)', data: rows.map(r=>r.netDvd), backgroundColor: 'rgba(74,222,128,0.5)', borderColor: '#4ade80', borderWidth: 1, yAxisID: 'y1' }
+      ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 } } }, tooltip: { backgroundColor: '#11151c', borderColor: '#2a3142', borderWidth: 1 } },
+      scales: {
+        x: { ticks: { color: '#5a6377', font:{family:'JetBrains Mono',size:9}, maxTicksLimit: 10 }, grid: { display: false } },
+        y: { position: 'left', ticks: { color: '#5a6377', font:{family:'JetBrains Mono',size:10}, callback: v => '€' + (v/1000).toFixed(0) + 'k' }, grid: { color:'#1f2531' } },
+        y1:{ position: 'right', ticks: { color: '#5a6377', font:{family:'JetBrains Mono',size:10}, callback: v => '€' + Math.round(v) }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderAnnaVas() {
+  document.getElementById('annavas-body').innerHTML = renderPersonBlock('Anna', data.annaVas.anna, 'anna') + renderPersonBlock('Vas', data.annaVas.vas, 'vas');
+}
+function renderPersonBlock(name, person, key) {
+  const unr = person.unrealized.map(p => {
+    const px = getPrice(p);
+    const cost = costBasisUSD(p);
+    const mv = marketValueUSD(p);
+    const upl = mv === null ? null : (mv - cost);
+    const ret = (upl === null || cost === 0) ? null : upl/cost;
+    return { ...p, cost, mv, upl, ret, px };
+  });
+  const totalUnrCost = unr.reduce((s,p) => s + p.cost, 0);
+  const mvList = unr.map(p => p.mv);
+  const hasMissing = mvList.some(v => v === null);
+  const totalUnrMv = mvList.reduce((s,v) => s + (v||0), 0);
+  const totalUpl = hasMissing ? null : (totalUnrMv - totalUnrCost);
+  const totalRpl = person.realized.reduce((s,r) => s + (r.rpl || 0), 0);
+  const totalReturnUSD = (totalUpl === null) ? null : (totalUpl + totalRpl);
+  const startBal = person.startingBalanceUSD || 0;
+  const totalReturnPct = (totalReturnUSD === null || startBal === 0) ? null : totalReturnUSD / startBal;
+  const currentBalanceEUR = ((totalUnrMv) + totalRpl) / data.fx.eurusd;
+  const profitEUR = (totalReturnUSD === null) ? null : totalReturnUSD / data.fx.eurusd;
+  const kpis = [
+    { label: 'Starting Balance', value: fmtMoney(startBal), sub: 'USD' },
+    { label: 'Unrealized P&L', value: totalUpl === null ? '<span class="dash">—</span>' : fmtMoney(totalUpl), sub: (totalUpl===null||totalUnrCost===0) ? 'need prices' : fmtPct(totalUpl/totalUnrCost), cls: totalUpl !== null && totalUpl >= 0 ? 'green' : (totalUpl !== null ? 'red' : ''), subCls: totalUpl !== null && totalUpl >= 0 ? 'green' : (totalUpl !== null ? 'red' : '') },
+    { label: 'Realized P&L', value: fmtMoney(totalRpl), sub: person.realized.length+' closed', cls: totalRpl >= 0 ? 'green' : 'red' },
+    { label: 'Total Return', value: totalReturnUSD === null ? '<span class="dash">—</span>' : fmtMoney(totalReturnUSD), sub: totalReturnPct === null ? 'need prices' : fmtPct(totalReturnPct), cls: totalReturnUSD !== null && totalReturnUSD >= 0 ? 'green' : (totalReturnUSD !== null ? 'red' : ''), subCls: totalReturnUSD !== null && totalReturnUSD >= 0 ? 'green' : (totalReturnUSD !== null ? 'red' : '') }
+  ];
+  const unrRows = unr.map(p => {
+    const k = priceKey(p);
+    const priceCls = p.px.source === 'manual' ? 'override' : (['finnhub','twelve','stooq','yahoo'].includes(p.px.source) ? 'live' : 'empty');
+    return `<tr>
+      <td class="l"><span class="pill">${p.broker}</span></td>
+      <td class="l"><span class="symbol">${p.symbol}</span></td>
+      <td class="l"><span class="name">${p.name}</span></td>
+      <td class="num">${fmtShares(p.shares)}</td>
+      <td class="num">${fmtNum(p.avgCost, p.avgCost<1?6:2)}</td>
+      <td class="num"><input class="edit ${priceCls}" type="number" step="any" value="${p.px.price !== null ? p.px.price : ''}" placeholder="type price" onchange="setManualPrice('${k}', this.value)"></td>
+      <td>${sourceTag(p.px.source, p.px.ts)}</td>
+      <td><span class="pill">${p.currency}</span></td>
+      <td class="num">${fmtMoney(p.cost)}</td>
+      <td class="num">${p.mv !== null ? fmtMoney(p.mv) : '<span class="dash">—</span>'}</td>
+      <td class="num ${cls(p.upl)}">${p.upl !== null ? fmtMoney(p.upl) : '<span class="dash">—</span>'}</td>
+      <td class="num ${cls(p.ret)}">${p.ret !== null ? fmtPct(p.ret) : '<span class="dash">—</span>'}</td>
+    </tr>`;
+  }).join('');
+  const unrTotRet = (totalUnrCost === 0 || totalUpl === null) ? null : totalUpl/totalUnrCost;
+  const unrTot = `<tr class="total">
+    <td class="l" colspan="8">Total Unrealized${hasMissing ? ' (partial)' : ''}</td>
+    <td class="num">${fmtMoney(totalUnrCost)}</td>
+    <td class="num">${fmtMoney(totalUnrMv)}</td>
+    <td class="num ${cls(totalUpl)}">${totalUpl !== null ? fmtMoney(totalUpl) : '—'}</td>
+    <td class="num ${cls(unrTotRet)}">${unrTotRet !== null ? fmtPct(unrTotRet) : '—'}</td>
+  </tr>`;
+  const realRows = person.realized.map(r => `
+    <tr>
+      <td class="l"><span class="pill">${r.broker}</span></td>
+      <td class="l"><span class="symbol">${r.symbol}</span></td>
+      <td class="l"><span class="name">${r.name}</span></td>
+      <td class="num">${fmtShares(r.shares)}</td>
+      <td class="num">${r.avgCost ? fmtNum(r.avgCost, r.avgCost<1?6:2) : '<span class="dash">—</span>'}</td>
+      <td class="num">${r.closePrice ? fmtNum(r.closePrice, r.closePrice<1?6:2) : '<span class="dash">—</span>'}</td>
+      <td><span class="pill">${r.currency}</span></td>
+      <td class="num ${cls(r.rpl)}">${fmtMoney(r.rpl)}</td>
+    </tr>`).join('');
+  const realTot = `<tr class="total"><td class="l" colspan="7">Total Realized</td><td class="num ${cls(totalRpl)}">${fmtMoney(totalRpl)}</td></tr>`;
+  return `
+    <div class="person-block">
+      <div class="person-header"><h2>${name}</h2><span class="meta">Sub-Portfolio · Starting ${fmtMoney(startBal)}</span></div>
+      <div class="kpi-grid">
+        ${kpis.map(k => `<div class="kpi ${k.cls||''}"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="sub-value ${k.subCls||''}">${k.sub}</div></div>`).join('')}
+      </div>
+      <h3 class="section-title" style="font-size:14px;">Unrealized Positions <span class="count">${person.unrealized.length} open</span></h3>
+      <div class="card" style="padding:0"><div class="table-scroll">
+        <table>
+          <thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Price</th><th>Src</th><th>Curr</th><th>Cost (USD)</th><th>Market (USD)</th><th>UPL</th><th>Return</th></tr></thead>
+          <tbody>${unrRows}${unrTot}</tbody>
+        </table>
+      </div></div>
+      <h3 class="section-title" style="font-size:14px;">Realized Positions <span class="count">${person.realized.length} closed</span></h3>
+      <div class="card" style="padding:0"><div class="table-scroll">
+        <table>
+          <thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Close Price</th><th>Curr</th><th>RPL (USD)</th></tr></thead>
+          <tbody>${realRows}${realTot}</tbody>
+        </table>
+      </div></div>
+      <div class="two-col" style="margin-top:24px;">
+        <div class="card">
+          <h3>Summary (USD)<small>All Time</small></h3>
+          <table><tbody>
+            <tr><td class="l">Starting Balance</td><td class="num">${fmtMoney(startBal)}</td></tr>
+            <tr><td class="l">Unrealized P&L</td><td class="num ${cls(totalUpl)}">${totalUpl!==null?fmtMoney(totalUpl):'<span class="dash">—</span>'}</td></tr>
+            <tr><td class="l">Realized P&L</td><td class="num ${cls(totalRpl)}">${fmtMoney(totalRpl)}</td></tr>
+            <tr class="total"><td class="l">Total Return</td><td class="num ${cls(totalReturnUSD)}">${totalReturnUSD!==null?fmtMoney(totalReturnUSD):'<span class="dash">—</span>'}</td></tr>
+            <tr><td class="l">Return %</td><td class="num ${cls(totalReturnPct)}">${totalReturnPct!==null?fmtPct(totalReturnPct):'<span class="dash">—</span>'}</td></tr>
+          </tbody></table>
+        </div>
+        <div class="card">
+          <h3>Summary (EUR)<small>At ${data.fx.eurusd.toFixed(4)} EUR/USD</small></h3>
+          <table><tbody>
+            <tr><td class="l">Current Balance</td><td class="num">${fmtMoney(currentBalanceEUR,'€')}</td></tr>
+            <tr><td class="l">Profit</td><td class="num ${cls(profitEUR)}">${profitEUR!==null?fmtMoney(profitEUR,'€'):'<span class="dash">—</span>'}</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>`;
+}
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    document.getElementById(activeTab).classList.add('active');
+    if (activeTab === 'projections') setTimeout(() => renderProjections(), 50);
+    if (activeTab === 'dividends')   setTimeout(() => renderDividends(), 50);
+  });
+});
+
+(async function init() {
+  document.getElementById('fx-rate').textContent = data.fx.eurusd.toFixed(4);
+  updateSyncStatusBadge();
+
+  // If auto-sync is configured, try to load latest from Gist first
+  if (syncConfig.autoSync && syncConfig.token && syncConfig.gistId) {
+    try {
+      const res = await fetch(`https://api.github.com/gists/${syncConfig.gistId}`, {
+        headers: { 'Authorization': `Bearer ${syncConfig.token}`, 'Accept': 'application/vnd.github+json' }
+      });
+      if (res.ok) {
+        const j = await res.json();
+        const filename = Object.keys(j.files)[0];
+        const payload = JSON.parse(j.files[filename].content);
+        const remoteTs = payload.timestamp || 0;
+        const localTs = parseInt(localStorage.getItem('dlb_last_local_save') || '0', 10);
+        // Only auto-load if remote is meaningfully newer than local
+        if (remoteTs > localTs + 1000) {
+          applySyncPayload(payload);
+          showBanner(`✓ Synced from cloud · gist last saved ${new Date(remoteTs).toLocaleString()}`, false, true);
+          setTimeout(hideBanner, 4000);
+        }
+      }
+    } catch(e) { console.warn('Auto-load failed:', e); }
+  }
+
+  render();
+  const anyFresh = Object.values(prices).some(p => p.ts && (Date.now() - p.ts) < 5*60*1000);
+  if (!anyFresh) {
+    if (!apiKeys.finnhub && !apiKeys.twelve) {
+      showBanner('<strong>Tip:</strong> Add a free Finnhub or Twelve Data API key in <strong>⚙ Settings</strong> for reliable stock prices.', false);
+    }
+    refreshAll();
+  } else {
+    const newest = Math.max(...Object.values(prices).map(p=>p.ts||0));
+    document.getElementById('status').className = 'val warn';
+    document.getElementById('status').textContent = 'Cached';
+    document.getElementById('last-update').textContent = new Date(newest).toLocaleTimeString('en-GB');
+  }
+})();
+</script>
 </body>
 </html>
