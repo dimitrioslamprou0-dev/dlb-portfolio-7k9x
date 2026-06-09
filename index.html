@@ -271,6 +271,161 @@
 
   .loading { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border-bright); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ============================================================
+     MOBILE RESPONSIVE LAYOUT (≤768px)
+     Affects phones and small tablets only. Desktop UNTOUCHED.
+     ============================================================ */
+  @media (max-width: 768px) {
+    body { font-size: 12px; }
+    .container { padding: 12px 12px 60px; }
+
+    /* Header: stack neatly */
+    header {
+      flex-direction: column; align-items: stretch; gap: 12px;
+      padding-bottom: 16px; margin-bottom: 16px;
+    }
+    .brand h1 { font-size: 24px; }
+    .brand .sub { font-size: 10px; }
+    .header-right {
+      gap: 8px 14px;
+      width: 100%;
+      flex-wrap: wrap; align-items: center; justify-content: flex-start;
+    }
+    .status { align-items: flex-start; gap: 2px; }
+    .status .label { font-size: 9px; }
+    .status .val { font-size: 11px; }
+    button.refresh, button.gear {
+      padding: 8px 12px; font-size: 10px;
+      flex: 1; min-width: 120px;
+    }
+
+    /* Tabs */
+    nav.tabs { margin-bottom: 16px; overflow-x: auto; flex-wrap: nowrap; }
+    .tab { padding: 10px 12px; font-size: 9px; letter-spacing: 0.12em; white-space: nowrap; }
+    .tab-num { font-size: 11px; margin-right: 4px; }
+
+    /* KPI grids: 4-col → 2-col, 8-col → 2-col */
+    .kpi-grid, .kpi-grid.eight { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+    .kpi { padding: 12px; }
+    .kpi.small { padding: 10px; }
+    .kpi .label { font-size: 8px; margin-bottom: 4px; }
+    .kpi .value { font-size: 18px; word-break: break-word; }
+    .kpi.small .value { font-size: 16px; }
+    .kpi .sub-value { font-size: 10px; }
+
+    /* Portfolio KPI bars on Positions tab — stack to 2 columns */
+    .portfolio-kpis, .portfolio-kpis.cols-5, .portfolio-kpis.cols-6, .portfolio-kpis.cols-8 {
+      grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px;
+    }
+    .portfolio-kpis .pk .l { font-size: 8px; }
+    .portfolio-kpis .pk .v { font-size: 13px; }
+
+    /* Section titles */
+    .section-title { font-size: 14px; margin: 20px 0 12px; gap: 8px; flex-wrap: wrap; }
+    .section-title .count { font-size: 9px; }
+    .section-title button.add-trade-btn { padding: 4px 8px; font-size: 9px; letter-spacing: 0.1em; margin-left: auto; }
+
+    /* Two-column layouts collapse to single column */
+    .two-col { grid-template-columns: 1fr; gap: 16px; margin-bottom: 20px; }
+
+    /* Cards */
+    .card { padding: 14px; }
+    .card h3 { font-size: 12px; margin-bottom: 10px; }
+    .card h3 small { font-size: 9px; }
+
+    /* Tables — already in .table-scroll wrappers, just shrink content */
+    table { font-size: 10px; }
+    thead th { padding: 6px 8px; font-size: 8px; }
+    tbody td { padding: 8px; }
+    td input.edit { width: 70px; font-size: 10px; padding: 3px 4px; }
+    .pill { font-size: 8px; padding: 1px 6px; }
+    .source-tag { font-size: 7px; padding: 1px 3px; }
+    .drip-info { font-size: 8px; }
+
+    /* Sub-portfolio and sector bar rows */
+    .alloc-row {
+      grid-template-columns: 100px 1fr 80px 40px 50px;
+      gap: 6px; padding: 6px 0; font-size: 10px;
+    }
+    .alloc-row.no-ret { grid-template-columns: 100px 1fr 80px 40px; }
+    .alloc-row .alloc-pct { font-size: 9px; }
+
+    /* 3D pie chart */
+    .pie3d-wrap { gap: 20px; flex-direction: column; align-items: stretch; }
+    .pie3d-container { width: 100%; max-width: 320px; height: 280px; margin: 0 auto; }
+    .pie3d-container::after { width: 260px; }
+    .pie-legend { width: 100%; min-width: 0; }
+    .legend-item { font-size: 10px; padding: 5px 6px; }
+    .legend-name { font-size: 10px; }
+    .legend-val { font-size: 10px; }
+
+    /* EQ donut: similar treatment */
+    .eq-donut-wrap { gap: 20px; flex-direction: column; align-items: stretch; }
+    .eq-donut-container { width: 100%; max-width: 280px; height: 280px; margin: 0 auto; }
+
+    /* Charts: ensure they fit and don't overflow */
+    .chart-wrap { padding: 12px; height: 280px; }
+    .chart-wrap.tall { height: 320px; }
+
+    /* Projections: 7-col → 2-col */
+    .proj-config { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .proj-input { padding: 8px; }
+    .proj-input label { font-size: 8px; }
+    .proj-input input { font-size: 14px; }
+
+    /* Dividend calendar: shrink columns, smaller font */
+    .dvd-edit-grid { font-size: 9px; gap: 2px; grid-template-columns: 60px repeat(12, minmax(28px, 1fr)); }
+    .dvd-edit-grid .h { font-size: 8px; padding: 2px; }
+    .dvd-edit-grid .row-label { font-size: 9px; padding: 4px 2px; }
+    .dvd-edit-grid .cell input { font-size: 9px; padding: 4px 1px; }
+    .dvd-edit-grid .cell.summary .summary-val { font-size: 9px; padding: 4px 1px; }
+    /* Outer scroll wrapper for the calendar */
+    #dvd-edit-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .dvd-add-row { font-size: 10px; gap: 6px; }
+    .dvd-add-row input, .dvd-add-row select { font-size: 10px; padding: 5px 6px; }
+    .dvd-add-row button { padding: 5px 10px; font-size: 9px; }
+
+    /* Add-trade form for positions */
+    .add-trade-form {
+      grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px;
+    }
+    .add-trade-form button { width: 100%; padding: 8px 12px; font-size: 9px; }
+    .add-trade-form button.save, .add-trade-form button.cancel { grid-column: span 1; }
+    .add-trade-form input, .add-trade-form select { font-size: 12px; padding: 6px 8px; }
+    .add-trade-form label { font-size: 8px; }
+    .add-trade-preview { font-size: 10px; padding-top: 6px; }
+
+    /* Banner & modal */
+    .banner { padding: 10px; font-size: 11px; flex-wrap: wrap; }
+    .modal { padding: 18px; max-height: 95vh; }
+    .modal h2 { font-size: 18px; }
+    .modal .modal-sub { font-size: 9px; margin-bottom: 14px; }
+    .modal .key-block { margin-bottom: 16px; }
+    .modal .key-block h3 { font-size: 12px; }
+    .modal .key-block .key-desc { font-size: 10px; }
+    .modal input.key-input { font-size: 12px; padding: 8px 10px; }
+    .modal button.btn { padding: 6px 10px; font-size: 9px; }
+    .modal-footer { flex-direction: column; gap: 10px; align-items: stretch; }
+
+    /* Anna & Vas headers */
+    .person-header h2 { font-size: 20px; }
+    .person-header .meta { font-size: 9px; }
+
+    /* Footer */
+    footer { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 9px; padding-top: 16px; }
+  }
+
+  /* Very small phones (≤400px): even tighter */
+  @media (max-width: 400px) {
+    .kpi-grid, .kpi-grid.eight { grid-template-columns: 1fr; }
+    .portfolio-kpis, .portfolio-kpis.cols-5, .portfolio-kpis.cols-6, .portfolio-kpis.cols-8 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .proj-config { grid-template-columns: 1fr; }
+    .pie3d-container { height: 260px; }
+    .eq-donut-container { width: 240px; height: 240px; }
+  }
 </style>
 </head>
 <body>
@@ -2447,3 +2602,4 @@ document.querySelectorAll('.tab').forEach(btn => {
 </script>
 </body>
 </html>
+
