@@ -10,182 +10,226 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #0a0d12; --bg-elev: #11151c; --bg-card: #151a23;
-    --border: #1f2531; --border-bright: #2a3142;
-    --text: #e8ecf1; --text-dim: #8b94a5; --text-faint: #5a6377;
-    --green: #4ade80; --green-dim: #22c55e22;
-    --red: #f87171; --red-dim: #ef444422;
-    --gold: #d4a574; --gold-dim: #d4a57422;
-    --blue: #7dd3fc; --purple: #c084fc;
+    /* STYLE 3 — Institutional / Quant Terminal */
+    --bg: #0c0c0c; --bg-elev: #131313; --bg-card: #131313;
+    --bg-hover: #1a1a1a; --bg-darker: #0a0a0a;
+    --border: #1f1f1f; --border-bright: #2a2a2a;
+    --text: #e6e6e6; --text-dim: #aaa; --text-faint: #666;
+    --green: #00ff41; --green-dim: rgba(0,255,65,0.12);
+    --red: #ff4141; --red-dim: rgba(255,65,65,0.12);
+    --gold: #fbbf24; --gold-dim: rgba(251,191,36,0.12);
+    --blue: #38bdf8; --purple: #c084fc;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
-  body { min-height: 100vh; background-image: radial-gradient(ellipse at top, #14202d 0%, #0a0d12 50%); }
-  .container { max-width: 1600px; margin: 0 auto; padding: 24px 32px 80px; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; }
+  .container { max-width: 1600px; margin: 0 auto; padding: 16px 20px 60px; }
 
-  header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-  .brand h1 { font-family: 'Fraunces', serif; font-weight: 400; font-size: 32px; letter-spacing: -0.02em; font-style: italic; }
-  .brand h1 span { color: var(--gold); font-style: normal; }
-  .brand .sub { font-size: 11px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
-  .header-right { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
-  .status { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .status .label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
-  .status .val { font-size: 13px; color: var(--text); }
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; padding: 8px 12px;
+    background: var(--bg-darker); border: 1px solid var(--border-bright);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 12px; }
+  .brand h1 { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; letter-spacing: 0.05em; }
+  .brand h1 em { font-style: normal; color: var(--text); }
+  .brand h1 span { color: var(--gold); }
+  .brand .sub { font-size: 9px; color: var(--text-faint); letter-spacing: 0.2em; text-transform: uppercase; }
+  .header-right { display: flex; gap: 0; align-items: center; flex-wrap: wrap; }
+  .status { display: flex; gap: 6px; padding: 0 12px; border-right: 1px solid var(--border-bright); align-items: center; }
+  .status:last-of-type { border-right: none; padding-right: 12px; }
+  .status .label { font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+  .status .val { font-size: 10px; color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
   .status .val.live { color: var(--green); }
-  .status .val.live::before { content: '●'; margin-right: 6px; animation: pulse 2s infinite; }
+  .status .val.live::before { content: '▲ '; }
   .status .val.warn { color: var(--gold); }
-  .status .val.warn::before { content: '●'; margin-right: 6px; }
+  .status .val.warn::before { content: '◆ '; }
   .status .val.err { color: var(--red); }
-  .status .val.err::before { content: '●'; margin-right: 6px; }
+  .status .val.err::before { content: '■ '; }
   @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
-  button.refresh, button.gear { background: var(--bg-card); color: var(--text); border: 1px solid var(--border-bright); padding: 10px 16px; font-family: inherit; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  button.refresh, button.gear {
+    background: var(--bg-darker); color: var(--text); border: 1px solid var(--border-bright);
+    padding: 7px 12px; font-family: inherit; font-size: 9px;
+    letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;
+    transition: all 0.1s; font-weight: 600; margin-left: 12px;
+  }
   button.refresh:hover, button.gear:hover { background: var(--gold); color: var(--bg); border-color: var(--gold); }
   button.refresh:disabled { opacity: 0.5; cursor: wait; }
-  button.gear { padding: 10px 12px; }
 
-  .banner { background: var(--bg-card); border: 1px solid var(--gold); padding: 12px 16px; margin-bottom: 24px; font-size: 12px; color: var(--text-dim); display: flex; gap: 12px; align-items: center; }
+  .banner {
+    background: var(--bg-darker); border: 1px solid var(--gold);
+    padding: 8px 12px; margin-bottom: 12px; font-size: 10px;
+    color: var(--text-dim); display: flex; gap: 8px; align-items: center;
+  }
   .banner.err { border-color: var(--red); }
   .banner.ok { border-color: var(--green); }
   .banner strong { color: var(--gold); }
   .banner.err strong { color: var(--red); }
   .banner.ok strong { color: var(--green); }
-  .banner button { background: transparent; border: 1px solid var(--border-bright); color: var(--text-dim); padding: 4px 10px; font-family: inherit; font-size: 10px; cursor: pointer; letter-spacing: 0.1em; margin-left: auto; }
+  .banner button {
+    background: transparent; border: 1px solid var(--border-bright); color: var(--text-dim);
+    padding: 3px 8px; font-family: inherit; font-size: 9px; cursor: pointer;
+    letter-spacing: 0.1em; margin-left: auto; text-transform: uppercase;
+  }
 
-  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 24px; }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
   .modal-backdrop.show { display: flex; }
-  .modal { background: var(--bg-card); border: 1px solid var(--border-bright); max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 32px; }
-  .modal h2 { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 400; font-style: italic; margin-bottom: 8px; color: var(--gold); }
-  .modal .modal-sub { font-size: 11px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 24px; }
-  .modal .key-block { margin-bottom: 24px; }
-  .modal .key-block h3 { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-  .modal .key-block .key-status { font-size: 9px; padding: 2px 8px; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; }
+  .modal { background: var(--bg-card); border: 1px solid var(--border-bright); max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px; }
+  .modal h2 { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; }
+  .modal .modal-sub { font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 16px; }
+  .modal .key-block { margin-bottom: 16px; }
+  .modal .key-block h3 { font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .modal .key-block .key-status { font-size: 8px; padding: 2px 6px; letter-spacing: 0.1em; text-transform: uppercase; }
   .modal .key-block .key-status.set { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
   .modal .key-block .key-status.unset { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
-  .modal .key-block .key-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+  .modal .key-block .key-desc { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; }
   .modal .key-block .key-desc a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
   .modal .key-block .key-desc a:hover { border-color: var(--gold); }
-  .modal input.key-input { width: 100%; background: var(--bg-elev); border: 1px solid var(--border-bright); color: var(--text); font-family: inherit; font-size: 13px; padding: 10px 12px; outline: none; transition: border 0.15s; }
+  .modal input.key-input { width: 100%; background: var(--bg-darker); border: 1px solid var(--border-bright); color: var(--text); font-family: inherit; font-size: 11px; padding: 8px 10px; outline: none; transition: border 0.1s; }
   .modal input.key-input:focus { border-color: var(--gold); }
-  .modal .key-actions { display: flex; gap: 8px; margin-top: 8px; }
-  .modal button.btn { background: transparent; border: 1px solid var(--border-bright); color: var(--text-dim); padding: 8px 14px; font-family: inherit; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .modal .key-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .modal button.btn { background: var(--bg-darker); border: 1px solid var(--border-bright); color: var(--text-dim); padding: 6px 10px; font-family: inherit; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.1s; font-weight: 600; }
   .modal button.btn:hover { color: var(--text); border-color: var(--text-dim); }
   .modal button.btn.primary { background: var(--gold); color: var(--bg); border-color: var(--gold); }
-  .modal button.btn.primary:hover { background: #b8915d; border-color: #b8915d; }
-  .modal button.btn.danger { color: var(--red); border-color: rgba(248,113,113,0.3); }
-  .modal button.btn.danger:hover { background: var(--red-dim); border-color: var(--red); }
-  .modal-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
-  .modal-info { background: var(--bg-elev); border: 1px solid var(--border); padding: 12px; font-size: 11px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.6; }
+  .modal button.btn.primary:hover { background: #d99c0e; border-color: #d99c0e; }
+  .modal button.btn.danger { color: var(--red); border-color: var(--red); }
+  .modal button.btn.danger:hover { background: var(--red-dim); }
+  .modal-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-bright); }
+  .modal-info { background: var(--bg-darker); border: 1px solid var(--border-bright); padding: 10px; font-size: 10px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.6; }
   .modal-info strong { color: var(--gold); }
 
-  nav.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; flex-wrap: wrap; }
-  .tab { background: transparent; border: none; color: var(--text-faint); padding: 14px 20px; font-family: inherit; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; position: relative; transition: color 0.2s; }
-  .tab:hover { color: var(--text-dim); }
-  .tab.active { color: var(--text); }
+  nav.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border-bright); margin-bottom: 20px; flex-wrap: wrap; background: var(--bg-darker); }
+  .tab {
+    background: transparent; border: none; color: var(--text-faint);
+    padding: 10px 16px; font-family: inherit; font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer;
+    position: relative; transition: color 0.1s; font-weight: 600;
+    border-right: 1px solid var(--border);
+  }
+  .tab:hover { color: var(--text-dim); background: var(--bg-hover); }
+  .tab.active { color: var(--gold); background: var(--bg-card); }
   .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--gold); }
-  .tab-num { font-family: 'Fraunces', serif; font-style: italic; color: var(--gold); margin-right: 8px; font-size: 14px; }
+  .tab-num { color: var(--gold); margin-right: 6px; font-size: 11px; opacity: 0.7; }
 
-  .panel { display: none; animation: fadeIn 0.4s ease; }
+  .panel { display: none; animation: fadeIn 0.2s ease; }
   .panel.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
-  .kpi-grid.eight { grid-template-columns: repeat(4, 1fr); gap: 14px; }
-  .kpi { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; position: relative; overflow: hidden; }
-  .kpi.small { padding: 16px; }
-  .kpi::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
+  /* KPI grids — terminal style with thin separators */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-bottom: 16px; background: var(--border-bright); }
+  .kpi-grid.eight { grid-template-columns: repeat(8, 1fr); }
+  .kpi { background: var(--bg-card); padding: 10px 12px; position: relative; }
+  .kpi.small { padding: 10px 12px; }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gold); }
   .kpi.green::before { background: var(--green); }
   .kpi.red::before { background: var(--red); }
   .kpi.blue::before { background: var(--blue); }
   .kpi.purple::before { background: var(--purple); }
-  .kpi .label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
-  .kpi .value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 400; letter-spacing: -0.02em; }
-  .kpi.small .value { font-size: 22px; }
-  .kpi .sub-value { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .kpi .label { font-size: 8px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+  .kpi .value { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); font-variant-numeric: tabular-nums; }
+  .kpi.small .value { font-size: 15px; }
+  .kpi .sub-value { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
   .kpi .sub-value.green { color: var(--green); }
   .kpi .sub-value.red { color: var(--red); }
 
-  .portfolio-kpis { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 16px; background: var(--bg-elev); border: 1px solid var(--border); padding: 14px; }
+  .portfolio-kpis { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-bottom: 12px; background: var(--border-bright); border: 1px solid var(--border-bright); }
   .portfolio-kpis.cols-6 { grid-template-columns: repeat(6, 1fr); }
   .portfolio-kpis.cols-5 { grid-template-columns: repeat(5, 1fr); }
   .portfolio-kpis.cols-8 { grid-template-columns: repeat(8, 1fr); }
-  .portfolio-kpis .pk { display: flex; flex-direction: column; gap: 2px; }
-  .portfolio-kpis .pk .l { font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
-  .portfolio-kpis .pk .v { font-family: 'Fraunces', serif; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .portfolio-kpis .pk { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: var(--bg-card); }
+  .portfolio-kpis .pk .l { font-size: 8px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; }
+  .portfolio-kpis .pk .v { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 600; }
   .portfolio-kpis .pk .v.pos { color: var(--green); }
   .portfolio-kpis .pk .v.neg { color: var(--red); }
 
-  .section-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 400; margin: 32px 0 16px; color: var(--text); display: flex; align-items: baseline; gap: 12px; }
-  .section-title::before { content: '—'; color: var(--gold); }
-  .section-title .count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; }
+  .section-title { font-size: 10px; color: var(--gold); margin: 20px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-bright); display: flex; align-items: baseline; gap: 10px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700; flex-wrap: wrap; }
+  .section-title .count { color: var(--text-faint); font-size: 9px; letter-spacing: 0.1em; font-weight: 400; text-transform: none; }
   .section-title button.add-trade-btn {
-    background: var(--gold); color: var(--bg); border: none; padding: 5px 12px;
-    font-family: inherit; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
-    cursor: pointer; font-weight: 600; margin-left: auto; transition: background 0.15s;
+    background: transparent; color: var(--gold); border: 1px solid var(--gold);
+    padding: 4px 10px; font-family: inherit; font-size: 9px; letter-spacing: 0.15em;
+    text-transform: uppercase; cursor: pointer; font-weight: 700;
+    margin-left: auto; transition: all 0.1s;
   }
-  .section-title button.add-trade-btn:hover { background: #b8915d; }
+  .section-title button.add-trade-btn:hover { background: var(--gold); color: var(--bg); }
+  .section-title button.add-trade-btn.secondary { color: var(--blue); border-color: var(--blue); }
+  .section-title button.add-trade-btn.secondary:hover { background: var(--blue); color: var(--bg); }
 
+  /* Add-Trade form */
   .add-trade-form {
-    background: var(--bg-elev); border: 1px solid var(--gold); padding: 16px; margin-bottom: 16px;
-    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto auto; gap: 12px; align-items: end;
+    background: var(--bg-darker); border: 1px solid var(--gold); padding: 12px;
+    margin-bottom: 12px; display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr auto auto;
+    gap: 10px; align-items: end;
   }
-  .add-trade-form .field { display: flex; flex-direction: column; gap: 4px; }
-  .add-trade-form label { font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
+  .add-trade-form .field { display: flex; flex-direction: column; gap: 3px; }
+  .add-trade-form label { font-size: 8px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600; }
   .add-trade-form input, .add-trade-form select {
-    background: var(--bg-card); border: 1px solid var(--border-bright); color: var(--text);
-    font-family: inherit; font-size: 13px; padding: 8px 10px; outline: none;
+    background: var(--bg); border: 1px solid var(--border-bright); color: var(--text);
+    font-family: inherit; font-size: 11px; padding: 6px 8px; outline: none;
     font-variant-numeric: tabular-nums;
   }
   .add-trade-form input:focus, .add-trade-form select:focus { border-color: var(--gold); }
   .add-trade-form button {
-    padding: 8px 16px; font-family: inherit; font-size: 10px; letter-spacing: 0.15em;
-    text-transform: uppercase; cursor: pointer; font-weight: 600; border: 1px solid;
+    padding: 7px 14px; font-family: inherit; font-size: 9px; letter-spacing: 0.15em;
+    text-transform: uppercase; cursor: pointer; font-weight: 700; border: 1px solid;
   }
   .add-trade-form button.save { background: var(--gold); color: var(--bg); border-color: var(--gold); }
-  .add-trade-form button.save:hover { background: #b8915d; border-color: #b8915d; }
+  .add-trade-form button.save:hover { background: #d99c0e; border-color: #d99c0e; }
   .add-trade-form button.cancel { background: transparent; color: var(--text-dim); border-color: var(--border-bright); }
-  .add-trade-form button.cancel:hover { color: var(--text); }
+  .add-trade-form button.cancel:hover { color: var(--text); border-color: var(--text); }
   .add-trade-preview {
-    font-size: 11px; color: var(--text-dim); margin-top: 8px; padding-top: 8px;
+    font-size: 10px; color: var(--text-dim); margin-top: 6px; padding-top: 6px;
     border-top: 1px solid var(--border); grid-column: 1 / -1;
   }
   .add-trade-preview strong { color: var(--gold); }
+  .add-trade-preview .lookup-hint { color: var(--green); font-size: 9px; letter-spacing: 0.1em; }
+  .add-trade-preview .lookup-err { color: var(--red); font-size: 9px; }
 
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 
-  .card { background: var(--bg-card); border: 1px solid var(--border); padding: 24px; }
-  .card h3 { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; margin-bottom: 16px; color: var(--text); letter-spacing: 0.02em; }
-  .card h3 small { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; font-weight: 400; }
+  .card { background: var(--bg-card); border: 1px solid var(--border-bright); padding: 14px; }
+  .card h3 { font-size: 11px; font-weight: 700; margin-bottom: 10px; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; }
+  .card h3 small { display: block; font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; font-weight: 400; }
 
-  /* Scroll wrapper for wide tables (fixes dividend portfolio overflow) */
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .table-scroll table { min-width: 100%; }
 
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  thead th { text-align: right; padding: 10px 12px; font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  thead th {
+    text-align: right; padding: 6px 10px; font-size: 8px;
+    color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase;
+    font-weight: 700; background: var(--bg-darker);
+    border-bottom: 1px solid var(--border-bright); white-space: nowrap;
+  }
   thead th:first-child, thead th.l { text-align: left; }
-  tbody td { padding: 12px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  tbody td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   tbody td:first-child, tbody td.l { text-align: left; }
-  tbody tr:hover { background: rgba(212, 165, 116, 0.03); }
+  tbody tr:hover { background: var(--bg-hover); }
   tbody tr:last-child td { border-bottom: none; }
-  tbody tr.total td { font-weight: 600; border-top: 1px solid var(--border-bright); padding-top: 14px; background: rgba(212, 165, 116, 0.04); }
-  .symbol { font-weight: 600; color: var(--gold); letter-spacing: 0.05em; }
-  .name { color: var(--text-dim); font-size: 11px; }
-  .price { color: var(--text); font-variant-numeric: tabular-nums; }
+  tbody tr.total td { font-weight: 700; border-top: 1px solid var(--gold); padding-top: 9px; background: rgba(251,191,36,0.04); color: var(--text); }
+  .symbol { font-weight: 700; color: var(--gold); letter-spacing: 0.05em; }
+  .name { color: var(--text-dim); font-size: 9px; }
+  .price { color: var(--text); }
   .num { font-variant-numeric: tabular-nums; }
   .pos { color: var(--green); }
   .neg { color: var(--red); }
-  .pill { display: inline-block; padding: 2px 8px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 2px; color: var(--text-dim); }
+  .pill { display: inline-block; padding: 1px 6px; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; background: var(--bg-darker); border: 1px solid var(--border-bright); color: var(--text-dim); font-weight: 600; }
 
-  td input.edit { background: transparent; border: 1px solid transparent; color: var(--text); font-family: inherit; font-size: 12px; text-align: right; width: 95px; padding: 4px 6px; transition: all 0.15s; font-variant-numeric: tabular-nums; }
-  td input.edit:hover { border-color: var(--border); }
-  td input.edit:focus { outline: none; border-color: var(--gold); background: var(--bg-elev); }
-  td input.edit.live { color: var(--green); border-color: rgba(74,222,128,0.2); }
+  td input.edit {
+    background: transparent; border: 1px solid transparent;
+    color: var(--text); font-family: inherit; font-size: 10px;
+    text-align: right; width: 80px; padding: 3px 5px; transition: all 0.1s;
+    font-variant-numeric: tabular-nums;
+  }
+  td input.edit:hover { border-color: var(--border-bright); }
+  td input.edit:focus { outline: none; border-color: var(--gold); background: var(--bg-darker); }
+  td input.edit.live { color: var(--green); border-color: rgba(0,255,65,0.25); }
   td input.edit.override { color: var(--gold); border-color: var(--gold-dim); }
-  td input.edit.empty { color: var(--text-faint); border-color: rgba(248,113,113,0.25); }
+  td input.edit.empty { color: var(--text-faint); border-color: rgba(255,65,65,0.3); }
 
-  .source-tag { font-size: 8px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-left: 4px; padding: 1px 4px; background: var(--bg-elev); border-radius: 2px; border: 1px solid var(--border); }
-  .source-tag.finnhub { color: var(--green); border-color: rgba(74,222,128,0.3); }
-  .source-tag.twelve { color: var(--blue); border-color: rgba(125,211,252,0.3); }
+  .source-tag { font-size: 7px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-left: 3px; padding: 1px 4px; background: var(--bg-darker); border: 1px solid var(--border); font-weight: 600; }
+  .source-tag.finnhub { color: var(--green); border-color: rgba(0,255,65,0.3); }
+  .source-tag.twelve { color: var(--blue); border-color: rgba(56,189,248,0.3); }
   .source-tag.yahoo { color: var(--purple); border-color: rgba(192,132,252,0.3); }
   .source-tag.stooq { color: var(--gold); border-color: var(--gold-dim); }
   .source-tag.coingecko { color: var(--gold); border-color: var(--gold-dim); }
@@ -193,238 +237,177 @@
   .source-tag.stale { color: var(--red); border-color: var(--red); }
   .dash { color: var(--text-faint); }
 
-  /* DRIP indicator */
-  .drip-info { display: block; font-size: 9px; color: var(--gold); margin-top: 2px; letter-spacing: 0.05em; }
+  .drip-info { display: block; font-size: 8px; color: var(--gold); margin-top: 1px; letter-spacing: 0.05em; }
 
-  .alloc-bar { display: flex; height: 8px; background: var(--bg-elev); border-radius: 1px; overflow: hidden; margin: 4px 0; }
-  .alloc-bar-fill { height: 100%; transition: width 0.4s; }
-  .alloc-row { display: grid; grid-template-columns: 180px 1fr 110px 60px 70px; align-items: center; gap: 12px; padding: 8px 0; font-size: 11px; }
-  .alloc-row.no-ret { grid-template-columns: 180px 1fr 110px 60px; }
-  .alloc-row .alloc-label { color: var(--text-dim); }
-  .alloc-row .alloc-value { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
-  .alloc-row .alloc-pct { text-align: right; color: var(--text-faint); font-variant-numeric: tabular-nums; font-size: 10px; }
-  .alloc-row .alloc-ret { text-align: right; font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 500; }
+  /* Close-position trash button per row */
+  .close-pos-btn {
+    background: transparent; border: 1px solid var(--red); color: var(--red);
+    font-family: inherit; font-size: 9px; padding: 2px 6px; cursor: pointer;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    transition: all 0.1s;
+  }
+  .close-pos-btn:hover { background: var(--red); color: var(--bg); }
 
-  .pie3d-wrap { display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
-  .pie3d-container { position: relative; width: 440px; height: 340px; perspective: 1400px; flex-shrink: 0; }
+  .alloc-bar { display: flex; height: 6px; background: var(--bg-darker); overflow: hidden; margin: 3px 0; }
+  .alloc-bar-fill { height: 100%; transition: width 0.3s; }
+  .alloc-row { display: grid; grid-template-columns: 140px 1fr 100px 50px 60px; align-items: center; gap: 10px; padding: 5px 0; font-size: 10px; }
+  .alloc-row.no-ret { grid-template-columns: 140px 1fr 100px 50px; }
+  .alloc-row .alloc-label { color: var(--text-dim); font-weight: 500; }
+  .alloc-row .alloc-value { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .alloc-row .alloc-pct { text-align: right; color: var(--text-faint); font-variant-numeric: tabular-nums; font-size: 9px; }
+  .alloc-row .alloc-ret { text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; font-weight: 600; }
 
-  .eq-donut-wrap { display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
-  .eq-donut-container { position: relative; width: 320px; height: 320px; flex-shrink: 0; }
+  .pie3d-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .pie3d-container { position: relative; width: 400px; height: 320px; perspective: 1400px; flex-shrink: 0; }
+
+  .eq-donut-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .eq-donut-container { position: relative; width: 300px; height: 300px; flex-shrink: 0; }
   .eq-donut-container canvas { width: 100% !important; height: 100% !important; }
   .pie3d { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; transform: translate(-50%,-50%) rotateX(60deg); animation: pieSpin 90s linear infinite; }
   @keyframes pieSpin { from { transform: translate(-50%,-50%) rotateX(60deg) rotateZ(0deg); } to { transform: translate(-50%,-50%) rotateX(60deg) rotateZ(360deg); } }
   .pie3d:hover { animation-play-state: paused; }
-  .pie3d-container::after { content: ''; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 340px; height: 32px; background: radial-gradient(ellipse, rgba(0,0,0,0.5), transparent 70%); filter: blur(10px); }
-  .pie-legend { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 6px; }
-  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 11px; padding: 6px 8px; border-radius: 2px; transition: background 0.2s; }
-  .legend-item:hover { background: rgba(255,255,255,0.03); }
-  .legend-dot { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
-  .legend-name { flex: 1; color: var(--text-dim); }
-  .legend-name .pct { color: var(--text-faint); font-size: 10px; margin-left: 6px; }
-  .legend-val { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 500; }
+  .pie3d-container::after { content: ''; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 300px; height: 28px; background: radial-gradient(ellipse, rgba(0,0,0,0.6), transparent 70%); filter: blur(8px); }
+  .pie-legend { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 3px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 10px; padding: 4px 8px; transition: background 0.1s; background: var(--bg-card); border: 1px solid var(--border); }
+  .legend-item:hover { background: var(--bg-hover); border-color: var(--border-bright); }
+  .legend-dot { width: 10px; height: 10px; flex-shrink: 0; }
+  .legend-name { flex: 1; color: var(--text-dim); font-weight: 500; }
+  .legend-name .pct { color: var(--text-faint); font-size: 9px; margin-left: 4px; }
+  .legend-val { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 700; }
 
-  .dvd-edit-grid { display: grid; grid-template-columns: 100px repeat(12, 1fr); gap: 4px; font-size: 10px; }
-  .dvd-edit-grid .h { color: var(--text-faint); padding: 4px; text-align: center; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9px; }
+  .dvd-edit-grid { display: grid; grid-template-columns: 90px repeat(12, 1fr); gap: 2px; font-size: 9px; }
+  .dvd-edit-grid .h { color: var(--text-faint); padding: 3px; text-align: center; letter-spacing: 0.1em; text-transform: uppercase; font-size: 8px; font-weight: 700; }
   .dvd-edit-grid .h.l { text-align: left; }
-  .dvd-edit-grid .row-label { padding: 6px 4px; color: var(--gold); font-weight: 600; font-size: 11px; display: flex; align-items: center; }
+  .dvd-edit-grid .row-label { padding: 4px; color: var(--gold); font-weight: 700; font-size: 10px; display: flex; align-items: center; letter-spacing: 0.05em; }
   .dvd-edit-grid .row-label.total { color: var(--text); }
-  .dvd-edit-grid .cell { padding: 0; text-align: center; background: var(--bg-elev); border-radius: 2px; position: relative; }
+  .dvd-edit-grid .cell { padding: 0; text-align: center; background: var(--bg-darker); position: relative; }
   .dvd-edit-grid .cell input {
     width: 100%; background: transparent; border: 1px solid transparent;
-    color: var(--text-dim); font-family: inherit; font-size: 11px; padding: 8px 2px;
+    color: var(--text-dim); font-family: inherit; font-size: 10px; padding: 6px 2px;
     text-align: center; font-variant-numeric: tabular-nums; outline: none;
-    border-radius: 2px;
   }
   .dvd-edit-grid .cell input:hover { border-color: var(--border-bright); }
   .dvd-edit-grid .cell input:focus { border-color: var(--gold); background: var(--bg-card); color: var(--text); }
-  .dvd-edit-grid .cell input.has-val { color: var(--green); font-weight: 500; }
-  .dvd-edit-grid .cell.summary { background: rgba(212,165,116,0.06); }
-  .dvd-edit-grid .cell.summary .summary-val { padding: 8px 2px; color: var(--gold); font-weight: 600; font-variant-numeric: tabular-nums; }
-  .dvd-add-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
-  .dvd-add-row label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
-  .dvd-add-row input, .dvd-add-row select { background: var(--bg-elev); border: 1px solid var(--border-bright); color: var(--text); font-family: inherit; font-size: 11px; padding: 6px 8px; outline: none; }
+  .dvd-edit-grid .cell input.has-val { color: var(--green); font-weight: 600; }
+  .dvd-edit-grid .cell.summary { background: var(--gold-dim); }
+  .dvd-edit-grid .cell.summary .summary-val { padding: 6px 2px; color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .dvd-add-row { display: flex; gap: 6px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-bright); flex-wrap: wrap; }
+  .dvd-add-row label { font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .dvd-add-row input, .dvd-add-row select { background: var(--bg-darker); border: 1px solid var(--border-bright); color: var(--text); font-family: inherit; font-size: 10px; padding: 4px 6px; outline: none; }
   .dvd-add-row input:focus, .dvd-add-row select:focus { border-color: var(--gold); }
-  .dvd-add-row button { background: var(--gold); color: var(--bg); border: none; padding: 6px 14px; font-family: inherit; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-weight: 600; }
-  .dvd-add-row button:hover { background: #b8915d; }
+  .dvd-add-row button { background: var(--gold); color: var(--bg); border: none; padding: 5px 12px; font-family: inherit; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-weight: 700; }
+  .dvd-add-row button:hover { background: #d99c0e; }
 
-  .proj-config { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 24px; }
-  .proj-input { background: var(--bg-card); border: 1px solid var(--border); padding: 12px; }
-  .proj-input.starting { border-left: 3px solid var(--gold); }
+  .proj-config { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-bottom: 16px; background: var(--border-bright); }
+  .proj-input { background: var(--bg-card); padding: 10px; }
+  .proj-input.starting { box-shadow: inset 3px 0 0 var(--gold); }
   .proj-input.starting label { color: var(--gold); }
-  .proj-input label { display: block; font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; }
-  .proj-input input { width: 100%; background: transparent; border: none; color: var(--text); font-family: inherit; font-size: 18px; font-weight: 500; padding: 4px 0; outline: none; font-variant-numeric: tabular-nums; }
+  .proj-input label { display: block; font-size: 8px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+  .proj-input input { width: 100%; background: transparent; border: none; color: var(--text); font-family: inherit; font-size: 15px; font-weight: 700; padding: 2px 0; outline: none; font-variant-numeric: tabular-nums; }
 
-  .chart-wrap { background: var(--bg-card); border: 1px solid var(--border); padding: 24px; height: 380px; position: relative; }
-  .chart-wrap.tall { height: 420px; }
+  .chart-wrap { background: var(--bg-card); border: 1px solid var(--border-bright); padding: 16px; height: 320px; position: relative; }
+  .chart-wrap.tall { height: 360px; }
 
-  .person-block { margin-bottom: 48px; }
-  .person-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-bright); }
-  .person-header h2 { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 400; font-style: italic; color: var(--gold); }
-  .person-header .meta { font-size: 11px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
+  .person-block { margin-bottom: 36px; }
+  .person-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--gold); }
+  .person-header h2 { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; text-transform: uppercase; }
+  .person-header .meta { font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; }
 
-  footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; flex-wrap: wrap; gap: 16px; }
+  footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--border-bright); display: flex; justify-content: space-between; font-size: 9px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; flex-wrap: wrap; gap: 12px; }
 
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
 
-  .loading { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border-bright); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
+  .loading { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--border-bright); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ============================================================
-     MOBILE RESPONSIVE LAYOUT (≤768px)
-     Affects phones and small tablets only. Desktop UNTOUCHED.
-     ============================================================ */
+  /* MOBILE RESPONSIVE — same breakpoints, adjusted for Style 3 sizing */
   @media (max-width: 768px) {
-    body { font-size: 12px; }
-    .container { padding: 12px 12px 60px; }
+    .container { padding: 10px 10px 50px; }
+    header { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px; }
+    .brand { justify-content: space-between; }
+    .brand h1 { font-size: 13px; }
+    .header-right { width: 100%; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
+    .status { padding: 4px 8px; border: 1px solid var(--border); border-right: 1px solid var(--border); flex: 1; min-width: 80px; justify-content: space-between; }
+    button.refresh, button.gear { padding: 8px 10px; font-size: 9px; flex: 1; min-width: 120px; margin-left: 0; }
+    nav.tabs { overflow-x: auto; flex-wrap: nowrap; }
+    .tab { padding: 8px 10px; font-size: 9px; white-space: nowrap; }
 
-    /* Header: stack neatly */
-    header {
-      flex-direction: column; align-items: stretch; gap: 12px;
-      padding-bottom: 16px; margin-bottom: 16px;
+    /* KPI grids stack to 2 cols */
+    .kpi-grid, .kpi-grid.eight { grid-template-columns: repeat(2, 1fr); }
+    .kpi .value { font-size: 15px; }
+    .kpi.small .value { font-size: 13px; }
+    .portfolio-kpis, .portfolio-kpis.cols-5, .portfolio-kpis.cols-6, .portfolio-kpis.cols-8 { grid-template-columns: repeat(2, 1fr); }
+    .portfolio-kpis .pk .v { font-size: 12px; }
+
+    /* Section titles: stack title + buttons */
+    .section-title { font-size: 10px; flex-wrap: wrap; gap: 6px 8px; line-height: 1.4; }
+    .section-title .count { font-size: 9px; flex-basis: 100%; }
+    .section-title button.add-trade-btn {
+      padding: 4px 8px; font-size: 9px; margin-left: 0;
+      flex: 1; min-width: calc(50% - 8px); text-align: center;
     }
-    .brand h1 { font-size: 24px; }
-    .brand .sub { font-size: 10px; }
-    .header-right {
-      gap: 8px 14px;
-      width: 100%;
-      flex-wrap: wrap; align-items: center; justify-content: flex-start;
-    }
-    .status { align-items: flex-start; gap: 2px; }
-    .status .label { font-size: 9px; }
-    .status .val { font-size: 11px; }
-    button.refresh, button.gear {
-      padding: 8px 12px; font-size: 10px;
-      flex: 1; min-width: 120px;
-    }
+    .section-title button.add-trade-btn[style*="margin-left:8px"] { margin-left: 0 !important; }
 
-    /* Tabs */
-    nav.tabs { margin-bottom: 16px; overflow-x: auto; flex-wrap: nowrap; }
-    .tab { padding: 10px 12px; font-size: 9px; letter-spacing: 0.12em; white-space: nowrap; }
-    .tab-num { font-size: 11px; margin-right: 4px; }
+    .two-col { grid-template-columns: 1fr; gap: 12px; }
+    .card { padding: 10px; }
+    table { font-size: 9px; }
+    thead th { padding: 5px 6px; font-size: 7px; }
+    tbody td { padding: 6px 6px; }
+    td input.edit { width: 56px; font-size: 9px; padding: 2px 4px; }
+    .pill { font-size: 7px; padding: 1px 4px; }
+    .source-tag { font-size: 6px; padding: 1px 3px; }
+    .drip-info { font-size: 7px; }
+    .close-pos-btn { font-size: 8px; padding: 1px 5px; }
 
-    /* KPI grids: 4-col → 2-col, 8-col → 2-col */
-    .kpi-grid, .kpi-grid.eight { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-    .kpi { padding: 12px; }
-    .kpi.small { padding: 10px; }
-    .kpi .label { font-size: 8px; margin-bottom: 4px; }
-    .kpi .value { font-size: 18px; word-break: break-word; }
-    .kpi.small .value { font-size: 16px; }
-    .kpi .sub-value { font-size: 10px; }
+    .alloc-row { grid-template-columns: 80px 1fr 60px 32px 42px; gap: 5px; font-size: 9px; }
+    .alloc-row.no-ret { grid-template-columns: 80px 1fr 60px 32px; }
 
-    /* Portfolio KPI bars on Positions tab — stack to 2 columns */
-    .portfolio-kpis, .portfolio-kpis.cols-5, .portfolio-kpis.cols-6, .portfolio-kpis.cols-8 {
-      grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px;
-    }
-    .portfolio-kpis .pk .l { font-size: 8px; }
-    .portfolio-kpis .pk .v { font-size: 13px; }
-
-    /* Section titles */
-    .section-title { font-size: 14px; margin: 20px 0 12px; gap: 8px; flex-wrap: wrap; }
-    .section-title .count { font-size: 9px; }
-    .section-title button.add-trade-btn { padding: 4px 8px; font-size: 9px; letter-spacing: 0.1em; margin-left: auto; }
-
-    /* Two-column layouts collapse to single column */
-    .two-col { grid-template-columns: 1fr; gap: 16px; margin-bottom: 20px; }
-
-    /* Cards */
-    .card { padding: 14px; }
-    .card h3 { font-size: 12px; margin-bottom: 10px; }
-    .card h3 small { font-size: 9px; }
-
-    /* Tables — already in .table-scroll wrappers, just shrink content */
-    table { font-size: 10px; }
-    thead th { padding: 6px 8px; font-size: 8px; }
-    tbody td { padding: 8px; }
-    td input.edit { width: 70px; font-size: 10px; padding: 3px 4px; }
-    .pill { font-size: 8px; padding: 1px 6px; }
-    .source-tag { font-size: 7px; padding: 1px 3px; }
-    .drip-info { font-size: 8px; }
-
-    /* Sub-portfolio and sector bar rows */
-    .alloc-row {
-      grid-template-columns: 100px 1fr 80px 40px 50px;
-      gap: 6px; padding: 6px 0; font-size: 10px;
-    }
-    .alloc-row.no-ret { grid-template-columns: 100px 1fr 80px 40px; }
-    .alloc-row .alloc-pct { font-size: 9px; }
-
-    /* 3D pie chart */
-    .pie3d-wrap { gap: 20px; flex-direction: column; align-items: stretch; }
-    .pie3d-container { width: 100%; max-width: 320px; height: 280px; margin: 0 auto; }
-    .pie3d-container::after { width: 260px; }
+    .pie3d-wrap, .eq-donut-wrap { gap: 16px; flex-direction: column; align-items: stretch; }
+    .pie3d-container { width: 100%; max-width: 300px; height: 260px; margin: 0 auto; }
+    .pie3d-container::after { width: 240px; }
+    .eq-donut-container { width: 100%; max-width: 260px; height: 260px; margin: 0 auto; }
     .pie-legend { width: 100%; min-width: 0; }
-    .legend-item { font-size: 10px; padding: 5px 6px; }
-    .legend-name { font-size: 10px; }
-    .legend-val { font-size: 10px; }
 
-    /* EQ donut: similar treatment */
-    .eq-donut-wrap { gap: 20px; flex-direction: column; align-items: stretch; }
-    .eq-donut-container { width: 100%; max-width: 280px; height: 280px; margin: 0 auto; }
+    .chart-wrap { padding: 10px; height: 260px; }
+    .chart-wrap.tall { height: 300px; }
 
-    /* Charts: ensure they fit and don't overflow */
-    .chart-wrap { padding: 12px; height: 280px; }
-    .chart-wrap.tall { height: 320px; }
+    .proj-config { grid-template-columns: repeat(2, 1fr); }
+    .proj-input input { font-size: 13px; }
 
-    /* Projections: 7-col → 2-col */
-    .proj-config { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .proj-input { padding: 8px; }
-    .proj-input label { font-size: 8px; }
-    .proj-input input { font-size: 14px; }
-
-    /* Dividend calendar: shrink columns, smaller font */
-    .dvd-edit-grid { font-size: 9px; gap: 2px; grid-template-columns: 60px repeat(12, minmax(28px, 1fr)); }
-    .dvd-edit-grid .h { font-size: 8px; padding: 2px; }
-    .dvd-edit-grid .row-label { font-size: 9px; padding: 4px 2px; }
-    .dvd-edit-grid .cell input { font-size: 9px; padding: 4px 1px; }
-    .dvd-edit-grid .cell.summary .summary-val { font-size: 9px; padding: 4px 1px; }
-    /* Outer scroll wrapper for the calendar */
+    /* Dividend calendar: smaller cells, horizontal scroll */
+    .dvd-edit-grid { font-size: 8px; grid-template-columns: 50px repeat(12, minmax(28px, 1fr)); min-width: 400px; }
+    .dvd-edit-grid .h { font-size: 7px; padding: 2px; }
+    .dvd-edit-grid .row-label { font-size: 8px; padding: 3px 2px; }
+    .dvd-edit-grid .cell input { font-size: 8px; padding: 4px 1px; }
+    .dvd-edit-grid .cell.summary .summary-val { font-size: 8px; padding: 4px 1px; }
     #dvd-edit-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .dvd-add-row { font-size: 10px; gap: 6px; }
-    .dvd-add-row input, .dvd-add-row select { font-size: 10px; padding: 5px 6px; }
-    .dvd-add-row button { padding: 5px 10px; font-size: 9px; }
 
-    /* Add-trade form for positions */
-    .add-trade-form {
-      grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px;
-    }
-    .add-trade-form button { width: 100%; padding: 8px 12px; font-size: 9px; }
-    .add-trade-form button.save, .add-trade-form button.cancel { grid-column: span 1; }
-    .add-trade-form input, .add-trade-form select { font-size: 12px; padding: 6px 8px; }
+    /* Add trade forms — collapse 6-col → 2-col grid */
+    .add-trade-form { grid-template-columns: 1fr 1fr !important; gap: 8px; padding: 10px; }
+    .add-trade-form .field { grid-column: span 1 !important; }
+    .add-trade-form .field:has(input[id$="-name"]) { grid-column: span 2 !important; }
+    .add-trade-form button { width: 100%; padding: 8px; font-size: 9px; grid-column: span 1; }
+    .add-trade-form input, .add-trade-form select { font-size: 12px; padding: 6px 7px; }
     .add-trade-form label { font-size: 8px; }
-    .add-trade-preview { font-size: 10px; padding-top: 6px; }
+    .add-trade-preview { font-size: 9px; padding-top: 6px; grid-column: span 2 !important; }
 
-    /* Banner & modal */
-    .banner { padding: 10px; font-size: 11px; flex-wrap: wrap; }
-    .modal { padding: 18px; max-height: 95vh; }
-    .modal h2 { font-size: 18px; }
-    .modal .modal-sub { font-size: 9px; margin-bottom: 14px; }
-    .modal .key-block { margin-bottom: 16px; }
-    .modal .key-block h3 { font-size: 12px; }
-    .modal .key-block .key-desc { font-size: 10px; }
-    .modal input.key-input { font-size: 12px; padding: 8px 10px; }
-    .modal button.btn { padding: 6px 10px; font-size: 9px; }
-    .modal-footer { flex-direction: column; gap: 10px; align-items: stretch; }
-
-    /* Anna & Vas headers */
-    .person-header h2 { font-size: 20px; }
-    .person-header .meta { font-size: 9px; }
-
-    /* Footer */
-    footer { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 9px; padding-top: 16px; }
+    .banner { padding: 8px 10px; font-size: 10px; flex-wrap: wrap; }
+    .modal { padding: 14px; max-height: 95vh; }
+    .modal h2 { font-size: 13px; }
+    .modal-footer { flex-direction: column; gap: 8px; align-items: stretch; }
+    .person-header h2 { font-size: 15px; }
+    footer { flex-direction: column; align-items: flex-start; gap: 4px; font-size: 8px; }
   }
 
-  /* Very small phones (≤400px): even tighter */
   @media (max-width: 400px) {
     .kpi-grid, .kpi-grid.eight { grid-template-columns: 1fr; }
-    .portfolio-kpis, .portfolio-kpis.cols-5, .portfolio-kpis.cols-6, .portfolio-kpis.cols-8 {
-      grid-template-columns: repeat(2, 1fr);
-    }
     .proj-config { grid-template-columns: 1fr; }
-    .pie3d-container { height: 260px; }
-    .eq-donut-container { width: 240px; height: 240px; }
+    .pie3d-container { height: 240px; }
+    .eq-donut-container { width: 220px; height: 220px; }
+    .section-title button.add-trade-btn { min-width: 100%; }
   }
 </style>
 </head>
@@ -488,7 +471,7 @@
     <h2 class="section-title">Yearly Dividend Income <span class="count">Total Net per Year</span></h2>
     <div class="chart-wrap tall"><canvas id="dvd-yearly-chart"></canvas></div>
 
-    <h2 class="section-title">DRIP Performance <span class="count">Reinvested Dividends</span><button class="add-trade-btn" onclick="toggleAddDripForm()">+ Add DRIP</button></h2>
+    <h2 class="section-title">DRIP Performance <span class="count">Reinvested Dividends</span><button class="add-trade-btn" onclick="toggleAddDripForm()">➕ ADD DRIP</button></h2>
     <div id="drip-add-form-container"></div>
     <div class="card" style="padding:0"><div class="table-scroll"><table id="drip-table"></table></div></div>
 
@@ -515,17 +498,17 @@
   </section>
 
   <section class="panel" id="positions">
-    <h2 class="section-title">Equity Portfolio <span class="count" id="eq-count">—</span><button class="add-trade-btn" onclick="toggleAddTradeForm('eq')">+ Add Buy</button></h2>
+    <h2 class="section-title">Equity Portfolio <span class="count" id="eq-count">—</span><button class="add-trade-btn secondary" onclick="toggleNewPositionForm('eq')">🆕 NEW POS</button><button class="add-trade-btn" onclick="toggleAddTradeForm('eq')" style="margin-left:8px;">➕ BUY MORE</button></h2>
     <div id="eq-add-form-container"></div>
     <div class="portfolio-kpis cols-6" id="eq-kpis"></div>
     <div class="card" style="padding: 0"><div class="table-scroll"><table id="eq-table"></table></div></div>
 
-    <h2 class="section-title">Dividend Portfolio <span class="count" id="dvd-count">—</span><button class="add-trade-btn" onclick="toggleAddTradeForm('dvd')">+ Add Buy</button></h2>
+    <h2 class="section-title">Dividend Portfolio <span class="count" id="dvd-count">—</span><button class="add-trade-btn secondary" onclick="toggleNewPositionForm('dvd')">🆕 NEW POS</button><button class="add-trade-btn" onclick="toggleAddTradeForm('dvd')" style="margin-left:8px;">➕ BUY MORE</button></h2>
     <div id="dvd-add-form-container"></div>
     <div class="portfolio-kpis cols-8" id="dvd-kpis-bar"></div>
     <div class="card" style="padding: 0"><div class="table-scroll"><table id="dvd-table"></table></div></div>
 
-    <h2 class="section-title">Crypto Portfolio <span class="count" id="cr-count">—</span><button class="add-trade-btn" onclick="toggleAddTradeForm('crypto')">+ Add Buy</button></h2>
+    <h2 class="section-title">Crypto Portfolio <span class="count" id="cr-count">—</span><button class="add-trade-btn secondary" onclick="toggleNewPositionForm('crypto')">🆕 NEW POS</button><button class="add-trade-btn" onclick="toggleAddTradeForm('crypto')" style="margin-left:8px;">➕ BUY MORE</button></h2>
     <div id="crypto-add-form-container"></div>
     <div class="portfolio-kpis cols-5" id="cr-kpis"></div>
     <div class="card" style="padding: 0"><div class="table-scroll"><table id="cr-table"></table></div></div>
@@ -544,7 +527,7 @@
   <section class="panel" id="annavas"><div id="annavas-body"></div></section>
 
   <footer>
-    <span>DLB Portfolio Terminal v11.0</span>
+    <span>DLB Portfolio Terminal v12.0 — Institutional</span>
     <span>Finnhub · Twelve Data · CoinGecko · Frankfurter</span>
   </footer>
 </div>
@@ -1091,22 +1074,43 @@ async function fetchStooqOne(stooqSymbol, currency) {
   return { price: close, currency: currency || 'USD', ts: Date.now(), source: 'stooq' };
 }
 async function fetchYahooOne(symbol) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
-  const j = await proxyFetch(url, true);
-  if (!j) return null;
-  const r = j?.chart?.result?.[0]; if (!r) return null;
-  const m = r.meta;
-  let price = m.regularMarketPrice ?? m.previousClose;
-  if (!price) return null;
-  let currency = m.currency || 'USD';
-  if (currency === 'GBp') { price /= 100; currency = 'GBP'; }
-  return { price, currency, ts: Date.now(), source: 'yahoo' };
+  // Try chart endpoint first (better data)
+  const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+  const j = await proxyFetch(chartUrl, true);
+  if (j) {
+    const r = j?.chart?.result?.[0];
+    if (r) {
+      const m = r.meta;
+      let price = m.regularMarketPrice ?? m.previousClose;
+      if (price) {
+        let currency = m.currency || 'USD';
+        if (currency === 'GBp') { price /= 100; currency = 'GBP'; }
+        return { price, currency, ts: Date.now(), source: 'yahoo' };
+      }
+    }
+  }
+  // Fallback: Yahoo Quote v7 endpoint (sometimes works when chart fails)
+  const quoteUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
+  const j2 = await proxyFetch(quoteUrl, true);
+  if (j2) {
+    const r2 = j2?.quoteResponse?.result?.[0];
+    if (r2 && (r2.regularMarketPrice || r2.regularMarketPreviousClose)) {
+      let price = r2.regularMarketPrice ?? r2.regularMarketPreviousClose;
+      let currency = r2.currency || 'USD';
+      if (currency === 'GBp') { price /= 100; currency = 'GBP'; }
+      return { price, currency, ts: Date.now(), source: 'yahoo' };
+    }
+  }
+  return null;
 }
 async function fetchStockPrice(pos) {
   if (pos.finnhub && apiKeys.finnhub && pos.currency === 'USD') {
     const r = await fetchFinnhubOne(pos.finnhub); if (r) return r;
   }
-  if (pos.tdataSymbol && apiKeys.twelve) {
+  // Twelve Data free tier only covers US equities — skip it for EU ETFs (XETR, LSE, etc.)
+  // to avoid wasting API credits on guaranteed 404s
+  const isUSStock = pos.currency === 'USD' && !pos.tdataEx;
+  if (pos.tdataSymbol && apiKeys.twelve && isUSStock) {
     const r = await fetchTwelveOne(pos.tdataSymbol, pos.tdataEx, pos.currency); if (r) return r;
   }
   if (pos.stooq) { const r = await fetchStooqOne(pos.stooq, pos.currency); if (r) return r; }
@@ -1224,12 +1228,19 @@ async function refreshAll() {
   } else if (okCount < totalNeeded) {
     status.className = 'val warn'; status.textContent = `${okCount}/${totalNeeded}`;
     const uniqueFailed = [...new Set(failedSymbols)];
-    const failedHint = uniqueFailed.length > 0
-      ? ` Failed: <strong style="color: var(--red);">${uniqueFailed.join(', ')}</strong>.`
-      : '';
+    // Group failed symbols: EU ETFs (have XETR/LSE/etc tag) vs other failures
+    const euFailed = uniqueFailed.filter(s => /\(XETR\)|\(LSE\)|\(EUR\)|\(GBP\)/.test(s));
+    const otherFailed = uniqueFailed.filter(s => !euFailed.includes(s));
+    let failedHint = '';
+    if (euFailed.length > 0) {
+      failedHint += ` <span style="color: var(--text-faint);">EU/UK ETFs without free API coverage: <strong style="color: var(--gold);">${euFailed.join(', ')}</strong> — type manual price.</span>`;
+    }
+    if (otherFailed.length > 0) {
+      failedHint += ` Failed: <strong style="color: var(--red);">${otherFailed.join(', ')}</strong>.`;
+    }
     const keysHint = (!apiKeys.finnhub && !apiKeys.twelve)
       ? ' Add API keys in <strong>⚙ Settings</strong> for better coverage.'
-      : ' Type missing prices manually on the Positions tab.';
+      : '';
     showBanner(`Fetched <strong>${okCount}/${totalNeeded}</strong> prices (${parts.join(', ')}).${failedHint}${clearedHint}${tdErrorHint}${keysHint}`, false);
     // Don't auto-hide so user can read which failed
   } else {
@@ -2037,7 +2048,7 @@ function renderCryptoKpis(list) {
 function positionTable(list, listName, includeDvdCols = false) {
   let header = '<thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Price (editable)</th><th>Src</th><th>Curr</th><th>Cost (USD)</th><th>Market (USD)</th><th>UPL</th><th>Return</th>';
   if (includeDvdCols) header += '<th>Div/Sh</th><th>Annual Inc</th><th>Yield</th><th>YoC</th>';
-  header += '</tr></thead>';
+  header += '<th></th></tr></thead>';
   let rows = list.map((p, idx) => {
     const px = getPrice(p);
     const cost = costBasisUSD(p);
@@ -2084,6 +2095,7 @@ function positionTable(list, listName, includeDvdCols = false) {
       <td class="num pos">${fmtMoney(annualInc)}</td>
       <td class="num">${fmtPct(y)}</td>
       <td class="num ${y!==null && yoc>=y?'pos':''}">${fmtPct(yoc)}</td>`;
+    row += `<td class="num"><button class="close-pos-btn" onclick="closePosition('${listName}', ${idx})" title="Close position">🗑</button></td>`;
     row += '</tr>';
     return row;
   }).join('');
@@ -2101,6 +2113,7 @@ function positionTable(list, listName, includeDvdCols = false) {
     <td class="num ${cls(totUpl)}">${totUpl !== null ? fmtMoney(totUpl) : '—'}</td>
     <td class="num ${cls(totRet)}">${totRet !== null ? fmtPct(totRet) : '—'}</td>
     ${includeDvdCols ? `<td></td><td class="num pos">${fmtMoney(totIncome)}</td><td></td><td></td>` : ''}
+    <td></td>
   </tr>`;
   return header + '<tbody>' + rows + '</tbody>';
 }
@@ -2116,9 +2129,34 @@ function renderPositions() {
   document.getElementById('cr-table').innerHTML = positionTable(data.crypto, 'crypto');
   const totalClosed = data.closed.reduce((s,t)=>s+t.pnl,0);
   document.getElementById('closed-table').innerHTML = `
-    <thead><tr><th class="l">Security</th><th class="l">Country</th><th>Net P&L (USD)</th></tr></thead>
-    <tbody>${data.closed.map(t=>`<tr><td class="l">${t.name}</td><td class="l"><span class="pill">${t.country}</span></td><td class="num ${cls(t.pnl)}">${fmtMoney(t.pnl)}</td></tr>`).join('')}
-    <tr class="total"><td class="l" colspan="2">Total</td><td class="num ${cls(totalClosed)}">${fmtMoney(totalClosed)}</td></tr></tbody>`;
+    <thead><tr><th class="l">Security</th><th class="l">Country</th><th>Net P&L (USD)</th><th></th></tr></thead>
+    <tbody>${data.closed.map((t, i)=>`<tr>
+      <td class="l">${t.name}</td>
+      <td class="l"><span class="pill">${t.country}</span></td>
+      <td class="num ${cls(t.pnl)}"><input class="edit" type="number" step="any" value="${t.pnl.toFixed(2)}" onchange="updateClosedPnl(${i}, this.value)" style="text-align:right;"></td>
+      <td class="num"><button class="close-pos-btn" onclick="removeClosedPosition(${i})" title="Remove from Realized P&amp;L" style="font-size:8px; padding:1px 4px;">✕</button></td>
+    </tr>`).join('')}
+    <tr class="total"><td class="l" colspan="2">Total</td><td class="num ${cls(totalClosed)}">${fmtMoney(totalClosed)}</td><td></td></tr></tbody>`;
+}
+
+function updateClosedPnl(idx, val) {
+  const v = parseFloat(val);
+  if (isNaN(v)) return;
+  data.closed[idx].pnl = v;
+  saveData();
+  render();
+}
+
+function removeClosedPosition(idx) {
+  const entry = data.closed[idx];
+  if (!entry) return;
+  const c1 = confirm(`Remove "${entry.name}" (${fmtMoney(entry.pnl)}) from Realized P&L?\n\nThis is for correcting test entries or mistakes. It does not bring the position back to active holdings.\n\nClick OK to remove.`);
+  if (!c1) return;
+  const c2 = confirm(`Final confirmation — permanently delete this Realized P&L entry?`);
+  if (!c2) return;
+  data.closed.splice(idx, 1);
+  saveData();
+  render();
 }
 function updateField(list, idx, field, val) { data[list][idx][field] = parseFloat(val) || 0; saveData(); render(); }
 function setManualPrice(key, val) {
@@ -2245,6 +2283,212 @@ function submitAddTrade(listName) {
   }
   saveData();
   toggleAddTradeForm(listName);  // close form
+  render();
+}
+
+/* ===================== NEW POSITION FORM (open brand new ticker) ===================== */
+function toggleNewPositionForm(listName) {
+  const container = document.getElementById(`${listName}-add-form-container`);
+  if (!container) return;
+  if (container.innerHTML.trim() && container.dataset.formType === 'new') {
+    container.innerHTML = '';
+    container.dataset.formType = '';
+    return;
+  }
+  container.dataset.formType = 'new';
+
+  const sectors = listName === 'crypto'
+    ? ['Crypto']
+    : ['Technology','Healthcare','Financials','Consumer Staples','Consumer Discretionary','Energy','Real Estate','Utilities','Industrials','Materials','Communication Services','US Large Cap','Emerging Markets','Global Small Cap','Other'];
+  const brokers = listName === 'crypto'
+    ? ['CoinBase','Binance','Revolut','Kraken','Other']
+    : ['IBKR','REV','Trading 212','eToro','Other'];
+  const currencies = listName === 'crypto' ? ['USD','EUR'] : ['USD','EUR','GBP'];
+
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1fr 2fr 1fr 1fr auto auto;">
+      <div class="field">
+        <label>Symbol *</label>
+        <input type="text" id="np-symbol" placeholder="${listName==='crypto'?'e.g. LINK':'e.g. NEE'}" autocomplete="off" style="text-transform: uppercase;">
+      </div>
+      <div class="field">
+        <label>Name *</label>
+        <input type="text" id="np-name" placeholder="${listName==='crypto'?'e.g. Chainlink':'e.g. NextEra Energy'}">
+      </div>
+      <div class="field">
+        <label>Shares *</label>
+        <input type="number" step="any" id="np-shares" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Avg Cost *</label>
+        <input type="number" step="any" id="np-cost" placeholder="0.00">
+      </div>
+      <button class="save" onclick="submitNewPosition('${listName}')">Add Position</button>
+      <button class="cancel" onclick="toggleNewPositionForm('${listName}')">Cancel</button>
+      <div class="field" style="grid-column: 1 / 2;">
+        <label>Currency</label>
+        <select id="np-currency">${currencies.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+      </div>
+      <div class="field" style="grid-column: 2 / 3;">
+        <label>${listName==='crypto'?'CoinGecko ID *':'Sector'}</label>
+        ${listName === 'crypto'
+          ? '<input type="text" id="np-cgid" placeholder="e.g. chainlink (lowercase)">'
+          : `<select id="np-sector">${sectors.map(s => `<option value="${s}">${s}</option>`).join('')}</select>`}
+      </div>
+      <div class="field" style="grid-column: 3 / 4;">
+        <label>Broker</label>
+        <select id="np-broker">${brokers.map(b => `<option value="${b}">${b}</option>`).join('')}</select>
+      </div>
+      ${listName === 'dvd' ? `
+      <div class="field" style="grid-column: 4 / 5;">
+        <label>Annual Div/Sh</label>
+        <input type="number" step="any" id="np-divshare" placeholder="0.00">
+      </div>` : '<div></div>'}
+      <div class="add-trade-preview" id="np-preview">
+        Enter the symbol — I'll try to auto-fill name, sector, currency from Finnhub / Twelve Data / CoinGecko.
+      </div>
+    </div>
+  `;
+  // Debounced auto-lookup
+  let lookupTimer = null;
+  document.getElementById('np-symbol').addEventListener('input', (e) => {
+    const sym = e.target.value.trim().toUpperCase();
+    if (lookupTimer) clearTimeout(lookupTimer);
+    if (sym.length < 2) return;
+    lookupTimer = setTimeout(() => autoLookupSymbol(sym, listName), 600);
+  });
+}
+
+async function autoLookupSymbol(sym, listName) {
+  const preview = document.getElementById('np-preview');
+  if (!preview) return;
+  preview.innerHTML = `<span class="lookup-hint">⟳ Looking up <strong>${sym}</strong>...</span>`;
+
+  if (listName === 'crypto') {
+    // Try CoinGecko search
+    try {
+      const url = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(sym.toLowerCase())}`;
+      const j = await proxyFetch(url, true);
+      if (j && j.coins && j.coins.length > 0) {
+        // Find exact symbol match first
+        const exact = j.coins.find(c => c.symbol.toUpperCase() === sym) || j.coins[0];
+        document.getElementById('np-name').value = document.getElementById('np-name').value || exact.name;
+        document.getElementById('np-cgid').value = document.getElementById('np-cgid').value || exact.id;
+        preview.innerHTML = `<span class="lookup-hint">✓ Found <strong>${exact.name}</strong> · CoinGecko ID: <strong>${exact.id}</strong></span>`;
+        return;
+      }
+    } catch(e) {}
+    preview.innerHTML = `<span class="lookup-err">No match for ${sym} on CoinGecko — fill in manually</span>`;
+    return;
+  }
+
+  // Stocks: try Finnhub profile first (best quality), fall back to Twelve Data
+  if (apiKeys.finnhub) {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${encodeURIComponent(sym)}&token=${apiKeys.finnhub}`);
+      if (r.ok) {
+        const j = await r.json();
+        if (j.name) {
+          document.getElementById('np-name').value = document.getElementById('np-name').value || j.name;
+          if (j.currency) document.getElementById('np-currency').value = j.currency;
+          if (j.finnhubIndustry && document.getElementById('np-sector')) {
+            // Try to match industry to one of our sectors
+            const opts = [...document.getElementById('np-sector').options].map(o => o.value);
+            const match = opts.find(o => j.finnhubIndustry.toLowerCase().includes(o.toLowerCase()) || o.toLowerCase().includes(j.finnhubIndustry.toLowerCase()));
+            if (match) document.getElementById('np-sector').value = match;
+          }
+          preview.innerHTML = `<span class="lookup-hint">✓ Found <strong>${j.name}</strong> · Currency: <strong>${j.currency || 'USD'}</strong>${j.finnhubIndustry ? ' · Industry: ' + j.finnhubIndustry : ''} (via Finnhub)</span>`;
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+  // Twelve Data fallback
+  if (apiKeys.twelve) {
+    try {
+      const r = await fetch(`https://api.twelvedata.com/quote?symbol=${encodeURIComponent(sym)}&apikey=${apiKeys.twelve}`);
+      if (r.ok) {
+        const j = await r.json();
+        if (j.name) {
+          document.getElementById('np-name').value = document.getElementById('np-name').value || j.name;
+          if (j.currency) document.getElementById('np-currency').value = j.currency;
+          preview.innerHTML = `<span class="lookup-hint">✓ Found <strong>${j.name}</strong> · ${j.exchange || ''} · ${j.currency || 'USD'} (via Twelve Data)</span>`;
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+  preview.innerHTML = `<span class="lookup-err">No auto-lookup available — fill in manually${(!apiKeys.finnhub && !apiKeys.twelve) ? ' (add API keys in ⚙ Settings for auto-lookup)' : ''}</span>`;
+}
+
+function submitNewPosition(listName) {
+  const sym = document.getElementById('np-symbol').value.trim().toUpperCase();
+  const name = document.getElementById('np-name').value.trim();
+  const shares = parseFloat(document.getElementById('np-shares').value);
+  const avgCost = parseFloat(document.getElementById('np-cost').value);
+  const currency = document.getElementById('np-currency').value;
+  const broker = document.getElementById('np-broker').value;
+  if (!sym || !name || isNaN(shares) || shares <= 0 || isNaN(avgCost) || avgCost <= 0) {
+    alert('Symbol, name, shares, and cost are all required.'); return;
+  }
+  // Check duplicates
+  if (data[listName].some(p => p.symbol === sym)) {
+    alert(`${sym} already exists in this portfolio. Use "Buy More" to add to it instead.`); return;
+  }
+  let newPos;
+  if (listName === 'crypto') {
+    const cgId = document.getElementById('np-cgid').value.trim().toLowerCase();
+    if (!cgId) { alert('CoinGecko ID is required for crypto (e.g. "chainlink"). Find it at coingecko.com/coins/<id>.'); return; }
+    newPos = { symbol: sym, name, broker, shares, avgCost, currency, cgId, priceCurrency: currency };
+  } else {
+    const sector = document.getElementById('np-sector').value;
+    const divShare = listName === 'dvd' ? (parseFloat(document.getElementById('np-divshare').value) || 0) : 0;
+    newPos = { symbol: sym, name, broker, shares, avgCost, currency, sector,
+      yahoo: sym, stooq: sym.toLowerCase() + '.us', tdataSymbol: sym, finnhub: sym };
+    if (listName === 'dvd') {
+      newPos.dvdPerShare = divShare;
+      newPos.manualShares = shares;
+      newPos.manualCost = shares * avgCost;
+    }
+  }
+  data[listName].push(newPos);
+  saveData();
+  toggleNewPositionForm(listName);
+  refreshAll();  // trigger price fetch for the new position
+}
+
+/* ===================== CLOSE POSITION (sell out) ===================== */
+function closePosition(listName, idx) {
+  const pos = data[listName][idx];
+  if (!pos) return;
+  const c1 = confirm(`Close ${pos.symbol} — ${pos.name}?\n\nThis will sell out the entire position (${fmtShares(pos.shares)} shares) and move it to Realized P&L.\n\nClick OK to continue.`);
+  if (!c1) return;
+
+  // Ask for close price
+  const px = getPrice(pos);
+  const suggested = px.price !== null ? px.price : pos.avgCost;
+  const closePriceStr = prompt(`Close price for ${pos.symbol} (per share, in ${pos.currency}):`, suggested.toFixed(pos.avgCost < 1 ? 6 : 2));
+  if (!closePriceStr) return;
+  const closePrice = parseFloat(closePriceStr);
+  if (isNaN(closePrice) || closePrice <= 0) { alert('Invalid close price.'); return; }
+
+  const c2 = confirm(`FINAL CONFIRMATION\n\nClose ${pos.shares.toFixed(4)} shares of ${pos.symbol} at ${closePrice.toFixed(2)} ${pos.currency}.\n\nRealized P&L: ${((closePrice - pos.avgCost) * pos.shares).toFixed(2)} ${pos.currency}\n\nThis cannot be undone. Continue?`);
+  if (!c2) return;
+
+  // Calculate realized P&L in USD
+  const pnlNative = (closePrice - pos.avgCost) * pos.shares;
+  const pnlUSD = toUSD(pnlNative, pos.currency);
+  // Add to closed list
+  if (!data.closed) data.closed = [];
+  data.closed.unshift({
+    name: pos.name + ' (' + pos.symbol + ')',
+    country: pos.currency === 'USD' ? 'US' : (pos.currency === 'EUR' ? 'EU' : pos.currency),
+    pnl: pnlUSD,
+    closedDate: new Date().toISOString().slice(0,10)
+  });
+  // Remove from list
+  data[listName].splice(idx, 1);
+  saveData();
   render();
 }
 
@@ -2602,4 +2846,3 @@ document.querySelectorAll('.tab').forEach(btn => {
 </script>
 </body>
 </html>
-
