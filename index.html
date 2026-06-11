@@ -330,16 +330,29 @@
     .brand { justify-content: space-between; }
     .brand h1 { font-size: 13px; }
     .header-right { width: 100%; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
-    .status { padding: 4px 8px; border: 1px solid var(--border); border-right: 1px solid var(--border); flex: 1; min-width: 80px; justify-content: space-between; }
+    .status {
+      padding: 6px 10px;
+      border: 1px solid var(--border-bright);
+      background: var(--bg-card);
+      flex: 1 1 calc(50% - 6px);
+      min-width: 0;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+    .status .label { font-size: 9px; }
+    .status .val { font-size: 11px; }
     button.refresh, button.gear { padding: 8px 10px; font-size: 9px; flex: 1; min-width: 120px; margin-left: 0; }
     nav.tabs { overflow-x: auto; flex-wrap: nowrap; }
     .tab { padding: 8px 10px; font-size: 9px; white-space: nowrap; }
 
-    /* KPI grids stack to 2 cols */
-    .kpi-grid, .kpi-grid.eight { grid-template-columns: repeat(2, 1fr); }
+    /* KPI grids stack to 2 cols on mobile, with visible gap */
+    .kpi-grid, .kpi-grid.eight { grid-template-columns: repeat(2, 1fr); gap: 6px; background: transparent; }
+    .kpi { border: 1px solid var(--border-bright); }
     .kpi .value { font-size: 15px; }
     .kpi.small .value { font-size: 13px; }
-    .portfolio-kpis, .portfolio-kpis.cols-5, .portfolio-kpis.cols-6, .portfolio-kpis.cols-8 { grid-template-columns: repeat(2, 1fr); }
+    .portfolio-kpis, .portfolio-kpis.cols-5, .portfolio-kpis.cols-6, .portfolio-kpis.cols-8 { grid-template-columns: repeat(2, 1fr); gap: 6px; background: transparent; }
+    .portfolio-kpis .pk { border: 1px solid var(--border-bright); }
     .portfolio-kpis .pk .v { font-size: 12px; }
 
     /* Section titles: stack title + buttons */
@@ -403,7 +416,6 @@
   }
 
   @media (max-width: 400px) {
-    .kpi-grid, .kpi-grid.eight { grid-template-columns: 1fr; }
     .proj-config { grid-template-columns: 1fr; }
     .pie3d-container { height: 240px; }
     .eq-donut-container { width: 220px; height: 220px; }
