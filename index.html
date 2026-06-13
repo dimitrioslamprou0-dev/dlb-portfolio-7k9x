@@ -258,15 +258,34 @@
   .alloc-row .alloc-ret { text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; font-weight: 600; }
 
   .pie3d-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
-  .pie3d-container { position: relative; width: 400px; height: 320px; perspective: 1400px; flex-shrink: 0; }
+  .pie3d-container { position: relative; width: 340px; height: 340px; flex-shrink: 0; }
+  .pie3d-container canvas { width: 100% !important; height: 100% !important; }
 
   .eq-donut-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
   .eq-donut-container { position: relative; width: 300px; height: 300px; flex-shrink: 0; }
   .eq-donut-container canvas { width: 100% !important; height: 100% !important; }
-  .pie3d { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; transform: translate(-50%,-50%) rotateX(60deg); animation: pieSpin 90s linear infinite; }
-  @keyframes pieSpin { from { transform: translate(-50%,-50%) rotateX(60deg) rotateZ(0deg); } to { transform: translate(-50%,-50%) rotateX(60deg) rotateZ(360deg); } }
-  .pie3d:hover { animation-play-state: paused; }
-  .pie3d-container::after { content: ''; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 300px; height: 28px; background: radial-gradient(ellipse, rgba(0,0,0,0.6), transparent 70%); filter: blur(8px); }
+  .pie3d { width: 100%; height: 100%; }
+
+  .donut-center-label {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center; pointer-events: none;
+  }
+  .donut-center-label .dc-label {
+    font-size: 9px; color: var(--text-faint);
+    letter-spacing: 0.25em; text-transform: uppercase;
+    margin-bottom: 4px; font-weight: 600;
+  }
+  .donut-center-label .dc-value {
+    font-size: 22px; color: var(--gold);
+    font-weight: 700; font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .donut-center-label .dc-sub {
+    font-size: 9px; color: var(--text-dim);
+    margin-top: 4px; letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
   .pie-legend { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 3px; }
   .legend-item { display: flex; align-items: center; gap: 8px; font-size: 10px; padding: 4px 8px; transition: background 0.1s; background: var(--bg-card); border: 1px solid var(--border); }
   .legend-item:hover { background: var(--bg-hover); border-color: var(--border-bright); }
@@ -379,8 +398,7 @@
     .alloc-row.no-ret { grid-template-columns: 80px 1fr 60px 32px; }
 
     .pie3d-wrap, .eq-donut-wrap { gap: 16px; flex-direction: column; align-items: stretch; }
-    .pie3d-container { width: 100%; max-width: 300px; height: 260px; margin: 0 auto; }
-    .pie3d-container::after { width: 240px; }
+    .pie3d-container { width: 100%; max-width: 280px; height: 280px; margin: 0 auto; }
     .eq-donut-container { width: 100%; max-width: 260px; height: 260px; margin: 0 auto; }
     .pie-legend { width: 100%; min-width: 0; }
 
@@ -417,7 +435,7 @@
 
   @media (max-width: 400px) {
     .proj-config { grid-template-columns: 1fr; }
-    .pie3d-container { height: 240px; }
+    .pie3d-container { width: 240px; height: 240px; }
     .eq-donut-container { width: 220px; height: 220px; }
     .section-title button.add-trade-btn { min-width: 100%; }
   }
@@ -447,8 +465,9 @@
     <button class="tab active" data-tab="overview"><span class="tab-num">01</span>Overview</button>
     <button class="tab" data-tab="dividends"><span class="tab-num">02</span>Dividends</button>
     <button class="tab" data-tab="positions"><span class="tab-num">03</span>Positions</button>
-    <button class="tab" data-tab="projections"><span class="tab-num">04</span>Projections</button>
-    <button class="tab" data-tab="annavas"><span class="tab-num">05</span>Anna &amp; Vas</button>
+    <button class="tab" data-tab="projections"><span class="tab-num">04</span>Projected DVD</button>
+    <button class="tab" data-tab="eqprojected"><span class="tab-num">05</span>EQ Projected</button>
+    <button class="tab" data-tab="annavas"><span class="tab-num">06</span>Anna &amp; Vas</button>
   </nav>
 
   <section class="panel active" id="overview">
@@ -463,7 +482,10 @@
     <h2 class="section-title">Equity Portfolio Allocation <span class="count">Asset Class Breakdown</span></h2>
     <div class="card">
       <div class="eq-donut-wrap">
-        <div class="eq-donut-container"><canvas id="eq-donut"></canvas></div>
+        <div class="eq-donut-container">
+          <canvas id="eq-donut"></canvas>
+          <div class="donut-center-label" id="eq-donut-center"></div>
+        </div>
         <div class="pie-legend" id="eq-donut-legend"></div>
       </div>
     </div>
@@ -534,6 +556,20 @@
     <div class="chart-wrap"><canvas id="proj-chart"></canvas></div>
     <h2 class="section-title">Year-by-Year Projection <span class="count">30 Years</span></h2>
     <div class="card" style="padding: 0"><div class="table-scroll"><table id="proj-table"></table></div></div>
+  </section>
+
+  <section class="panel" id="eqprojected">
+    <div class="proj-config" id="eqproj-config"></div>
+    <div class="kpi-grid" id="eqproj-kpis"></div>
+    <h2 class="section-title">Accumulation Phase · Portfolio Growth</h2>
+    <div class="chart-wrap tall"><canvas id="eqproj-growth-chart"></canvas></div>
+    <h2 class="section-title">Withdrawal Phase · After FIRE (30 Years)</h2>
+    <div class="chart-wrap"><canvas id="eqproj-withdraw-chart"></canvas></div>
+    <h2 class="section-title">Year-by-Year Detail</h2>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="eqproj-table"></table></div></div>
+    <div style="margin-top: 16px; padding: 10px 14px; background: var(--bg-darker); border: 1px solid var(--border-bright); font-size: 9px; color: var(--text-faint); line-height: 1.6;">
+      <strong style="color: var(--gold);">How this is calculated:</strong> Compound growth at the entered annual return, compounded monthly with monthly contributions. FIRE year = first year when portfolio × withdrawal rate ≥ target annual income (target monthly × 12). FIRE number = target annual income ÷ withdrawal rate. <strong>The 4% rule comes from the Trinity Study — it's a starting point, not a guarantee. Real returns vary year-to-year.</strong> This shows one deterministic path; reality will deviate.
+    </div>
   </section>
 
   <section class="panel" id="annavas"><div id="annavas-body"></div></section>
@@ -746,6 +782,7 @@ const DEFAULT_DATA = {
     { name: 'Blue Owl Capital (OBDC)', country: 'US', pnl: -228.71 }
   ],
   projection: { years: 30, startingBalanceEUR: null, annualDeposit: 3000, dvdYield: 0.048, dvdGrowth: 0.071, marketGrowth: 0.06, taxRate: 0.15 },
+  eqProjection: { startingBalanceEUR: null, monthlyContrib: 500, annualReturn: 0.08, targetMonthlyEUR: 3500, withdrawalRate: 0.04, years: 40 },
   annaVas: {
     anna: {
       startingBalanceUSD: 8511.58,
@@ -1329,6 +1366,7 @@ function render() {
   renderDividends();
   renderPositions();
   renderProjections();
+  renderEqProjected();
   renderAnnaVas();
 }
 
@@ -1402,20 +1440,29 @@ function renderOverview() {
   }
   if (cr.sum > 0) sectors['Crypto'] = cr.sum;
   const sectorList = Object.entries(sectors).sort((a,b) => b[1]-a[1]);
-  // Distinct palette: each color is ≥40° apart in hue for clear separation
-  const palette = [
-    '#d4a574',  // gold (warm beige)
-    '#3b82f6',  // strong blue
-    '#a855f7',  // strong purple
-    '#22c55e',  // green
-    '#ef4444',  // red
-    '#f59e0b',  // amber/orange
-    '#06b6d4',  // cyan/teal
-    '#ec4899',  // pink/magenta
-    '#84cc16',  // lime
-    '#8b5cf6',  // violet
-    '#f97316'   // orange
-  ];
+  // PALETTE B — 11 hues at ≥30° spacing, S=65% L=38%
+  // Each sector mapped to a specific color (consistent across all charts)
+  const SECTOR_COLOR_MAP = {
+    'Financials':             '#9f7521',  // bronze
+    'Technology':             '#809f21',  // olive
+    'Consumer Staples':       '#369f21',  // grass
+    'US Large Cap':           '#219f56',  // emerald
+    'Real Estate':            '#219f9f',  // teal
+    'Crypto':                 '#21569f',  // ocean
+    'Consumer Discretionary': '#36219f',  // violet
+    'Healthcare':             '#75219f',  // grape
+    'Energy':                 '#9f218a',  // berry
+    'Global Small Cap':       '#9f2141',  // ruby
+    'Emerging Markets':       '#9f3621',  // brick
+    'Utilities':              '#9f7521',
+    'Industrials':            '#809f21',
+    'Materials':              '#369f21',
+    'Communication Services': '#219f56',
+    'Other':                  '#666666'
+  };
+  const PALETTE_B = ['#9f7521','#809f21','#369f21','#219f56','#219f9f','#21569f','#36219f','#75219f','#9f218a','#9f2141','#9f3621'];
+  // Build palette aligned to sortedSectorList ordering
+  const palette = sectorList.map(([name], i) => SECTOR_COLOR_MAP[name] || PALETTE_B[i % PALETTE_B.length]);
   drawPie3D(sectorList, totalMv || 1, palette);
   drawEqDonut(palette);
   document.getElementById('pie-legend').innerHTML = sectorList.map(([name, val], i) => `
@@ -1426,9 +1473,9 @@ function renderOverview() {
     </div>`).join('');
 
   const subs = [
-    { name: 'Dividend Portfolio', value: dv.sum, cost: dvCb.sum, color: '#d4a574' },
-    { name: 'Equity Portfolio', value: eq.sum, cost: eqCb.sum, color: '#7dd3fc' },
-    { name: 'Crypto Portfolio', value: cr.sum, cost: crCb.sum, color: '#c084fc' }
+    { name: 'Dividend Portfolio', value: dv.sum, cost: dvCb.sum, color: '#9f7521' },  // bronze
+    { name: 'Equity Portfolio',   value: eq.sum, cost: eqCb.sum, color: '#21569f' },  // ocean
+    { name: 'Crypto Portfolio',   value: cr.sum, cost: crCb.sum, color: '#75219f' }   // grape
   ];
   const maxSub = Math.max(...subs.map(s=>s.value), 1);
   document.getElementById('subport-bars').innerHTML = subs.map(s => {
@@ -1475,77 +1522,70 @@ function renderOverview() {
     }).join('')}</tbody>`;
 }
 function drawPie3D(sectorList, total, palette) {
+  // Renamed conceptually to "flat donut" — kept function name for compat
   const container = document.getElementById('pie3d');
   if (!container) return;
-  const DISK_SIZE = 340;          // pie disk diameter (matches CSS)
-  const LAYERS = 16; const LAYER_OFFSET = 3.5;
-  const segs = sectorList.map(([n,v], i) => ({ name: n, value: v, color: palette[i % palette.length] }));
-  let html = '';
+  // Clear any old 3D structure
+  container.innerHTML = '<canvas id="sector-donut-canvas"></canvas>';
+  const canvas = document.getElementById('sector-donut-canvas');
 
-  // Stacked conic-gradient layers (depth)
-  for (let li = LAYERS - 1; li >= 0; li--) {
-    const z = -li * LAYER_OFFSET; const isTop = li === 0;
-    let cg = 'conic-gradient(from 0deg'; let acc = 0;
-    for (const s of segs) {
-      const frac = s.value / total;
-      const start = acc * 360; const end = (acc + frac) * 360;
-      const col = isTop ? s.color : shadeColor(s.color, -28);
-      cg += `, ${col} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
-      acc += frac;
+  // Build labels and data
+  const labels = sectorList.map(([n]) => n);
+  const values = sectorList.map(([,v]) => v);
+
+  // Destroy any prior chart instance on this canvas
+  if (chartInstances.sectorDonut) { try { chartInstances.sectorDonut.destroy(); } catch(e){} }
+
+  chartInstances.sectorDonut = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: palette,
+        borderColor: '#0c0c0c',
+        borderWidth: 2,
+        hoverOffset: 12
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      animation: { duration: 600 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0a0a0a',
+          borderColor: '#fbbf24',
+          borderWidth: 1,
+          titleColor: '#fff',
+          bodyColor: '#fbbf24',
+          padding: 12,
+          titleFont: { family: 'JetBrains Mono', size: 11 },
+          bodyFont: { family: 'JetBrains Mono', size: 12, weight: 700 },
+          callbacks: {
+            label: c => `${c.label}: $${c.parsed.toLocaleString('en-US', {maximumFractionDigits: 0})} (${(c.parsed/total*100).toFixed(1)}%)`
+          }
+        }
+      }
     }
-    cg += ')';
-    html += `<div style="position:absolute; left:50%; top:50%; transform: translate(-50%,-50%) translateZ(${z}px); width:${DISK_SIZE}px; height:${DISK_SIZE}px; border-radius:50%; background:${cg}; ${isTop ? 'box-shadow: 0 0 28px rgba(0,0,0,0.4) inset, 0 0 14px rgba(212,165,116,0.15);' : ''}"></div>`;
+  });
+
+  // Center label overlay
+  const sectorCount = sectorList.length;
+  let centerEl = document.getElementById('sector-donut-center');
+  if (!centerEl) {
+    centerEl = document.createElement('div');
+    centerEl.id = 'sector-donut-center';
+    centerEl.className = 'donut-center-label';
+    container.appendChild(centerEl);
   }
-
-  // Overlay SVG with % labels — adaptive placement per slice size.
-  // For each slice we compute a position that stays inside, using:
-  //   - chord length at the label radius vs ~40px text width budget
-  //   - smaller slices get pulled toward the slice midline and closer to outer edge
-  const r = DISK_SIZE / 2;  // 170
-  const labelsSvg = [];
-  let acc = 0;
-  for (const s of segs) {
-    const frac = s.value / total;
-    const pct = frac * 100;
-    const midAngle = (acc + frac/2) * 2 * Math.PI;
-    acc += frac;
-
-    // Don't label very small slices (would be cramped/illegible)
-    if (pct < 3) continue;
-
-    // For slices ≥10%: place at 55% radius (comfortable center)
-    // For slices 3-10%: place at 70% radius (further out where slice is wider)
-    // Font scales down for smaller slices
-    let labelR, fontSize;
-    if (pct >= 15) { labelR = r * 0.50; fontSize = 17; }
-    else if (pct >= 8) { labelR = r * 0.58; fontSize = 14; }
-    else if (pct >= 5) { labelR = r * 0.68; fontSize = 12; }
-    else { labelR = r * 0.76; fontSize = 11; }
-
-    // Sanity check: at labelR, the chord/arc length must be > ~text width
-    // Arc length at radius labelR for this slice = labelR * frac * 2π
-    const arcLen = labelR * frac * 2 * Math.PI;
-    const textWidth = String(pct.toFixed(pct >= 10 ? 0 : 1)).length * fontSize * 0.7 + 8;  // approx "12%" width
-    // If text would not fit, push further out and shrink
-    let attempts = 0;
-    while (arcLen < textWidth && attempts < 3) {
-      labelR = Math.min(r * 0.82, labelR * 1.1);
-      fontSize = Math.max(9, fontSize - 1);
-      attempts++;
-    }
-
-    const x = labelR * Math.sin(midAngle);
-    const y = -labelR * Math.cos(midAngle);
-    const txt = pct >= 10 ? `${pct.toFixed(0)}%` : `${pct.toFixed(1)}%`;
-    labelsSvg.push(`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="#0a0d12" font-family="JetBrains Mono, monospace" font-weight="700" font-size="${fontSize}" text-anchor="middle" dominant-baseline="middle" stroke="rgba(255,255,255,0.5)" stroke-width="0.6" paint-order="stroke">${txt}</text>`);
-  }
-
-  const svgViewBox = `${-r} ${-r} ${DISK_SIZE} ${DISK_SIZE}`;
-  html += `<div style="position:absolute; left:0; top:0; width:100%; height:100%; transform-style:preserve-3d; pointer-events:none;">
-    <svg style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:${DISK_SIZE}px; height:${DISK_SIZE}px;" viewBox="${svgViewBox}">${labelsSvg.join('')}</svg>
-  </div>`;
-
-  container.innerHTML = html;
+  centerEl.innerHTML = `
+    <div class="dc-label">Total</div>
+    <div class="dc-value">${fmtMoney(total)}</div>
+    <div class="dc-sub">${sectorCount} sector${sectorCount===1?'':'s'}</div>
+  `;
 }
 function shadeColor(hex, percent) {
   let r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
@@ -1593,15 +1633,15 @@ function drawEqDonut(palette) {
     return;
   }
 
-  // Distinct color picks from the palette
+  // Palette B colors for the 4 EQ buckets
   const bucketColors = {
-    'US Large Cap': '#3b82f6',         // blue
-    'Technology': '#d4a574',           // gold
-    'Emerging Markets': '#22c55e',     // green
-    'Global Small Cap': '#a855f7',     // purple
-    'Other': '#8b94a5'                 // gray
+    'US Large Cap':     '#36219f',  // violet
+    'Technology':       '#9f7521',  // bronze (matches main pie)
+    'Emerging Markets': '#219f9f',  // teal
+    'Global Small Cap': '#9f218a',  // berry
+    'Other':            '#666666'
   };
-  const colors = entries.map(([k]) => bucketColors[k] || palette[order.indexOf(k) % palette.length] || '#8b94a5');
+  const colors = entries.map(([k]) => bucketColors[k] || palette[order.indexOf(k) % palette.length] || '#666666');
 
   chartInstances.eqDonut = new Chart(ctx, {
     type: 'doughnut',
@@ -1610,23 +1650,23 @@ function drawEqDonut(palette) {
       datasets: [{
         data: entries.map(([_, v]) => v),
         backgroundColor: colors,
-        borderColor: '#0a0d12',
-        borderWidth: 3,
-        hoverOffset: 8
+        borderColor: '#0c0c0c',
+        borderWidth: 2,
+        hoverOffset: 10
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '62%',
+      cutout: '68%',
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#11151c',
-          borderColor: '#d4a574',
+          backgroundColor: '#0a0a0a',
+          borderColor: '#fbbf24',
           borderWidth: 1,
-          titleColor: '#e8ecf1',
-          bodyColor: '#d4a574',
+          titleColor: '#fff',
+          bodyColor: '#fbbf24',
           padding: 12,
           callbacks: {
             label: (c) => {
@@ -1641,6 +1681,15 @@ function drawEqDonut(palette) {
   });
 
   // Legend
+  // Center label
+  const eqCenter = document.getElementById('eq-donut-center');
+  if (eqCenter) {
+    eqCenter.innerHTML = `
+      <div class="dc-label">EQ Total</div>
+      <div class="dc-value" style="font-size: 18px;">${fmtMoney(total)}</div>
+      <div class="dc-sub">${entries.length} bucket${entries.length===1?'':'s'}</div>
+    `;
+  }
   document.getElementById('eq-donut-legend').innerHTML = entries.map(([k, v], i) => `
     <div class="legend-item">
       <span class="legend-dot" style="background:${colors[i]}"></span>
@@ -1849,19 +1898,18 @@ function drawMonthlyDvdChart(monthTotals) {
   const values = sortedKeys.map(k => monthTotals[k]);
   const currentYear = String(new Date().getFullYear());
 
-  // Sophisticated palette: muted gold for current year, deep teal for prior years
-  // Each bar gets a vertical gradient to give depth
+  // 2025 teal (kept) · 2026 bronze (Option A from Palette B)
   const c2d = ctx.getContext('2d');
   const h = ctx.height || 380;
-  const goldGrad = c2d.createLinearGradient(0, 0, 0, h);
-  goldGrad.addColorStop(0, 'rgba(212, 165, 116, 0.95)');   // gold top
-  goldGrad.addColorStop(1, 'rgba(184, 134, 92, 0.55)');    // darker gold bottom
+  const bronzeGrad = c2d.createLinearGradient(0, 0, 0, h);
+  bronzeGrad.addColorStop(0, 'rgba(159, 117, 33, 0.95)');   // bronze top
+  bronzeGrad.addColorStop(1, 'rgba(107, 79, 22, 0.55)');    // dark bronze bottom
   const tealGrad = c2d.createLinearGradient(0, 0, 0, h);
-  tealGrad.addColorStop(0, 'rgba(56, 142, 142, 0.90)');    // deep teal top
-  tealGrad.addColorStop(1, 'rgba(38, 100, 100, 0.45)');    // dark teal bottom
+  tealGrad.addColorStop(0, 'rgba(56, 142, 142, 0.90)');    // teal top (kept)
+  tealGrad.addColorStop(1, 'rgba(38, 100, 100, 0.45)');    // teal bottom (kept)
 
-  const bgColors = sortedKeys.map(k => k.startsWith(currentYear) ? goldGrad : tealGrad);
-  const borderColors = sortedKeys.map(k => k.startsWith(currentYear) ? '#d4a574' : '#4a9999');
+  const bgColors = sortedKeys.map(k => k.startsWith(currentYear) ? bronzeGrad : tealGrad);
+  const borderColors = sortedKeys.map(k => k.startsWith(currentYear) ? '#c89030' : '#4a9999');
 
   chartInstances.dvd = new Chart(ctx, {
     type: 'bar',
@@ -1912,32 +1960,18 @@ function drawYearlyDvdChart(monthTotals) {
   const values = years.map(y => yearTotals[y]);
   const currentYear = String(new Date().getFullYear());
 
-  // Same professional palette, scaled for yearly view:
-  // Past years: muted navy
-  // Current year: gold
-  // Future years: deep teal
+  // Yearly: 2026 bronze (current year), all other years teal (same as monthly)
   const c2d = ctx.getContext('2d');
   const h = ctx.height || 380;
-  const goldGrad = c2d.createLinearGradient(0, 0, 0, h);
-  goldGrad.addColorStop(0, 'rgba(212, 165, 116, 0.95)');
-  goldGrad.addColorStop(1, 'rgba(184, 134, 92, 0.55)');
-  const navyGrad = c2d.createLinearGradient(0, 0, 0, h);
-  navyGrad.addColorStop(0, 'rgba(74, 110, 153, 0.88)');    // muted navy top
-  navyGrad.addColorStop(1, 'rgba(48, 78, 117, 0.45)');     // dark navy bottom
+  const bronzeGrad = c2d.createLinearGradient(0, 0, 0, h);
+  bronzeGrad.addColorStop(0, 'rgba(159, 117, 33, 0.95)');
+  bronzeGrad.addColorStop(1, 'rgba(107, 79, 22, 0.55)');
   const tealGrad = c2d.createLinearGradient(0, 0, 0, h);
-  tealGrad.addColorStop(0, 'rgba(56, 142, 142, 0.88)');
+  tealGrad.addColorStop(0, 'rgba(56, 142, 142, 0.90)');
   tealGrad.addColorStop(1, 'rgba(38, 100, 100, 0.45)');
 
-  const bgColors = years.map(y => {
-    if (y < currentYear) return navyGrad;
-    if (y === currentYear) return goldGrad;
-    return tealGrad;
-  });
-  const borderColors = years.map(y => {
-    if (y < currentYear) return '#6388b8';
-    if (y === currentYear) return '#d4a574';
-    return '#4a9999';
-  });
+  const bgColors = years.map(y => y === currentYear ? bronzeGrad : tealGrad);
+  const borderColors = years.map(y => y === currentYear ? '#c89030' : '#4a9999');
 
   chartInstances.dvdYearly = new Chart(ctx, {
     type: 'bar',
@@ -2671,6 +2705,200 @@ function updateProj(key, fmt, val) {
   else data.projection[key] = v;
   saveData(); renderProjections();
 }
+
+/* ===================== EQ PROJECTED (FIRE Calculator) ===================== */
+function renderEqProjected() {
+  if (!data.eqProjection) {
+    data.eqProjection = { startingBalanceEUR: null, monthlyContrib: 500, annualReturn: 0.08, targetMonthlyEUR: 3500, withdrawalRate: 0.04, years: 40 };
+  }
+  const cfg = data.eqProjection;
+  // Auto-derive starting balance from current EQ portfolio (USD → EUR)
+  const eqMvUSD = data.eq.reduce((s,p) => { const mv = marketValueUSD(p); return s + (mv||0); }, 0);
+  const autoStartEUR = eqMvUSD / data.fx.eurusd;
+  const startBalEUR = (cfg.startingBalanceEUR !== null && cfg.startingBalanceEUR !== undefined && !isNaN(cfg.startingBalanceEUR)) ? cfg.startingBalanceEUR : autoStartEUR;
+  const isAutoStart = cfg.startingBalanceEUR === null || cfg.startingBalanceEUR === undefined;
+
+  // Config inputs
+  document.getElementById('eqproj-config').innerHTML = [
+    {key:'startingBalanceEUR', label:`Start Balance (€)${isAutoStart ? ' · auto' : ''}`, val:startBalEUR.toFixed(2), fmt:'num', cls:'starting'},
+    {key:'monthlyContrib',     label:'Monthly Contribution (€)', val:cfg.monthlyContrib, fmt:'num'},
+    {key:'annualReturn',       label:'Annual Return %',          val:(cfg.annualReturn*100).toFixed(2), fmt:'pct'},
+    {key:'targetMonthlyEUR',   label:'Target Monthly Income (€)', val:cfg.targetMonthlyEUR, fmt:'num'},
+    {key:'withdrawalRate',     label:'Withdrawal Rate %',        val:(cfg.withdrawalRate*100).toFixed(2), fmt:'pct'},
+    {key:'years',              label:'Years to Project',         val:cfg.years, fmt:'int'},
+  ].map(c => `<div class="proj-input ${c.cls||''}"><label>${c.label}</label><input type="number" step="any" value="${c.val}" onchange="updateEqProj('${c.key}','${c.fmt}', this.value)"></div>`).join('');
+
+  // Project growth month-by-month
+  const fireNumber = (cfg.targetMonthlyEUR * 12) / cfg.withdrawalRate;
+  const monthlyReturn = Math.pow(1 + cfg.annualReturn, 1/12) - 1;
+  const yearBalances = [startBalEUR];
+  const yearContribs = [startBalEUR];
+  let bal = startBalEUR;
+  let totalContrib = startBalEUR;
+  for (let y = 1; y <= cfg.years; y++) {
+    for (let m = 0; m < 12; m++) {
+      bal = bal * (1 + monthlyReturn) + cfg.monthlyContrib;
+      totalContrib += cfg.monthlyContrib;
+    }
+    yearBalances.push(bal);
+    yearContribs.push(totalContrib);
+  }
+  // Find FIRE year
+  let fireYear = -1;
+  for (let i = 0; i < yearBalances.length; i++) {
+    if (yearBalances[i] >= fireNumber) { fireYear = i; break; }
+  }
+  const totalContribsFinal = yearContribs[yearContribs.length-1];
+  const finalBal = yearBalances[yearBalances.length-1];
+  const gainsFinal = finalBal - totalContribsFinal;
+  const gainsPct = finalBal > 0 ? (gainsFinal/finalBal*100) : 0;
+  const currentYear = new Date().getFullYear();
+
+  // KPIs
+  const fireYearLabel = fireYear > 0 ? `Year ${fireYear} (${currentYear + fireYear})` : `Not within ${cfg.years}y`;
+  const fireKpiClass = fireYear > 0 && fireYear <= cfg.years ? 'green' : 'red';
+  document.getElementById('eqproj-kpis').innerHTML = `
+    <div class="kpi ${fireKpiClass}"><div class="label">FIRE Year</div><div class="value">${fireYearLabel}</div><div class="sub-value">at €${cfg.targetMonthlyEUR.toLocaleString()}/mo target</div></div>
+    <div class="kpi"><div class="label">FIRE Number</div><div class="value">${fmtMoney(fireNumber, '€')}</div><div class="sub-value">€${cfg.targetMonthlyEUR.toLocaleString()} × 12 ÷ ${(cfg.withdrawalRate*100).toFixed(1)}%</div></div>
+    <div class="kpi"><div class="label">Total Contributions</div><div class="value">${fmtMoney(totalContribsFinal, '€')}</div><div class="sub-value">Start + ${cfg.monthlyContrib}/mo × ${cfg.years}y</div></div>
+    <div class="kpi green"><div class="label">Compound Gains</div><div class="value">${fmtMoney(gainsFinal, '€')}</div><div class="sub-value">${gainsPct.toFixed(1)}% of final value</div></div>
+  `;
+
+  drawEqGrowthChart(yearBalances, yearContribs, fireNumber, fireYear);
+
+  // Withdrawal phase (from FIRE year onward, 30 years)
+  if (fireYear > 0 && fireYear <= cfg.years) {
+    const withdrawalBalances = [fireNumber];
+    let wBal = fireNumber;
+    const monthlyWithdraw = cfg.targetMonthlyEUR;
+    for (let y = 1; y <= 30; y++) {
+      for (let m = 0; m < 12; m++) {
+        wBal = wBal * (1 + monthlyReturn) - monthlyWithdraw;
+        if (wBal < 0) { wBal = 0; break; }
+      }
+      withdrawalBalances.push(wBal);
+      if (wBal === 0) break;
+    }
+    drawEqWithdrawalChart(withdrawalBalances, fireYear);
+  } else {
+    // Hide withdrawal chart by showing message
+    const wCtx = document.getElementById('eqproj-withdraw-chart');
+    if (wCtx && chartInstances.eqProjWithdraw) { chartInstances.eqProjWithdraw.destroy(); chartInstances.eqProjWithdraw = null; }
+  }
+
+  // Year-by-year table
+  document.getElementById('eqproj-table').innerHTML = `
+    <thead><tr>
+      <th class="l">Year</th><th class="l">Calendar</th><th>Contributions</th><th>Portfolio Value</th><th>4% Monthly Income</th><th class="l">Status</th>
+    </tr></thead>
+    <tbody>${yearBalances.map((bv, i) => {
+      const isFire = bv >= fireNumber && (i === 0 || yearBalances[i-1] < fireNumber);
+      const isPastFire = bv >= fireNumber;
+      return `<tr ${isFire ? 'style="background: rgba(0,255,65,0.10);"' : ''}>
+        <td class="l" style="color: var(--gold); font-weight: 700;">Y${i}</td>
+        <td class="l">${currentYear + i}</td>
+        <td class="num">${fmtMoney(yearContribs[i], '€')}</td>
+        <td class="num ${isPastFire ? 'pos' : ''}">${fmtMoney(bv, '€')}</td>
+        <td class="num">${fmtMoney(bv * cfg.withdrawalRate / 12, '€')}/mo</td>
+        <td class="l ${isPastFire ? 'pos' : ''}" style="font-weight: ${isFire ? '700' : '400'};">${isFire ? '✓ FIRE YEAR' : (isPastFire ? '✓ Beyond FIRE' : 'Accumulating')}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+function updateEqProj(key, fmt, val) {
+  if (!data.eqProjection) data.eqProjection = {};
+  if (key === 'startingBalanceEUR' && (val === '' || val === null)) { data.eqProjection.startingBalanceEUR = null; saveData(); renderEqProjected(); return; }
+  const v = parseFloat(val) || 0;
+  if (fmt === 'pct') data.eqProjection[key] = v / 100;
+  else if (fmt === 'int') data.eqProjection[key] = Math.round(v);
+  else data.eqProjection[key] = v;
+  saveData(); renderEqProjected();
+}
+
+function drawEqGrowthChart(balances, contribs, fireNumber, fireYear) {
+  const ctx = document.getElementById('eqproj-growth-chart');
+  if (!ctx) return;
+  if (chartInstances.eqProjGrowth) chartInstances.eqProjGrowth.destroy();
+  const labels = balances.map((_, i) => `Y${i}`);
+  chartInstances.eqProjGrowth = new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'line', label: 'Portfolio Value',
+          data: balances,
+          borderColor: '#fbbf24',
+          backgroundColor: 'rgba(251,191,36,0.10)',
+          fill: true, tension: 0.2, pointRadius: 0, borderWidth: 2
+        },
+        {
+          type: 'line', label: 'Cumulative Contributions',
+          data: contribs,
+          borderColor: '#9f7521',
+          borderDash: [4, 3],
+          backgroundColor: 'transparent',
+          fill: false, tension: 0, pointRadius: 0, borderWidth: 1.5
+        },
+        {
+          type: 'line', label: `FIRE Number (${fmtMoney(fireNumber, '€')})`,
+          data: balances.map(() => fireNumber),
+          borderColor: '#00ff41',
+          borderDash: [8, 4],
+          backgroundColor: 'transparent',
+          fill: false, tension: 0, pointRadius: 0, borderWidth: 1.5
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { family: 'JetBrains Mono', size: 10 } } },
+        tooltip: {
+          backgroundColor: '#0a0a0a', borderColor: '#fbbf24', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#fbbf24', padding: 10,
+          callbacks: { label: c => c.dataset.label + ': ' + fmtMoney(c.parsed.y, '€') }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#666', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 12 }, grid: { color: '#1f1f1f' } },
+        y: { ticks: { color: '#aaa', font: { family: 'JetBrains Mono', size: 10 }, callback: v => fmtMoney(v, '€') }, grid: { color: '#1f1f1f' } }
+      }
+    }
+  });
+}
+
+function drawEqWithdrawalChart(balances, fireYearOffset) {
+  const ctx = document.getElementById('eqproj-withdraw-chart');
+  if (!ctx) return;
+  if (chartInstances.eqProjWithdraw) chartInstances.eqProjWithdraw.destroy();
+  const labels = balances.map((_, i) => `Y${fireYearOffset + i}`);
+  chartInstances.eqProjWithdraw = new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [{
+        type: 'line', label: 'Portfolio Value (Withdrawal Phase)',
+        data: balances,
+        borderColor: '#21569f',
+        backgroundColor: 'rgba(33,86,159,0.15)',
+        fill: true, tension: 0.2, pointRadius: 0, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { family: 'JetBrains Mono', size: 10 } } },
+        tooltip: {
+          backgroundColor: '#0a0a0a', borderColor: '#fbbf24', borderWidth: 1,
+          callbacks: { label: c => fmtMoney(c.parsed.y, '€') }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#666', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 10 }, grid: { color: '#1f1f1f' } },
+        y: { ticks: { color: '#aaa', font: { family: 'JetBrains Mono', size: 10 }, callback: v => fmtMoney(v, '€') }, grid: { color: '#1f1f1f' } }
+      }
+    }
+  });
+}
 function drawProjChart(rows) {
   const ctx = document.getElementById('proj-chart');
   if (!ctx) return;
@@ -2723,7 +2951,7 @@ function renderPersonBlock(name, person, key) {
     { label: 'Realized P&L', value: fmtMoney(totalRpl), sub: person.realized.length+' closed', cls: totalRpl >= 0 ? 'green' : 'red' },
     { label: 'Total Return', value: totalReturnUSD === null ? '<span class="dash">—</span>' : fmtMoney(totalReturnUSD), sub: totalReturnPct === null ? 'need prices' : fmtPct(totalReturnPct), cls: totalReturnUSD !== null && totalReturnUSD >= 0 ? 'green' : (totalReturnUSD !== null ? 'red' : ''), subCls: totalReturnUSD !== null && totalReturnUSD >= 0 ? 'green' : (totalReturnUSD !== null ? 'red' : '') }
   ];
-  const unrRows = unr.map(p => {
+  const unrRows = unr.map((p, idx) => {
     const k = priceKey(p);
     const priceCls = p.px.source === 'manual' ? 'override' : (['finnhub','twelve','stooq','yahoo'].includes(p.px.source) ? 'live' : 'empty');
     return `<tr>
@@ -2739,6 +2967,7 @@ function renderPersonBlock(name, person, key) {
       <td class="num">${p.mv !== null ? fmtMoney(p.mv) : '<span class="dash">—</span>'}</td>
       <td class="num ${cls(p.upl)}">${p.upl !== null ? fmtMoney(p.upl) : '<span class="dash">—</span>'}</td>
       <td class="num ${cls(p.ret)}">${p.ret !== null ? fmtPct(p.ret) : '<span class="dash">—</span>'}</td>
+      <td class="num"><button class="close-pos-btn" onclick="closeAnnaVasPosition('${key}', ${idx})" title="Close position">🗑</button></td>
     </tr>`;
   }).join('');
   const unrTotRet = (totalUnrCost === 0 || totalUpl === null) ? null : totalUpl/totalUnrCost;
@@ -2748,8 +2977,9 @@ function renderPersonBlock(name, person, key) {
     <td class="num">${fmtMoney(totalUnrMv)}</td>
     <td class="num ${cls(totalUpl)}">${totalUpl !== null ? fmtMoney(totalUpl) : '—'}</td>
     <td class="num ${cls(unrTotRet)}">${unrTotRet !== null ? fmtPct(unrTotRet) : '—'}</td>
+    <td></td>
   </tr>`;
-  const realRows = person.realized.map(r => `
+  const realRows = person.realized.map((r, idx) => `
     <tr>
       <td class="l"><span class="pill">${r.broker}</span></td>
       <td class="l"><span class="symbol">${r.symbol}</span></td>
@@ -2758,26 +2988,28 @@ function renderPersonBlock(name, person, key) {
       <td class="num">${r.avgCost ? fmtNum(r.avgCost, r.avgCost<1?6:2) : '<span class="dash">—</span>'}</td>
       <td class="num">${r.closePrice ? fmtNum(r.closePrice, r.closePrice<1?6:2) : '<span class="dash">—</span>'}</td>
       <td><span class="pill">${r.currency}</span></td>
-      <td class="num ${cls(r.rpl)}">${fmtMoney(r.rpl)}</td>
+      <td class="num ${cls(r.rpl)}"><input class="edit" type="number" step="any" value="${(r.rpl||0).toFixed(2)}" onchange="updateAnnaVasRpl('${key}', ${idx}, this.value)" style="text-align:right;"></td>
+      <td class="num"><button class="close-pos-btn" onclick="removeAnnaVasRealized('${key}', ${idx})" title="Remove from Realized" style="font-size:8px; padding:1px 4px;">✕</button></td>
     </tr>`).join('');
-  const realTot = `<tr class="total"><td class="l" colspan="7">Total Realized</td><td class="num ${cls(totalRpl)}">${fmtMoney(totalRpl)}</td></tr>`;
+  const realTot = `<tr class="total"><td class="l" colspan="7">Total Realized</td><td class="num ${cls(totalRpl)}">${fmtMoney(totalRpl)}</td><td></td></tr>`;
   return `
     <div class="person-block">
       <div class="person-header"><h2>${name}</h2><span class="meta">Sub-Portfolio · Starting ${fmtMoney(startBal)}</span></div>
       <div class="kpi-grid">
         ${kpis.map(k => `<div class="kpi ${k.cls||''}"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="sub-value ${k.subCls||''}">${k.sub}</div></div>`).join('')}
       </div>
-      <h3 class="section-title" style="font-size:14px;">Unrealized Positions <span class="count">${person.unrealized.length} open</span></h3>
+      <h3 class="section-title" style="font-size:14px;">Unrealized Positions <span class="count">${person.unrealized.length} open</span><button class="add-trade-btn secondary" onclick="toggleAnnaVasNewPos('${key}')">🆕 NEW POS</button><button class="add-trade-btn" onclick="toggleAnnaVasAddBuy('${key}')" style="margin-left:8px;">➕ BUY MORE</button></h3>
+      <div id="annavas-${key}-form-container"></div>
       <div class="card" style="padding:0"><div class="table-scroll">
         <table>
-          <thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Price</th><th>Src</th><th>Curr</th><th>Cost (USD)</th><th>Market (USD)</th><th>UPL</th><th>Return</th></tr></thead>
+          <thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Price</th><th>Src</th><th>Curr</th><th>Cost (USD)</th><th>Market (USD)</th><th>UPL</th><th>Return</th><th></th></tr></thead>
           <tbody>${unrRows}${unrTot}</tbody>
         </table>
       </div></div>
       <h3 class="section-title" style="font-size:14px;">Realized Positions <span class="count">${person.realized.length} closed</span></h3>
       <div class="card" style="padding:0"><div class="table-scroll">
         <table>
-          <thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Close Price</th><th>Curr</th><th>RPL (USD)</th></tr></thead>
+          <thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Close Price</th><th>Curr</th><th>RPL (USD)</th><th></th></tr></thead>
           <tbody>${realRows}${realTot}</tbody>
         </table>
       </div></div>
@@ -2803,6 +3035,204 @@ function renderPersonBlock(name, person, key) {
     </div>`;
 }
 
+/* ===================== ANNA & VAS POSITION MANAGEMENT ===================== */
+function toggleAnnaVasAddBuy(personKey) {
+  const container = document.getElementById(`annavas-${personKey}-form-container`);
+  if (!container) return;
+  if (container.innerHTML.trim() && container.dataset.formType === 'addbuy') {
+    container.innerHTML = ''; container.dataset.formType = ''; return;
+  }
+  container.dataset.formType = 'addbuy';
+  const person = data.annaVas[personKey];
+  const symOptions = person.unrealized.map(p => `<option value="${p.symbol}">${p.symbol} — ${p.name}</option>`).join('');
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1.2fr 1fr 1fr 1fr auto auto;">
+      <div class="field"><label>Position</label><select id="av-${personKey}-buy-symbol">${symOptions}</select></div>
+      <div class="field"><label>Add Shares *</label><input type="number" step="any" id="av-${personKey}-buy-shares" placeholder="0"></div>
+      <div class="field"><label>Buy Price *</label><input type="number" step="any" id="av-${personKey}-buy-price" placeholder="0.00"></div>
+      <div class="field"><label>Date (optional)</label><input type="date" id="av-${personKey}-buy-date"></div>
+      <button class="save" onclick="submitAnnaVasAddBuy('${personKey}')">Add Buy</button>
+      <button class="cancel" onclick="toggleAnnaVasAddBuy('${personKey}')">Cancel</button>
+      <div class="add-trade-preview">Add more shares to an existing position. New avg cost = (old cost basis + new cost) ÷ (old + new shares).</div>
+    </div>`;
+}
+
+function submitAnnaVasAddBuy(personKey) {
+  const sym = document.getElementById(`av-${personKey}-buy-symbol`).value;
+  const newShares = parseFloat(document.getElementById(`av-${personKey}-buy-shares`).value);
+  const buyPrice = parseFloat(document.getElementById(`av-${personKey}-buy-price`).value);
+  if (!sym || isNaN(newShares) || newShares <= 0 || isNaN(buyPrice) || buyPrice <= 0) {
+    alert('Shares and price are required.'); return;
+  }
+  const person = data.annaVas[personKey];
+  const idx = person.unrealized.findIndex(p => p.symbol === sym);
+  if (idx < 0) { alert('Position not found.'); return; }
+  const pos = person.unrealized[idx];
+  const oldCost = pos.shares * pos.avgCost;
+  const addCost = newShares * buyPrice;
+  const totalShares = pos.shares + newShares;
+  pos.avgCost = (oldCost + addCost) / totalShares;
+  pos.shares = totalShares;
+  saveData();
+  toggleAnnaVasAddBuy(personKey);
+  render();
+}
+
+function toggleAnnaVasNewPos(personKey) {
+  const container = document.getElementById(`annavas-${personKey}-form-container`);
+  if (!container) return;
+  if (container.innerHTML.trim() && container.dataset.formType === 'new') {
+    container.innerHTML = ''; container.dataset.formType = ''; return;
+  }
+  container.dataset.formType = 'new';
+  const brokers = ['IBKR','REV','Trading 212','eToro','Other'];
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1fr 2fr 1fr 1fr auto auto;">
+      <div class="field">
+        <label>Symbol *</label>
+        <input type="text" id="av-${personKey}-np-symbol" placeholder="e.g. AAPL" autocomplete="off" style="text-transform: uppercase;">
+      </div>
+      <div class="field">
+        <label>Name *</label>
+        <input type="text" id="av-${personKey}-np-name" placeholder="e.g. Apple Inc">
+      </div>
+      <div class="field">
+        <label>Shares *</label>
+        <input type="number" step="any" id="av-${personKey}-np-shares" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Avg Cost *</label>
+        <input type="number" step="any" id="av-${personKey}-np-cost" placeholder="0.00">
+      </div>
+      <button class="save" onclick="submitAnnaVasNewPos('${personKey}')">Add Position</button>
+      <button class="cancel" onclick="toggleAnnaVasNewPos('${personKey}')">Cancel</button>
+      <div class="field" style="grid-column: 1 / 2;">
+        <label>Currency</label>
+        <select id="av-${personKey}-np-currency"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select>
+      </div>
+      <div class="field" style="grid-column: 2 / 3;">
+        <label>Broker</label>
+        <select id="av-${personKey}-np-broker">${brokers.map(b => `<option value="${b}">${b}</option>`).join('')}</select>
+      </div>
+      <div></div>
+      <div></div>
+      <div class="add-trade-preview" id="av-${personKey}-np-preview">
+        Enter the symbol — I'll try to auto-fill name and currency from Finnhub / Twelve Data.
+      </div>
+    </div>`;
+  // Debounced auto-lookup
+  let lookupTimer = null;
+  document.getElementById(`av-${personKey}-np-symbol`).addEventListener('input', (e) => {
+    const sym = e.target.value.trim().toUpperCase();
+    if (lookupTimer) clearTimeout(lookupTimer);
+    if (sym.length < 2) return;
+    lookupTimer = setTimeout(() => autoLookupAnnaVas(sym, personKey), 600);
+  });
+}
+
+async function autoLookupAnnaVas(sym, personKey) {
+  const preview = document.getElementById(`av-${personKey}-np-preview`);
+  if (!preview) return;
+  preview.innerHTML = `<span class="lookup-hint">⟳ Looking up <strong>${sym}</strong>...</span>`;
+  // Finnhub profile
+  if (apiKeys.finnhub) {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${encodeURIComponent(sym)}&token=${apiKeys.finnhub}`);
+      if (r.ok) {
+        const j = await r.json();
+        if (j.name) {
+          document.getElementById(`av-${personKey}-np-name`).value = document.getElementById(`av-${personKey}-np-name`).value || j.name;
+          if (j.currency) document.getElementById(`av-${personKey}-np-currency`).value = j.currency;
+          preview.innerHTML = `<span class="lookup-hint">✓ Found <strong>${j.name}</strong> · ${j.currency || 'USD'}${j.finnhubIndustry ? ' · ' + j.finnhubIndustry : ''} (via Finnhub)</span>`;
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+  // Twelve Data fallback
+  if (apiKeys.twelve) {
+    try {
+      const r = await fetch(`https://api.twelvedata.com/quote?symbol=${encodeURIComponent(sym)}&apikey=${apiKeys.twelve}`);
+      if (r.ok) {
+        const j = await r.json();
+        if (j.name) {
+          document.getElementById(`av-${personKey}-np-name`).value = document.getElementById(`av-${personKey}-np-name`).value || j.name;
+          if (j.currency) document.getElementById(`av-${personKey}-np-currency`).value = j.currency;
+          preview.innerHTML = `<span class="lookup-hint">✓ Found <strong>${j.name}</strong> · ${j.exchange || ''} · ${j.currency || 'USD'} (via Twelve Data)</span>`;
+          return;
+        }
+      }
+    } catch(e) {}
+  }
+  preview.innerHTML = `<span class="lookup-err">No auto-lookup available — fill in manually${(!apiKeys.finnhub && !apiKeys.twelve) ? ' (add API keys in ⚙ Settings for auto-lookup)' : ''}</span>`;
+}
+
+function submitAnnaVasNewPos(personKey) {
+  const sym = document.getElementById(`av-${personKey}-np-symbol`).value.trim().toUpperCase();
+  const name = document.getElementById(`av-${personKey}-np-name`).value.trim();
+  const shares = parseFloat(document.getElementById(`av-${personKey}-np-shares`).value);
+  const avgCost = parseFloat(document.getElementById(`av-${personKey}-np-cost`).value);
+  const currency = document.getElementById(`av-${personKey}-np-currency`).value;
+  const broker = document.getElementById(`av-${personKey}-np-broker`).value;
+  if (!sym || !name || isNaN(shares) || shares <= 0 || isNaN(avgCost) || avgCost <= 0) {
+    alert('Symbol, name, shares, and cost are all required.'); return;
+  }
+  const person = data.annaVas[personKey];
+  if (person.unrealized.some(p => p.symbol === sym)) {
+    alert(`${sym} already exists for ${personKey === 'anna' ? 'Anna' : 'Vas'}. Use "Buy More" instead.`); return;
+  }
+  const newPos = { broker, symbol: sym, name, shares, avgCost, currency,
+    yahoo: sym, stooq: sym.toLowerCase() + '.us', tdataSymbol: sym, finnhub: sym };
+  person.unrealized.push(newPos);
+  saveData();
+  toggleAnnaVasNewPos(personKey);
+  refreshAll();
+}
+
+function closeAnnaVasPosition(personKey, idx) {
+  const person = data.annaVas[personKey];
+  const pos = person.unrealized[idx];
+  if (!pos) return;
+  const c1 = confirm(`Close ${pos.symbol} — ${pos.name} (${personKey === 'anna' ? 'Anna' : 'Vas'})?\n\nThis will sell out the entire position (${fmtShares(pos.shares)} shares) and move it to Realized P&L.\n\nClick OK to continue.`);
+  if (!c1) return;
+  const px = getPrice(pos);
+  const suggested = px.price !== null ? px.price : pos.avgCost;
+  const closePriceStr = prompt(`Close price for ${pos.symbol} (per share, in ${pos.currency}):`, suggested.toFixed(pos.avgCost < 1 ? 6 : 2));
+  if (!closePriceStr) return;
+  const closePrice = parseFloat(closePriceStr);
+  if (isNaN(closePrice) || closePrice <= 0) { alert('Invalid close price.'); return; }
+  const c2 = confirm(`FINAL CONFIRMATION\n\nClose ${pos.shares.toFixed(4)} shares of ${pos.symbol} at ${closePrice.toFixed(2)} ${pos.currency}.\n\nRealized P&L: ${((closePrice - pos.avgCost) * pos.shares).toFixed(2)} ${pos.currency}\n\nThis cannot be undone. Continue?`);
+  if (!c2) return;
+  const rplNative = (closePrice - pos.avgCost) * pos.shares;
+  const rplUSD = toUSD(rplNative, pos.currency);
+  person.realized.unshift({
+    broker: pos.broker, symbol: pos.symbol, name: pos.name,
+    shares: pos.shares, avgCost: pos.avgCost, closePrice,
+    currency: pos.currency, rpl: rplUSD
+  });
+  person.unrealized.splice(idx, 1);
+  saveData();
+  render();
+}
+
+function updateAnnaVasRpl(personKey, idx, val) {
+  const v = parseFloat(val);
+  if (isNaN(v)) return;
+  data.annaVas[personKey].realized[idx].rpl = v;
+  saveData(); render();
+}
+
+function removeAnnaVasRealized(personKey, idx) {
+  const entry = data.annaVas[personKey].realized[idx];
+  if (!entry) return;
+  const c1 = confirm(`Remove "${entry.symbol} — ${entry.name}" (${fmtMoney(entry.rpl)}) from ${personKey === 'anna' ? "Anna's" : "Vas's"} Realized P&L?\n\nThis is for correcting test entries or mistakes. It does not bring the position back to active holdings.\n\nClick OK to remove.`);
+  if (!c1) return;
+  const c2 = confirm(`Final confirmation — permanently delete this Realized P&L entry?`);
+  if (!c2) return;
+  data.annaVas[personKey].realized.splice(idx, 1);
+  saveData(); render();
+}
+
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
@@ -2811,6 +3241,7 @@ document.querySelectorAll('.tab').forEach(btn => {
     activeTab = btn.dataset.tab;
     document.getElementById(activeTab).classList.add('active');
     if (activeTab === 'projections') setTimeout(() => renderProjections(), 50);
+    if (activeTab === 'eqprojected') setTimeout(() => renderEqProjected(), 50);
     if (activeTab === 'dividends')   setTimeout(() => renderDividends(), 50);
   });
 });
