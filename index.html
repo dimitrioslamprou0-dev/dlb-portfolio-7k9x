@@ -465,31 +465,65 @@
     <button class="tab active" data-tab="overview"><span class="tab-num">01</span>Overview</button>
     <button class="tab" data-tab="dividends"><span class="tab-num">02</span>Dividends</button>
     <button class="tab" data-tab="positions"><span class="tab-num">03</span>Positions</button>
-    <button class="tab" data-tab="projections"><span class="tab-num">04</span>Projected DVD</button>
-    <button class="tab" data-tab="eqprojected"><span class="tab-num">05</span>EQ Projected</button>
-    <button class="tab" data-tab="annavas"><span class="tab-num">06</span>Anna &amp; Vas</button>
+    <button class="tab" data-tab="cashflow"><span class="tab-num">04</span>Passive Cash Flow</button>
+    <button class="tab" data-tab="projections"><span class="tab-num">05</span>Projected DVD</button>
+    <button class="tab" data-tab="eqprojected"><span class="tab-num">06</span>EQ Projected</button>
+    <button class="tab" data-tab="annavas"><span class="tab-num">07</span>Anna &amp; Vas</button>
   </nav>
 
   <section class="panel active" id="overview">
     <div class="kpi-grid eight" id="kpi-grid"></div>
-    <h2 class="section-title">Sector Allocation <span class="count">3D Distribution</span></h2>
+
+    <h2 class="section-title">Portfolio Allocation <span class="count">All Holdings · Sector View</span></h2>
     <div class="card">
       <div class="pie3d-wrap">
         <div class="pie3d-container"><div class="pie3d" id="pie3d"></div></div>
         <div class="pie-legend" id="pie-legend"></div>
       </div>
     </div>
-    <h2 class="section-title">Equity Portfolio Allocation <span class="count">Asset Class Breakdown</span></h2>
-    <div class="card">
-      <div class="eq-donut-wrap">
-        <div class="eq-donut-container">
-          <canvas id="eq-donut"></canvas>
-          <div class="donut-center-label" id="eq-donut-center"></div>
+
+    <div class="two-col" style="margin-top: 20px;">
+      <div class="card"><h3>Equity Portfolio Allocation<small>By Asset Class</small></h3>
+        <div class="eq-donut-wrap">
+          <div class="eq-donut-container">
+            <canvas id="eq-donut"></canvas>
+            <div class="donut-center-label" id="eq-donut-center"></div>
+          </div>
+          <div class="pie-legend" id="eq-donut-legend"></div>
         </div>
-        <div class="pie-legend" id="eq-donut-legend"></div>
+      </div>
+      <div class="card"><h3>Dividend Portfolio Allocation<small>By Holding</small></h3>
+        <div class="eq-donut-wrap">
+          <div class="eq-donut-container">
+            <canvas id="dvd-donut"></canvas>
+            <div class="donut-center-label" id="dvd-donut-center"></div>
+          </div>
+          <div class="pie-legend" id="dvd-donut-legend"></div>
+        </div>
       </div>
     </div>
-    <div class="two-col" style="margin-top: 32px;">
+    <div class="two-col" style="margin-top: 20px;">
+      <div class="card"><h3>Crypto Portfolio Allocation<small>By Holding</small></h3>
+        <div class="eq-donut-wrap">
+          <div class="eq-donut-container">
+            <canvas id="crypto-donut"></canvas>
+            <div class="donut-center-label" id="crypto-donut-center"></div>
+          </div>
+          <div class="pie-legend" id="crypto-donut-legend"></div>
+        </div>
+      </div>
+      <div class="card"><h3>Bonds Portfolio Allocation<small>By Holding</small></h3>
+        <div class="eq-donut-wrap">
+          <div class="eq-donut-container">
+            <canvas id="bd-donut"></canvas>
+            <div class="donut-center-label" id="bd-donut-center"></div>
+          </div>
+          <div class="pie-legend" id="bd-donut-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top: 20px;">
       <div class="card"><h3>Portfolio Breakdown<small>By Sub-Portfolio</small></h3><div id="subport-bars"></div></div>
       <div class="card"><h3>Sector Detail<small>Bar Distribution</small></h3><div id="sector-bars"></div></div>
     </div>
@@ -547,8 +581,50 @@
     <div class="portfolio-kpis cols-5" id="cr-kpis"></div>
     <div class="card" style="padding: 0"><div class="table-scroll"><table id="cr-table"></table></div></div>
 
+    <h2 class="section-title">Bonds Portfolio <span class="count" id="bd-count">—</span><button class="add-trade-btn secondary" onclick="toggleNewBondForm()">🆕 NEW POS</button><button class="add-trade-btn" onclick="toggleAddBondBuyForm()" style="margin-left:8px;">➕ BUY MORE</button></h2>
+    <div id="bond-add-form-container"></div>
+    <div class="portfolio-kpis cols-6" id="bd-kpis"></div>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="bd-table"></table></div></div>
+    <div class="card" style="margin-top:20px;"><h3>Coupon Calendar<small>Coupons Received per Bond per Month</small></h3>
+      <div id="bd-coupon-grid" style="overflow-x: auto;"></div>
+      <div class="dvd-add-row">
+        <label>Add row for year:</label>
+        <select id="bd-coupon-add-year"></select>
+        <input type="text" id="bd-coupon-add-symbol" placeholder="Bond symbol (e.g. AMZN32)" style="text-transform:uppercase;">
+        <button onclick="addCouponRow()">+ Add</button>
+      </div>
+    </div>
+
     <h2 class="section-title">Realized P&L <span class="count">Closed Transactions</span></h2>
     <div class="card" style="padding: 0"><div class="table-scroll"><table id="closed-table"></table></div></div>
+  </section>
+
+  <section class="panel" id="cashflow">
+    <div class="kpi-grid" id="cashflow-kpis"></div>
+    <h2 class="section-title">Passive Cash Flow Sources <span class="count">Monthly + Annual Breakdown</span></h2>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="cashflow-table"></table></div></div>
+
+    <div class="two-col" style="margin-top:24px;">
+      <div class="card">
+        <h3>Interest-Bearing Accounts<small>Manual entry · auto-converted to USD</small></h3>
+        <div id="interest-accounts-list"></div>
+      </div>
+      <div class="card">
+        <h3>EQ Withdrawal Toggle<small>Hypothetical 4% rule</small></h3>
+        <div id="eq-withdrawal-toggle"></div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Source Allocation <span class="count">Where Your Cash Comes From</span></h2>
+    <div class="card">
+      <div class="eq-donut-wrap">
+        <div class="eq-donut-container">
+          <canvas id="cashflow-donut"></canvas>
+          <div class="donut-center-label" id="cashflow-donut-center"></div>
+        </div>
+        <div class="pie-legend" id="cashflow-donut-legend"></div>
+      </div>
+    </div>
   </section>
 
   <section class="panel" id="projections">
@@ -575,7 +651,7 @@
   <section class="panel" id="annavas"><div id="annavas-body"></div></section>
 
   <footer>
-    <span>DLB Portfolio Terminal v12.0 — Institutional</span>
+    <span>DLB Portfolio Terminal v13.0 — Institutional</span>
     <span>Finnhub · Twelve Data · CoinGecko · Frankfurter</span>
   </footer>
 </div>
@@ -739,6 +815,27 @@ const DEFAULT_DATA = {
     { symbol: 'FLOKI', name: 'Floki',          broker: 'Revolut',  shares: 1600000.82,   avgCost: 0.00015109, currency: 'EUR', cgId: 'floki',           priceCurrency: 'EUR' },
     { symbol: 'SHIB',  name: 'Shiba Inu',      broker: 'Revolut',  shares: 10000000.70,  avgCost: 0.00002008, currency: 'EUR', cgId: 'shiba-inu',       priceCurrency: 'EUR' }
   ],
+  // Bonds — fixed income. Stored in USD by default. Add new bonds via NEW POS button.
+  bonds: [
+    // Placeholder structure — user will add their 3 bonds via the UI
+    // Fields: issuer, name (full bond), couponRate (decimal e.g. 0.047), rating, qty (bond units, fractional ok),
+    //         avgPrice (per 1000 face), currentPrice (per 1000 face, editable), maturityDate (YYYY-MM-DD),
+    //         nextCouponDate (YYYY-MM-DD), couponFrequency ('semiannual' | 'annual' | 'quarterly'),
+    //         faceValue (default 1000), currency, broker
+  ],
+  // Coupons received calendar — same structure as dividendsReceived
+  // { "YYYY-MM": { "BONDSYMBOL": amountUSD, ... } }
+  couponsReceived: {},
+  // Interest-bearing cash accounts — manual entries on Cash Flow tab
+  interestAccounts: [
+    { id: 'eur-account', label: 'EUR Savings',  amount: 0, annualYield: 0, currency: 'EUR' },
+    { id: 'usd-account', label: 'USD Savings',  amount: 0, annualYield: 0, currency: 'USD' }
+  ],
+  // Cash Flow tab settings
+  cashFlowConfig: {
+    includeEqWithdrawal: false,    // toggle: count 4% of EQ portfolio in cash flow
+    eqWithdrawalRate: 0.04
+  },
   // Dividend Income Calendar — populated from Excel (NET amounts, after tax)
   dividendsReceived: {
     '2025-08': { O: 2.42, PFLT: 1.02, SAR: 2.55 },
@@ -846,7 +943,24 @@ let activeTab = 'overview';
 let chartInstances = {};
 let syncTimer = null;  // debounce timer for auto-sync
 
-function loadData() { try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch(e) {} return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+function loadData() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const loaded = JSON.parse(s);
+      // Migrations: add new fields if missing (for users updating from older versions)
+      if (!loaded.bonds) loaded.bonds = [];
+      if (!loaded.couponsReceived) loaded.couponsReceived = {};
+      if (!loaded.interestAccounts) loaded.interestAccounts = [
+        { id: 'eur-account', label: 'EUR Savings',  amount: 0, annualYield: 0, currency: 'EUR' },
+        { id: 'usd-account', label: 'USD Savings',  amount: 0, annualYield: 0, currency: 'USD' }
+      ];
+      if (!loaded.cashFlowConfig) loaded.cashFlowConfig = { includeEqWithdrawal: false, eqWithdrawalRate: 0.04 };
+      return loaded;
+    }
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
 function saveData() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1082,6 +1196,38 @@ async function proxyFetch(url, asJson = true) {
   }
   return null;
 }
+
+/* ===== BOND PRICE FETCHING (Yahoo HTML scrape) =====
+   Yahoo embeds bond data in a few possible patterns:
+   1. JSON inside a script tag (root.App.main pattern)
+   2. data-test qsp-price attribute
+   3. Modern Yahoo (2024+): fin-streamer element with data-symbol and value attribute
+   We try each pattern in order and return the first match.
+*/
+async function fetchBondPrice(bond) {
+  if (!bond.yahooBondUrl) return null;
+  const html = await proxyFetch(bond.yahooBondUrl, false);
+  if (!html || typeof html !== 'string') return null;
+
+  // Pattern 1: fin-streamer with regularMarketPrice
+  // e.g. <fin-streamer ... data-field="regularMarketPrice" value="101.21" ...>
+  let m = html.match(/data-field=["']regularMarketPrice["'][^>]*value=["']([0-9.]+)["']/i);
+  if (m) return { price: parseFloat(m[1]), source: 'yahoo-bond', ts: Date.now() };
+
+  // Pattern 2: alternate order
+  m = html.match(/value=["']([0-9.]+)["'][^>]*data-field=["']regularMarketPrice["']/i);
+  if (m) return { price: parseFloat(m[1]), source: 'yahoo-bond', ts: Date.now() };
+
+  // Pattern 3: legacy quote summary JSON
+  m = html.match(/"regularMarketPrice":\{"raw":([0-9.]+)/);
+  if (m) return { price: parseFloat(m[1]), source: 'yahoo-bond', ts: Date.now() };
+
+  // Pattern 4: simple raw number after regularMarketPrice
+  m = html.match(/"regularMarketPrice":([0-9.]+)/);
+  if (m) return { price: parseFloat(m[1]), source: 'yahoo-bond', ts: Date.now() };
+
+  return null;
+}
 async function fetchFinnhubOne(symbol) {
   if (!apiKeys.finnhub) return null;
   try {
@@ -1256,6 +1402,37 @@ async function refreshAll() {
   for (const c of data.crypto) {
     if (c.cgId && !cres[c.cgId]) failedSymbols.push(c.symbol);
   }
+
+  // BONDS: fetch from Yahoo bond URLs (when configured)
+  const bondsList = (data.bonds || []).filter(b => b.yahooBondUrl);
+  const bondsSkipped = (data.bonds || []).length - bondsList.length;
+  let bondOk = 0, bondFailed = [];
+  for (let i = 0; i < bondsList.length; i++) {
+    const b = bondsList[i];
+    try {
+      const r = await fetchBondPrice(b);
+      if (r && r.price && !isNaN(r.price)) {
+        // Update the bond's currentPrice + record last-fetched timestamp
+        b.currentPrice = r.price;
+        b.lastFetched = Date.now();
+        b.lastFetchSource = 'yahoo';
+        bondOk++;
+        // If manual override existed for bond, clear it
+        const k = 'BOND:' + b.symbol;
+        if (manualPrices[k] !== undefined) {
+          clearedManual.push(b.symbol);
+          delete manualPrices[k];
+          saveManual();
+        }
+      } else {
+        bondFailed.push(b.symbol);
+      }
+    } catch(e) { bondFailed.push(b.symbol); }
+    // Small delay between bond fetches (Yahoo can rate-limit)
+    if (i < bondsList.length - 1) await new Promise(r => setTimeout(r, 300));
+  }
+  if (bondsList.length > 0) saveData();
+
   savePrices();
   document.getElementById('last-update').textContent = new Date().toLocaleTimeString('en-GB');
   const parts = [];
@@ -1264,6 +1441,13 @@ async function refreshAll() {
   if (sourceCounts.stooq) parts.push(`${sourceCounts.stooq} SQ`);
   if (sourceCounts.yahoo) parts.push(`${sourceCounts.yahoo} YH`);
   parts.push(`${Object.keys(cres).length} CG`);
+  if (bondOk > 0) parts.push(`${bondOk} BD`);
+  // Adjust counters for bonds
+  okCount += bondOk;
+  // bondsList.length not included in totalNeeded — add it
+  const adjustedTotalNeeded = totalNeeded + bondsList.length;
+  // Add bond failures to failedSymbols with a tag
+  for (const sym of bondFailed) failedSymbols.push(sym + '(BOND)');
   const clearedHint = clearedManual.length > 0
     ? ` <span style="color: var(--gold);">Manual override replaced with live price for: <strong>${[...new Set(clearedManual)].join(', ')}</strong>.</span>`
     : '';
@@ -1274,27 +1458,34 @@ async function refreshAll() {
   if (okCount === 0) {
     status.className = 'val err'; status.textContent = 'Offline';
     showBanner('<strong>No live prices.</strong> Add API keys in ⚙ Settings, or type prices manually.', true);
-  } else if (okCount < totalNeeded) {
-    status.className = 'val warn'; status.textContent = `${okCount}/${totalNeeded}`;
+  } else if (okCount < adjustedTotalNeeded) {
+    status.className = 'val warn'; status.textContent = `${okCount}/${adjustedTotalNeeded}`;
     const uniqueFailed = [...new Set(failedSymbols)];
-    // Group failed symbols: EU ETFs (have XETR/LSE/etc tag) vs other failures
+    // Group failed symbols: EU ETFs / bonds / other
     const euFailed = uniqueFailed.filter(s => /\(XETR\)|\(LSE\)|\(EUR\)|\(GBP\)/.test(s));
-    const otherFailed = uniqueFailed.filter(s => !euFailed.includes(s));
+    const bondsF = uniqueFailed.filter(s => s.endsWith('(BOND)'));
+    const otherFailed = uniqueFailed.filter(s => !euFailed.includes(s) && !bondsF.includes(s));
     let failedHint = '';
     if (euFailed.length > 0) {
       failedHint += ` <span style="color: var(--text-faint);">EU/UK ETFs without free API coverage: <strong style="color: var(--gold);">${euFailed.join(', ')}</strong> — type manual price.</span>`;
     }
+    if (bondsF.length > 0) {
+      failedHint += ` <span style="color: var(--text-faint);">Bonds Yahoo scrape failed for: <strong style="color: var(--gold);">${bondsF.map(s => s.replace('(BOND)','')).join(', ')}</strong> — Yahoo URL may be invalid or layout changed. Type manual price.</span>`;
+    }
     if (otherFailed.length > 0) {
       failedHint += ` Failed: <strong style="color: var(--red);">${otherFailed.join(', ')}</strong>.`;
+    }
+    if (bondsSkipped > 0) {
+      failedHint += ` <span style="color: var(--text-faint);"><strong>${bondsSkipped}</strong> bond${bondsSkipped===1?'':'s'} without Yahoo URL skipped.</span>`;
     }
     const keysHint = (!apiKeys.finnhub && !apiKeys.twelve)
       ? ' Add API keys in <strong>⚙ Settings</strong> for better coverage.'
       : '';
-    showBanner(`Fetched <strong>${okCount}/${totalNeeded}</strong> prices (${parts.join(', ')}).${failedHint}${clearedHint}${tdErrorHint}${keysHint}`, false);
+    showBanner(`Fetched <strong>${okCount}/${adjustedTotalNeeded}</strong> prices (${parts.join(', ')}).${failedHint}${clearedHint}${tdErrorHint}${keysHint}`, false);
     // Don't auto-hide so user can read which failed
   } else {
     status.className = 'val live'; status.textContent = 'Live';
-    showBanner(`All ${totalNeeded} prices fetched (${parts.join(', ')}).${clearedHint}${tdErrorHint}`, false, true);
+    showBanner(`All ${adjustedTotalNeeded} prices fetched (${parts.join(', ')}).${clearedHint}${tdErrorHint}`, false, true);
     setTimeout(hideBanner, (clearedManual.length > 0 || lastTwelveError) ? 8000 : 4000);
   }
   btn.disabled = false; btn.innerHTML = '↻ Refresh Prices';
@@ -1365,6 +1556,7 @@ function render() {
   renderOverview();
   renderDividends();
   renderPositions();
+  renderCashflow();
   renderProjections();
   renderEqProjected();
   renderAnnaVas();
@@ -1400,12 +1592,19 @@ function renderOverview() {
   const eq = sumDef(data.eq, marketValueUSD), eqCb = sumDef(data.eq, costBasisUSD);
   const dv = sumDef(data.dvd, marketValueUSD), dvCb = sumDef(data.dvd, costBasisUSD);
   const cr = sumDef(data.crypto, marketValueUSD), crCb = sumDef(data.crypto, costBasisUSD);
-  const totalMv = eq.sum + dv.sum + cr.sum;
-  const totalCb = eqCb.sum + dvCb.sum + crCb.sum;
+  // Bonds
+  const bonds = data.bonds || [];
+  const bdMvList = bonds.map(b => bondMarketValueUSD(b));
+  const bdCbList = bonds.map(b => bondCostUSD(b));
+  const bdSum = bdMvList.reduce((s,v) => s + (v||0), 0);
+  const bdCbSum = bdCbList.reduce((s,v) => s + (v||0), 0);
+  const bdMissing = bdMvList.filter(v => v === null).length;
+  const totalMv = eq.sum + dv.sum + cr.sum + bdSum;
+  const totalCb = eqCb.sum + dvCb.sum + crCb.sum + bdCbSum;
   const totalUpl = totalMv - totalCb;
   const totalReturnPct = totalCb === 0 ? 0 : totalUpl / totalCb;
-  const totalMissing = eq.missing + dv.missing + cr.missing;
-  const totalPositions = data.eq.length + data.dvd.length + data.crypto.length;
+  const totalMissing = eq.missing + dv.missing + cr.missing + bdMissing;
+  const totalPositions = data.eq.length + data.dvd.length + data.crypto.length + bonds.length;
   const all = [...data.eq, ...data.dvd, ...data.crypto].map(p => ({ p, upl: uplUSD(p), ret: returnPct(p) })).filter(r => r.upl !== null);
   let best = null, worst = null;
   for (const r of all) {
@@ -1413,20 +1612,23 @@ function renderOverview() {
     if (!worst || r.upl < worst.upl) worst = r;
   }
   const annualDvd = data.dvd.reduce((s,p) => s + (p.dvdPerShare||0)*p.shares, 0);
+  const annualCoupons = bonds.reduce((s,b) => s + bondAnnualCoupon(b), 0);
   const realizedPnl = data.closed.reduce((s,t) => s + t.pnl, 0);
   const totalDvdReceived = Object.values(data.dividendsReceived).reduce((s, m) => s + Object.values(m).reduce((a,b)=>a+b, 0), 0);
+  const totalCouponsReceived = Object.values(data.couponsReceived || {}).reduce((s, m) => s + Object.values(m).reduce((a,b)=>a+b, 0), 0);
   const portfolioYieldOnMv = dv.sum === 0 ? 0 : annualDvd / dv.sum;
   const yieldOnCost = dvCb.sum === 0 ? 0 : annualDvd / dvCb.sum;
+  const passiveAnnual = annualDvd + annualCoupons;
 
   const kpis = [
     { label: 'Total Market Value', value: fmtMoney(totalMv), sub: fmtMoney(totalCb)+' cost' + (totalMissing ? ` · ${totalMissing} need price` : ''), cls: 'blue' },
     { label: 'Total UPL', value: fmtMoney(totalUpl), sub: fmtPct(totalReturnPct), cls: totalUpl>=0?'green':'red', subCls: totalUpl>=0?'green':'red' },
     { label: 'Realized P&L', value: fmtMoney(realizedPnl), sub: data.closed.length+' closed', cls: realizedPnl>=0?'green':'red' },
     { label: 'Lifetime P&L', value: fmtMoney(totalUpl + realizedPnl), sub: 'unrealized + realized', cls: (totalUpl+realizedPnl)>=0?'green':'red' },
-    { label: 'Annual Dividend', value: fmtMoney(annualDvd), sub: fmtMoney(annualDvd/12)+' / month', cls: 'green' },
-    { label: 'Dividends Received', value: fmtMoney(totalDvdReceived), sub: 'all-time net', cls: 'gold' },
+    { label: 'Annual Passive', value: fmtMoney(passiveAnnual), sub: fmtMoney(passiveAnnual/12)+' / mo · div+coupon', cls: 'green' },
+    { label: 'Income Received', value: fmtMoney(totalDvdReceived + totalCouponsReceived), sub: 'div + coupon · all-time', cls: 'gold' },
     { label: 'Portfolio Yield', value: fmtPct(portfolioYieldOnMv), sub: 'YoC ' + fmtPct(yieldOnCost), cls: 'purple' },
-    { label: 'Positions / Sectors', value: totalPositions + ' / ' + new Set([...data.eq, ...data.dvd].map(p=>p.sector)).size, sub: (best ? `Best: ${best.p.symbol} ` : '') + (worst ? `· Worst: ${worst.p.symbol}` : ''), cls: '' }
+    { label: 'Positions / Bonds', value: totalPositions + ' / ' + bonds.length, sub: (best ? `Best: ${best.p.symbol} ` : '') + (worst ? `· Worst: ${worst.p.symbol}` : ''), cls: '' }
   ];
   document.getElementById('kpi-grid').innerHTML = kpis.map(k =>
     `<div class="kpi small ${k.cls||''}"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="sub-value ${k.subCls||''}">${k.sub}</div></div>`
@@ -1439,6 +1641,7 @@ function renderOverview() {
     sectors[s] = (sectors[s] || 0) + mv;
   }
   if (cr.sum > 0) sectors['Crypto'] = cr.sum;
+  if (bdSum > 0) sectors['Bonds'] = bdSum;
   const sectorList = Object.entries(sectors).sort((a,b) => b[1]-a[1]);
   // PALETTE B — 11 hues at ≥30° spacing, S=65% L=38%
   // Each sector mapped to a specific color (consistent across all charts)
@@ -1449,6 +1652,7 @@ function renderOverview() {
     'US Large Cap':           '#219f56',  // emerald
     'Real Estate':            '#219f9f',  // teal
     'Crypto':                 '#21569f',  // ocean
+    'Bonds':                  '#9f2141',  // ruby
     'Consumer Discretionary': '#36219f',  // violet
     'Healthcare':             '#75219f',  // grape
     'Energy':                 '#9f218a',  // berry
@@ -1465,6 +1669,10 @@ function renderOverview() {
   const palette = sectorList.map(([name], i) => SECTOR_COLOR_MAP[name] || PALETTE_B[i % PALETTE_B.length]);
   drawPie3D(sectorList, totalMv || 1, palette);
   drawEqDonut(palette);
+  // Per-portfolio holding donuts (now on Overview)
+  drawHoldingDonut('dvd-donut', 'dvd-donut-legend', 'dvd-donut-center', data.dvd, 'Dividend');
+  drawHoldingDonut('crypto-donut', 'crypto-donut-legend', 'crypto-donut-center', data.crypto, 'Crypto');
+  drawBondDonut();
   document.getElementById('pie-legend').innerHTML = sectorList.map(([name, val], i) => `
     <div class="legend-item">
       <span class="legend-dot" style="background:${palette[i%palette.length]}"></span>
@@ -1475,7 +1683,8 @@ function renderOverview() {
   const subs = [
     { name: 'Dividend Portfolio', value: dv.sum, cost: dvCb.sum, color: '#9f7521' },  // bronze
     { name: 'Equity Portfolio',   value: eq.sum, cost: eqCb.sum, color: '#21569f' },  // ocean
-    { name: 'Crypto Portfolio',   value: cr.sum, cost: crCb.sum, color: '#75219f' }   // grape
+    { name: 'Crypto Portfolio',   value: cr.sum, cost: crCb.sum, color: '#75219f' },  // grape
+    { name: 'Bonds Portfolio',    value: bdSum,  cost: bdCbSum,  color: '#9f2141' }   // ruby
   ];
   const maxSub = Math.max(...subs.map(s=>s.value), 1);
   document.getElementById('subport-bars').innerHTML = subs.map(s => {
@@ -2167,12 +2376,17 @@ function renderPositions() {
   document.getElementById('eq-count').textContent = data.eq.length + ' positions';
   document.getElementById('dvd-count').textContent = data.dvd.length + ' positions';
   document.getElementById('cr-count').textContent = data.crypto.length + ' positions';
+  const bdCountEl = document.getElementById('bd-count');
+  if (bdCountEl) bdCountEl.textContent = (data.bonds || []).length + ' bonds';
   renderEqKpis(data.eq);
   renderDvdKpis(data.dvd);
   renderCryptoKpis(data.crypto);
+  renderBondsKpis(data.bonds || []);
   document.getElementById('eq-table').innerHTML = positionTable(data.eq, 'eq');
   document.getElementById('dvd-table').innerHTML = positionTable(data.dvd, 'dvd', true);
   document.getElementById('cr-table').innerHTML = positionTable(data.crypto, 'crypto');
+  renderBondsTable();
+  renderCouponCalendar();
   const totalClosed = data.closed.reduce((s,t)=>s+t.pnl,0);
   document.getElementById('closed-table').innerHTML = `
     <thead><tr><th class="l">Security</th><th class="l">Country</th><th>Net P&L (USD)</th><th></th></tr></thead>
@@ -2205,6 +2419,715 @@ function removeClosedPosition(idx) {
   render();
 }
 function updateField(list, idx, field, val) { data[list][idx][field] = parseFloat(val) || 0; saveData(); render(); }
+
+/* ===================== BONDS PORTFOLIO ===================== */
+// A bond's price in IBKR/Trading 212 is quoted as a % of face value (e.g. 101.21 means 101.21% of $1000 face).
+// We store avgPrice and currentPrice in that quoted format (per 100, like 101.21).
+// Quantity = number of bond units (each unit = faceValue, default $1000).
+// Bond value = qty × (price/100) × faceValue
+
+function bondMarketValueUSD(b) {
+  const px = getBondPrice(b);
+  if (px.price === null) return null;
+  const face = b.faceValue || 1000;
+  const valNative = b.qty * (px.price/100) * face;
+  return toUSD(valNative, b.currency);
+}
+function bondCostUSD(b) {
+  const face = b.faceValue || 1000;
+  const costNative = b.qty * (b.avgPrice/100) * face;
+  return toUSD(costNative, b.currency);
+}
+function bondAnnualCoupon(b) {
+  // Annual coupon in USD = qty × faceValue × couponRate, converted to USD
+  const face = b.faceValue || 1000;
+  const annualNative = b.qty * face * (b.couponRate || 0);
+  return toUSD(annualNative, b.currency);
+}
+function bondCurrentYTM(b) {
+  // Simplified YTM (does not account for tax or compounding adjustments).
+  // YTM ≈ [coupon + (face - currentPrice)/yearsToMaturity] / [(face + currentPrice)/2]
+  // currentPrice here is the price-per-100 quote, so convert: actual price = currentPrice/100 * face
+  const px = getBondPrice(b);
+  if (px.price === null || !b.maturityDate) return null;
+  const face = b.faceValue || 1000;
+  const cp = (px.price/100) * face;
+  const couponAnnual = face * (b.couponRate || 0);
+  const yearsToMat = (new Date(b.maturityDate) - new Date()) / (1000*60*60*24*365.25);
+  if (yearsToMat <= 0) return null;
+  const ytm = (couponAnnual + (face - cp)/yearsToMat) / ((face + cp)/2);
+  return ytm;
+}
+function getBondPrice(b) {
+  const k = 'BOND:' + b.symbol;
+  // Manual override always wins
+  if (manualPrices[k] !== undefined) return { price: manualPrices[k], source: 'manual', ts: Date.now() };
+  // Yahoo-fetched value (currentPrice + lastFetched + lastFetchSource='yahoo')
+  if (b.currentPrice !== undefined && b.currentPrice !== null) {
+    const src = b.lastFetchSource === 'yahoo' ? 'yahoo-bond' : 'manual';
+    const ts = b.lastFetched || Date.now();
+    return { price: b.currentPrice, source: src, ts };
+  }
+  return { price: null, source: 'none', ts: 0 };
+}
+function setBondPrice(symbol, val) {
+  const k = 'BOND:' + symbol;
+  const b = (data.bonds||[]).find(x => x.symbol === symbol);
+  if (val === '' || val === null || isNaN(parseFloat(val))) {
+    delete manualPrices[k];
+    if (b) { b.currentPrice = null; b.lastFetched = null; b.lastFetchSource = null; }
+  } else {
+    const v = parseFloat(val);
+    manualPrices[k] = v;
+    if (b) { b.currentPrice = v; b.lastFetched = Date.now(); b.lastFetchSource = 'manual'; }
+  }
+  saveManual(); saveData(); render();
+}
+
+function renderBondsKpis(bonds) {
+  const host = document.getElementById('bd-kpis');
+  if (!host) return;
+  const totalCost = bonds.reduce((s,b) => s + bondCostUSD(b), 0);
+  const totalMv = bonds.reduce((s,b) => { const mv = bondMarketValueUSD(b); return s + (mv||0); }, 0);
+  const hasMissing = bonds.some(b => bondMarketValueUSD(b) === null);
+  const totalUpl = hasMissing ? null : (totalMv - totalCost);
+  const totalRet = (totalUpl === null || totalCost === 0) ? null : totalUpl/totalCost;
+  const totalAnnualCoupon = bonds.reduce((s,b) => s + bondAnnualCoupon(b), 0);
+  const portfolioYield = totalMv > 0 ? totalAnnualCoupon/totalMv : 0;
+  const ytmAvg = (() => {
+    const ytms = bonds.map(b => bondCurrentYTM(b)).filter(y => y !== null);
+    if (ytms.length === 0) return null;
+    // Weight by market value
+    let sumY = 0, sumW = 0;
+    bonds.forEach(b => {
+      const ytm = bondCurrentYTM(b);
+      const mv = bondMarketValueUSD(b);
+      if (ytm !== null && mv !== null) { sumY += ytm * mv; sumW += mv; }
+    });
+    return sumW > 0 ? sumY/sumW : null;
+  })();
+  const kpis = [
+    { label: 'Bonds Value', value: fmtMoney(totalMv), sub: bonds.length + ' bonds' },
+    { label: 'Total Cost', value: fmtMoney(totalCost) },
+    { label: 'Unrealized P&L', value: totalUpl===null?'—':fmtMoney(totalUpl), sub: totalRet===null?'—':fmtPct(totalRet), cls: totalUpl!==null && totalUpl>=0 ? 'pos':'neg' },
+    { label: 'Annual Coupons', value: fmtMoney(totalAnnualCoupon), sub: fmtMoney(totalAnnualCoupon/12) + '/mo' },
+    { label: 'Portfolio Yield', value: fmtPct(portfolioYield), sub: 'on market value' },
+    { label: 'Avg Current YTM', value: ytmAvg===null?'—':fmtPct(ytmAvg), sub: 'weighted' }
+  ];
+  host.innerHTML = kpis.map(k => `<div class="pk"><span class="l">${k.label}</span><span class="v ${k.cls||''}">${k.value}</span>${k.sub?`<span class="l" style="font-size:8px; color:var(--text-faint);">${k.sub}</span>`:''}</div>`).join('');
+}
+
+function renderBondsTable() {
+  const host = document.getElementById('bd-table');
+  if (!host) return;
+  const bonds = data.bonds || [];
+  if (bonds.length === 0) {
+    host.innerHTML = '<thead><tr><th class="l">Bonds</th></tr></thead><tbody><tr><td class="l" style="padding:20px; color:var(--text-faint); text-align:center;">No bonds yet. Click <strong style="color:var(--gold);">🆕 NEW POS</strong> above to add your first bond.</td></tr></tbody>';
+    return;
+  }
+  const today = new Date();
+  let html = '<thead><tr>'
+    + '<th class="l">Issuer</th>'
+    + '<th class="l">Coupon</th>'
+    + '<th class="l">Rating</th>'
+    + '<th>Avg Price</th>'
+    + '<th>Current Px</th>'
+    + '<th>Src</th>'
+    + '<th>YTM</th>'
+    + '<th>Qty</th>'
+    + '<th>Cost (USD)</th>'
+    + '<th>Value (USD)</th>'
+    + '<th>P/L</th>'
+    + '<th>Next Coupon</th>'
+    + '<th>Maturity</th>'
+    + '<th></th>'
+    + '</tr></thead><tbody>';
+  let totCost = 0, totVal = 0, hasMissing = false;
+  bonds.forEach((b, idx) => {
+    const cost = bondCostUSD(b);
+    const mv = bondMarketValueUSD(b);
+    const upl = mv === null ? null : (mv - cost);
+    const ytm = bondCurrentYTM(b);
+    const px = getBondPrice(b);
+    totCost += cost; totVal += (mv||0);
+    if (mv === null) hasMissing = true;
+    const nextC = b.nextCouponDate ? new Date(b.nextCouponDate).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'2-digit'}) : '—';
+    const mat = b.maturityDate ? new Date(b.maturityDate).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+    // Source tag
+    let srcTag = '';
+    if (px.source === 'yahoo-bond') {
+      const isStale = (Date.now() - px.ts) > 24*60*60*1000;
+      srcTag = isStale
+        ? `<span class="source-tag stale" title="Last fetched ${new Date(px.ts).toLocaleString('en-GB')} — over 24h ago">STALE</span>`
+        : `<span class="source-tag yahoo" title="Yahoo · ${new Date(px.ts).toLocaleString('en-GB')}">YH</span>`;
+    } else if (px.source === 'manual' && px.price !== null) {
+      srcTag = `<span class="source-tag manual" title="Manual entry${b.lastFetched ? ' · ' + new Date(b.lastFetched).toLocaleString('en-GB') : ''}">M</span>`;
+    } else {
+      srcTag = '<span class="source-tag" style="color:var(--text-faint);">—</span>';
+    }
+    // Yahoo URL pencil button (small)
+    const ybIcon = b.yahooBondUrl
+      ? `<button onclick="editBondYahooUrl(${idx})" title="Edit Yahoo URL: ${b.yahooBondUrl}" style="background:transparent; border:none; color:var(--gold); cursor:pointer; padding:0; font-size:9px;">✏</button>`
+      : `<button onclick="editBondYahooUrl(${idx})" title="Add Yahoo URL for auto-refresh" style="background:transparent; border:1px dashed var(--border-bright); color:var(--text-faint); cursor:pointer; padding:1px 4px; font-size:8px;">+ YH</button>`;
+    html += `<tr>
+      <td class="l"><span class="symbol">${b.issuer}</span><br><span class="name">${b.symbol}</span></td>
+      <td class="l">${(b.couponRate*100).toFixed(2)}%</td>
+      <td class="l"><span class="pill">${b.rating||'—'}</span></td>
+      <td class="num">${b.avgPrice.toFixed(2)}</td>
+      <td class="num"><input class="edit ${px.source==='yahoo-bond'?'live':(px.price!==null?'override':'empty')}" type="number" step="any" value="${px.price!==null?px.price:''}" placeholder="type" onchange="setBondPrice('${b.symbol}', this.value)"></td>
+      <td>${srcTag} ${ybIcon}</td>
+      <td class="num">${ytm===null?'—':fmtPct(ytm)}</td>
+      <td class="num">${b.qty.toFixed(4)}</td>
+      <td class="num">${fmtMoney(cost)}</td>
+      <td class="num">${mv===null?'—':fmtMoney(mv)}</td>
+      <td class="num ${cls(upl)}">${upl===null?'—':fmtMoney(upl)}</td>
+      <td class="num" style="font-size:9px;">${nextC}</td>
+      <td class="num" style="font-size:9px;">${mat}</td>
+      <td class="num"><button class="close-pos-btn" onclick="closeBondPosition(${idx})" title="Close bond">🗑</button></td>
+    </tr>`;
+  });
+  const totUpl = hasMissing ? null : (totVal - totCost);
+  const totRet = (totUpl === null || totCost === 0) ? null : totUpl/totCost;
+  html += `<tr class="total">
+    <td class="l" colspan="8">Total${hasMissing?' (partial)':''}</td>
+    <td class="num">${fmtMoney(totCost)}</td>
+    <td class="num">${fmtMoney(totVal)}</td>
+    <td class="num ${cls(totUpl)}">${totUpl===null?'—':fmtMoney(totUpl)}</td>
+    <td></td><td></td><td></td>
+  </tr></tbody>`;
+  host.innerHTML = html;
+}
+
+function editBondYahooUrl(idx) {
+  const b = data.bonds[idx];
+  if (!b) return;
+  const current = b.yahooBondUrl || '';
+  const newUrl = prompt(`Yahoo Bond URL for ${b.symbol} (${b.issuer}):\n\nPaste the full Yahoo Finance URL for this bond.\nExample: https://finance.yahoo.com/quote/CUSIP.BOND/\n\nLeave empty to remove auto-refresh for this bond.`, current);
+  if (newUrl === null) return;  // cancelled
+  b.yahooBondUrl = newUrl.trim() || null;
+  saveData();
+  render();
+}
+
+function toggleNewBondForm() {
+  const container = document.getElementById('bond-add-form-container');
+  if (!container) return;
+  if (container.innerHTML.trim() && container.dataset.formType === 'new') {
+    container.innerHTML = ''; container.dataset.formType = ''; return;
+  }
+  container.dataset.formType = 'new';
+  const brokers = ['IBKR','Trading 212','REV','eToro','Other'];
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1fr 1.4fr 0.8fr 0.8fr auto auto;">
+      <div class="field"><label>Issuer *</label><input type="text" id="bn-issuer" placeholder="e.g. Amazon"></div>
+      <div class="field"><label>Symbol / ISIN *</label><input type="text" id="bn-symbol" placeholder="e.g. AMZN-2032" style="text-transform:uppercase;"></div>
+      <div class="field"><label>Coupon % *</label><input type="number" step="any" id="bn-coupon" placeholder="4.70"></div>
+      <div class="field"><label>Rating</label><input type="text" id="bn-rating" placeholder="e.g. AA-"></div>
+      <button class="save" onclick="submitNewBond()">Add Bond</button>
+      <button class="cancel" onclick="toggleNewBondForm()">Cancel</button>
+      <div class="field"><label>Qty (units)</label><input type="number" step="any" id="bn-qty" placeholder="1.0"></div>
+      <div class="field"><label>Avg Price (% face)</label><input type="number" step="any" id="bn-avgprice" placeholder="101.21"></div>
+      <div class="field"><label>Current Px (% face)</label><input type="number" step="any" id="bn-currprice" placeholder="optional"></div>
+      <div class="field"><label>Face Value</label><input type="number" step="any" id="bn-face" value="1000"></div>
+      <div></div><div></div>
+      <div class="field"><label>Next Coupon Date</label><input type="date" id="bn-nextcoupon"></div>
+      <div class="field"><label>Maturity Date *</label><input type="date" id="bn-maturity"></div>
+      <div class="field"><label>Currency</label><select id="bn-currency"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+      <div class="field"><label>Broker</label><select id="bn-broker">${brokers.map(b => `<option>${b}</option>`).join('')}</select></div>
+      <div></div><div></div>
+      <div class="field"><label>Coupon Frequency</label><select id="bn-freq"><option value="semiannual">Semiannual</option><option value="annual">Annual</option><option value="quarterly">Quarterly</option></select></div>
+      <div class="field" style="grid-column: 1 / -1;"><label>Yahoo Bond URL (optional · for auto-refresh)</label><input type="text" id="bn-yahoo-url" placeholder="e.g. https://finance.yahoo.com/quote/CUSIP.BOND/ — leave empty for manual-only"></div>
+      <div class="add-trade-preview" style="grid-column: 1 / -1;">Bond price is quoted as % of face value (e.g. 101.21 means $1012.10 per $1000 bond). The Yahoo URL is optional — when set, 🔄 Refresh will try to scrape the current price (Yahoo's layout may change and break this). Manual price always wins if set after refresh.</div>
+    </div>`;
+}
+
+function submitNewBond() {
+  const issuer = document.getElementById('bn-issuer').value.trim();
+  const symbol = document.getElementById('bn-symbol').value.trim().toUpperCase();
+  const couponRate = parseFloat(document.getElementById('bn-coupon').value);
+  const rating = document.getElementById('bn-rating').value.trim();
+  const qty = parseFloat(document.getElementById('bn-qty').value);
+  const avgPrice = parseFloat(document.getElementById('bn-avgprice').value);
+  const currentPriceStr = document.getElementById('bn-currprice').value;
+  const currentPrice = currentPriceStr ? parseFloat(currentPriceStr) : null;
+  const faceValue = parseFloat(document.getElementById('bn-face').value) || 1000;
+  const nextCouponDate = document.getElementById('bn-nextcoupon').value;
+  const maturityDate = document.getElementById('bn-maturity').value;
+  const currency = document.getElementById('bn-currency').value;
+  const broker = document.getElementById('bn-broker').value;
+  const couponFrequency = document.getElementById('bn-freq').value;
+  const yahooBondUrl = document.getElementById('bn-yahoo-url').value.trim() || null;
+  if (!issuer || !symbol || isNaN(couponRate) || isNaN(qty) || isNaN(avgPrice) || !maturityDate) {
+    alert('Issuer, Symbol, Coupon %, Qty, Avg Price, and Maturity are all required.');
+    return;
+  }
+  if (!data.bonds) data.bonds = [];
+  if (data.bonds.some(b => b.symbol === symbol)) {
+    alert(`Bond ${symbol} already exists. Use BUY MORE.`); return;
+  }
+  data.bonds.push({
+    issuer, symbol, name: issuer + ' ' + (couponRate*100).toFixed(2) + '% ' + (maturityDate.slice(0,4)),
+    couponRate: couponRate / 100,  // store as decimal
+    rating, qty, avgPrice, currentPrice, faceValue,
+    nextCouponDate: nextCouponDate || null,
+    maturityDate, currency, broker, couponFrequency, yahooBondUrl
+  });
+  saveData();
+  toggleNewBondForm();
+  render();
+}
+
+function toggleAddBondBuyForm() {
+  const container = document.getElementById('bond-add-form-container');
+  if (!container) return;
+  if (container.innerHTML.trim() && container.dataset.formType === 'buy') {
+    container.innerHTML = ''; container.dataset.formType = ''; return;
+  }
+  container.dataset.formType = 'buy';
+  const bonds = data.bonds || [];
+  if (bonds.length === 0) {
+    container.innerHTML = `<div class="banner">No bonds yet. Click <strong>🆕 NEW POS</strong> to create your first bond.</div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1.5fr 1fr 1fr auto auto;">
+      <div class="field"><label>Bond</label><select id="bbuy-symbol">${bonds.map(b => `<option value="${b.symbol}">${b.issuer} ${(b.couponRate*100).toFixed(2)}% (${b.symbol})</option>`).join('')}</select></div>
+      <div class="field"><label>Add Qty *</label><input type="number" step="any" id="bbuy-qty"></div>
+      <div class="field"><label>Buy Price (% face) *</label><input type="number" step="any" id="bbuy-price"></div>
+      <button class="save" onclick="submitBondBuy()">Add Buy</button>
+      <button class="cancel" onclick="toggleAddBondBuyForm()">Cancel</button>
+      <div class="add-trade-preview">New avg price = weighted average of old qty and new qty.</div>
+    </div>`;
+}
+
+function submitBondBuy() {
+  const sym = document.getElementById('bbuy-symbol').value;
+  const addQty = parseFloat(document.getElementById('bbuy-qty').value);
+  const buyPrice = parseFloat(document.getElementById('bbuy-price').value);
+  if (!sym || isNaN(addQty) || addQty <= 0 || isNaN(buyPrice) || buyPrice <= 0) {
+    alert('Qty and price required.'); return;
+  }
+  const b = data.bonds.find(x => x.symbol === sym);
+  if (!b) return;
+  const newTotalQty = b.qty + addQty;
+  b.avgPrice = ((b.qty * b.avgPrice) + (addQty * buyPrice)) / newTotalQty;
+  b.qty = newTotalQty;
+  saveData();
+  toggleAddBondBuyForm();
+  render();
+}
+
+function closeBondPosition(idx) {
+  const b = data.bonds[idx];
+  if (!b) return;
+  const c1 = confirm(`Close bond ${b.issuer} (${b.symbol})?\n\nThis sells out the entire holding and moves it to Realized P&L.\n\nClick OK to continue.`);
+  if (!c1) return;
+  const px = getBondPrice(b);
+  const suggested = px.price !== null ? px.price : b.avgPrice;
+  const closePriceStr = prompt(`Close price for ${b.symbol} (as % of face, e.g. 101.21):`, suggested.toFixed(2));
+  if (!closePriceStr) return;
+  const closePrice = parseFloat(closePriceStr);
+  if (isNaN(closePrice) || closePrice <= 0) { alert('Invalid price.'); return; }
+  const face = b.faceValue || 1000;
+  const pnlNative = b.qty * ((closePrice - b.avgPrice)/100) * face;
+  const pnlUSD = toUSD(pnlNative, b.currency);
+  const c2 = confirm(`FINAL CONFIRMATION\n\nClose ${b.qty} units of ${b.symbol} at ${closePrice.toFixed(2)}.\n\nRealized P&L: ${fmtMoney(pnlUSD)} USD\n\nContinue?`);
+  if (!c2) return;
+  if (!data.closed) data.closed = [];
+  data.closed.unshift({
+    name: b.issuer + ' ' + (b.couponRate*100).toFixed(2) + '% (' + b.symbol + ')',
+    country: b.currency === 'USD' ? 'US' : (b.currency === 'EUR' ? 'EU' : b.currency),
+    pnl: pnlUSD,
+    closedDate: new Date().toISOString().slice(0,10)
+  });
+  data.bonds.splice(idx, 1);
+  saveData();
+  render();
+}
+
+function drawBondDonut() {
+  const ctx = document.getElementById('bd-donut');
+  if (!ctx) return;
+  if (chartInstances.bdDonut) chartInstances.bdDonut.destroy();
+  const bonds = data.bonds || [];
+  const legendEl = document.getElementById('bd-donut-legend');
+  const centerEl = document.getElementById('bd-donut-center');
+  if (bonds.length === 0) {
+    if (legendEl) legendEl.innerHTML = '<div style="color: var(--text-faint); padding: 20px; text-align:center; font-size:10px;">No bonds — add via 🆕 NEW POS</div>';
+    if (centerEl) centerEl.innerHTML = '<div class="dc-label">Bonds</div><div class="dc-value" style="font-size:14px;">—</div>';
+    return;
+  }
+  const labels = bonds.map(b => b.issuer + ' ' + (b.couponRate*100).toFixed(2) + '%');
+  const values = bonds.map(b => bondMarketValueUSD(b) || 0);
+  const total = values.reduce((s,v) => s+v, 0);
+  // Use a subset of Palette B by index
+  const PALETTE_B_BONDS = ['#9f7521','#21569f','#75219f','#219f9f','#9f218a','#369f21','#9f2141','#36219f','#9f3621','#809f21','#219f56'];
+  const colors = bonds.map((_, i) => PALETTE_B_BONDS[i % PALETTE_B_BONDS.length]);
+  chartInstances.bdDonut = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: '#0c0c0c', borderWidth: 2, hoverOffset: 10 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0a0a0a', borderColor: '#fbbf24', borderWidth: 1, padding: 10,
+          titleColor: '#fff', bodyColor: '#fbbf24',
+          callbacks: { label: c => `${c.label}: ${fmtMoney(c.parsed)} (${(c.parsed/total*100).toFixed(1)}%)` }
+        }
+      }
+    }
+  });
+  const center = document.getElementById('bd-donut-center');
+  if (center) center.innerHTML = `<div class="dc-label">Bonds Total</div><div class="dc-value" style="font-size:18px;">${fmtMoney(total)}</div><div class="dc-sub">${bonds.length} bond${bonds.length===1?'':'s'}</div>`;
+  document.getElementById('bd-donut-legend').innerHTML = bonds.map((b, i) => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${colors[i]}"></span>
+      <span class="legend-name">${b.issuer}<span class="pct">${total>0?((values[i]/total)*100).toFixed(1):0}%</span></span>
+      <span class="legend-val">${fmtMoney(values[i])}</span>
+    </div>`).join('');
+}
+
+/* Generic holding donut for DVD / Crypto */
+function drawHoldingDonut(canvasId, legendId, centerId, list, label) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  // Clean prior chart on same id
+  if (chartInstances[canvasId]) { try { chartInstances[canvasId].destroy(); } catch(e){} }
+  const items = list.map(p => ({ name: p.symbol, full: p.name, value: marketValueUSD(p) || 0 })).filter(x => x.value > 0);
+  if (items.length === 0) {
+    if (legendId) document.getElementById(legendId).innerHTML = '<div style="color:var(--text-faint); padding:20px;">No holdings to display</div>';
+    return;
+  }
+  items.sort((a,b) => b.value - a.value);
+  const total = items.reduce((s,x) => s+x.value, 0);
+  const PALETTE_B = ['#9f7521','#21569f','#75219f','#219f9f','#9f218a','#369f21','#9f2141','#36219f','#9f3621','#809f21','#219f56'];
+  const colors = items.map((_, i) => PALETTE_B[i % PALETTE_B.length]);
+  chartInstances[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels: items.map(x => x.name), datasets: [{ data: items.map(x => x.value), backgroundColor: colors, borderColor: '#0c0c0c', borderWidth: 2, hoverOffset: 10 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0a0a0a', borderColor: '#fbbf24', borderWidth: 1, padding: 10,
+          titleColor: '#fff', bodyColor: '#fbbf24',
+          callbacks: { label: c => `${c.label}: ${fmtMoney(c.parsed)} (${(c.parsed/total*100).toFixed(1)}%)` }
+        }
+      }
+    }
+  });
+  if (centerId) {
+    const center = document.getElementById(centerId);
+    if (center) center.innerHTML = `<div class="dc-label">${label} Total</div><div class="dc-value" style="font-size:18px;">${fmtMoney(total)}</div><div class="dc-sub">${items.length} holding${items.length===1?'':'s'}</div>`;
+  }
+  if (legendId) {
+    document.getElementById(legendId).innerHTML = items.map((x, i) => `
+      <div class="legend-item">
+        <span class="legend-dot" style="background:${colors[i]}"></span>
+        <span class="legend-name">${x.name}<span class="pct">${((x.value/total)*100).toFixed(1)}%</span></span>
+        <span class="legend-val">${fmtMoney(x.value)}</span>
+      </div>`).join('');
+  }
+}
+
+/* ===================== COUPON CALENDAR ===================== */
+function renderCouponCalendar() {
+  const host = document.getElementById('bd-coupon-grid');
+  if (!host) return;
+  const received = data.couponsReceived || {};
+  const bondSymbols = new Set();
+  for (const ym in received) for (const s in received[ym]) bondSymbols.add(s);
+  // Also add all current bond symbols
+  (data.bonds || []).forEach(b => bondSymbols.add(b.symbol));
+  const symbolsArr = [...bondSymbols].sort();
+
+  // Populate year selector
+  const ySel = document.getElementById('bd-coupon-add-year');
+  if (ySel) {
+    const currYear = new Date().getFullYear();
+    const yearsSet = new Set([currYear, currYear-1, currYear+1]);
+    for (const ym in received) yearsSet.add(parseInt(ym.split('-')[0]));
+    const years = [...yearsSet].sort();
+    ySel.innerHTML = years.map(y => `<option value="${y}" ${y===currYear?'selected':''}>${y}</option>`).join('');
+  }
+
+  if (symbolsArr.length === 0) {
+    host.innerHTML = '<div style="color: var(--text-faint); padding: 20px; text-align:center; font-size:10px;">No bonds yet. Add a bond to start tracking coupons.</div>';
+    return;
+  }
+
+  // Determine year range
+  let minYear = new Date().getFullYear(), maxYear = minYear;
+  for (const ym in received) { const y = parseInt(ym.split('-')[0]); if (y < minYear) minYear = y; if (y > maxYear) maxYear = y; }
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  let html = '';
+  for (let yr = minYear; yr <= maxYear; yr++) {
+    html += `<div style="margin-bottom: 10px;"><div style="font-size:9px; color:var(--gold); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:4px;">${yr}</div>`;
+    html += `<div class="dvd-edit-grid" style="min-width:400px;">`;
+    html += '<div class="h l">Bond</div>' + months.map(m => `<div class="h">${m}</div>`).join('');
+    let yearTotal = 0;
+    for (const sym of symbolsArr) {
+      html += `<div class="row-label">${sym}</div>`;
+      for (let m = 1; m <= 12; m++) {
+        const ymKey = `${yr}-${String(m).padStart(2,'0')}`;
+        const val = (received[ymKey] && received[ymKey][sym]) || 0;
+        yearTotal += val;
+        html += `<div class="cell"><input type="number" step="any" value="${val||''}" class="${val>0?'has-val':''}" onchange="updateCouponCell('${sym}','${yr}','${String(m).padStart(2,'0')}', this.value)"></div>`;
+      }
+    }
+    // Year total summary row
+    html += `<div class="row-label total">Total ${yr}</div>`;
+    for (let m = 1; m <= 12; m++) {
+      const ymKey = `${yr}-${String(m).padStart(2,'0')}`;
+      let mTotal = 0;
+      for (const sym of symbolsArr) mTotal += (received[ymKey] && received[ymKey][sym]) || 0;
+      html += `<div class="cell summary"><div class="summary-val">${mTotal>0?mTotal.toFixed(2):''}</div></div>`;
+    }
+    html += `</div></div>`;
+  }
+  host.innerHTML = html;
+}
+
+function updateCouponCell(sym, year, month, val) {
+  if (!data.couponsReceived) data.couponsReceived = {};
+  const ym = `${year}-${month}`;
+  if (!data.couponsReceived[ym]) data.couponsReceived[ym] = {};
+  const v = parseFloat(val);
+  if (val === '' || val === '0' || isNaN(v)) {
+    delete data.couponsReceived[ym][sym];
+    if (Object.keys(data.couponsReceived[ym]).length === 0) delete data.couponsReceived[ym];
+  } else {
+    data.couponsReceived[ym][sym] = v;
+  }
+  saveData(); renderCouponCalendar(); renderCashflow();
+}
+
+function addCouponRow() {
+  const year = document.getElementById('bd-coupon-add-year').value;
+  const sym = document.getElementById('bd-coupon-add-symbol').value.trim().toUpperCase();
+  if (!sym) return;
+  if (!data.couponsReceived) data.couponsReceived = {};
+  const ym = `${year}-01`;
+  if (!data.couponsReceived[ym]) data.couponsReceived[ym] = {};
+  if (data.couponsReceived[ym][sym] === undefined) data.couponsReceived[ym][sym] = 0;
+  document.getElementById('bd-coupon-add-symbol').value = '';
+  saveData(); renderCouponCalendar();
+}
+
+/* ===================== PASSIVE CASH FLOW TAB ===================== */
+function renderCashflow() {
+  // Defensive: ensure all data structures exist (in case migration missed something)
+  if (!data.interestAccounts) data.interestAccounts = [
+    { id: 'eur-account', label: 'EUR Savings',  amount: 0, annualYield: 0, currency: 'EUR' },
+    { id: 'usd-account', label: 'USD Savings',  amount: 0, annualYield: 0, currency: 'USD' }
+  ];
+  if (!data.cashFlowConfig) data.cashFlowConfig = { includeEqWithdrawal: false, eqWithdrawalRate: 0.04 };
+  if (!data.bonds) data.bonds = [];
+  if (!data.couponsReceived) data.couponsReceived = {};
+
+  // Sources
+  const annualDvd = data.dvd.reduce((s,p) => s + (p.dvdPerShare||0)*p.shares, 0);
+  const annualBondCoupons = (data.bonds || []).reduce((s,b) => s + bondAnnualCoupon(b), 0);
+  const interestUSD = (data.interestAccounts || []).reduce((s,a) => {
+    const amtUSD = toUSD(a.amount, a.currency);
+    return s + amtUSD * a.annualYield;
+  }, 0);
+  const eqMv = data.eq.reduce((s,p) => { const mv = marketValueUSD(p); return s + (mv||0); }, 0);
+  const eqWithdrawal = data.cashFlowConfig.includeEqWithdrawal ? eqMv * data.cashFlowConfig.eqWithdrawalRate : 0;
+  const totalAnnual = annualDvd + annualBondCoupons + interestUSD + eqWithdrawal;
+  const totalMonthly = totalAnnual / 12;
+
+  // KPIs
+  const host = document.getElementById('cashflow-kpis');
+  if (host) {
+    host.innerHTML = `
+      <div class="kpi"><div class="label">Total Annual</div><div class="value">${fmtMoney(totalAnnual)}</div><div class="sub-value">passive</div></div>
+      <div class="kpi green"><div class="label">Total Monthly</div><div class="value">${fmtMoney(totalMonthly)}</div><div class="sub-value">${fmtMoney(totalAnnual/52)}/wk</div></div>
+      <div class="kpi"><div class="label">Annual Dividends</div><div class="value">${fmtMoney(annualDvd)}</div><div class="sub-value">${(annualDvd/totalAnnual*100||0).toFixed(1)}% of total</div></div>
+      <div class="kpi"><div class="label">Annual Coupons</div><div class="value">${fmtMoney(annualBondCoupons)}</div><div class="sub-value">${(annualBondCoupons/totalAnnual*100||0).toFixed(1)}% of total</div></div>
+    `;
+  }
+
+  // Detailed table
+  const tableHost = document.getElementById('cashflow-table');
+  if (tableHost) {
+    const rows = [
+      { source: 'Dividends (Portfolio)', annual: annualDvd, basis: 'Annual div/share × shares', detail: data.dvd.length + ' stocks' },
+      { source: 'Bond Coupons',          annual: annualBondCoupons, basis: 'Coupon rate × face × qty', detail: (data.bonds||[]).length + ' bonds' },
+      ...(data.interestAccounts || []).map(a => {
+        const amtUSD = toUSD(a.amount, a.currency);
+        return { source: a.label, annual: amtUSD * a.annualYield, basis: fmtMoney(amtUSD) + ' @ ' + fmtPct(a.annualYield), detail: a.currency + ' account' };
+      })
+    ];
+    if (data.cashFlowConfig.includeEqWithdrawal) {
+      rows.push({ source: 'EQ Withdrawal (Hypothetical)', annual: eqWithdrawal, basis: `${(data.cashFlowConfig.eqWithdrawalRate*100).toFixed(1)}% of ${fmtMoney(eqMv)}`, detail: 'Toggle ON', isHypo: true });
+    }
+    tableHost.innerHTML = `
+      <thead><tr><th class="l">Source</th><th class="l">Basis</th><th class="l">Detail</th><th>Annual (USD)</th><th>Monthly (USD)</th><th>%</th></tr></thead>
+      <tbody>${rows.map(r => `<tr ${r.isHypo?'style="opacity:0.7; font-style:italic;"':''}>
+        <td class="l"><span class="symbol">${r.source}</span></td>
+        <td class="l"><span class="name">${r.basis}</span></td>
+        <td class="l"><span class="pill">${r.detail}</span></td>
+        <td class="num pos">${fmtMoney(r.annual)}</td>
+        <td class="num">${fmtMoney(r.annual/12)}</td>
+        <td class="num">${totalAnnual>0?(r.annual/totalAnnual*100).toFixed(1):0}%</td>
+      </tr>`).join('')}
+      <tr class="total">
+        <td class="l" colspan="3">Total</td>
+        <td class="num pos">${fmtMoney(totalAnnual)}</td>
+        <td class="num pos">${fmtMoney(totalMonthly)}</td>
+        <td class="num">100%</td>
+      </tr></tbody>`;
+  }
+
+  // Interest accounts editor
+  const intHost = document.getElementById('interest-accounts-list');
+  if (intHost) {
+    intHost.innerHTML = (data.interestAccounts || []).map((a, idx) => {
+      const hidden = a.hidden === true;
+      const amtUSD = toUSD(a.amount, a.currency);
+      const annualInt = amtUSD * a.annualYield;
+      const monthlyInt = annualInt / 12;
+      return `
+      <div style="margin-bottom: 10px; padding: 10px; background: var(--bg-darker); border: 1px solid var(--border-bright);">
+        <div style="display:grid; grid-template-columns: 1.4fr 1fr 0.8fr auto; gap:8px; align-items:end;">
+          <div class="field">
+            <label style="font-size:8px; color:var(--text-faint); letter-spacing:0.15em; text-transform:uppercase;">${a.currency} Label</label>
+            <input type="text" class="key-input" value="${a.label}" onchange="updateInterestField(${idx},'label',this.value)" style="padding: 5px 8px; font-size: 11px;">
+          </div>
+          <div class="field">
+            <label style="font-size:8px; color:var(--text-faint); letter-spacing:0.15em; text-transform:uppercase;">Amount (${a.currency})</label>
+            <input type="${hidden?'password':'number'}" step="any" class="key-input" value="${a.amount}" onchange="updateInterestField(${idx},'amount',this.value)" style="padding: 5px 8px; font-size: 11px;">
+          </div>
+          <div class="field">
+            <label style="font-size:8px; color:var(--text-faint); letter-spacing:0.15em; text-transform:uppercase;">Yield %</label>
+            <input type="number" step="any" class="key-input" value="${(a.annualYield*100).toFixed(2)}" onchange="updateInterestField(${idx},'annualYield',this.value)" style="padding: 5px 8px; font-size: 11px;">
+          </div>
+          <button class="btn" onclick="toggleInterestHidden(${idx})" style="padding: 5px 10px; font-size: 9px; height: fit-content;" title="${hidden?'Show':'Hide'} amount">${hidden?'👁':'🔒'}</button>
+        </div>
+        <div style="font-size:9px; color:var(--text-faint); margin-top:8px; display: flex; gap: 16px; flex-wrap: wrap;">
+          ${hidden
+            ? '<span style="color:var(--text-faint); font-style:italic;">Amount hidden · interest calculated normally</span>'
+            : `<span>${a.currency === 'USD' ? `${fmtMoney(a.amount)}` : `€${a.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} → ${fmtMoney(amtUSD)}`}</span>`}
+          <span>Annual: <strong style="color:var(--green);">${fmtMoney(annualInt)}</strong></span>
+          <span>Monthly: <strong style="color:var(--gold);">${fmtMoney(monthlyInt)}</strong></span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // EQ Withdrawal toggle
+  const togHost = document.getElementById('eq-withdrawal-toggle');
+  if (togHost) {
+    const cfg = data.cashFlowConfig;
+    togHost.innerHTML = `
+      <div style="margin-bottom: 12px;">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 11px;">
+          <input type="checkbox" ${cfg.includeEqWithdrawal?'checked':''} onchange="toggleEqWithdrawal(this.checked)" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--gold);">
+          <span><strong style="color:var(--gold);">Include EQ Withdrawal</strong> in cash flow total</span>
+        </label>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="field">
+          <label style="font-size:8px; color:var(--text-faint); letter-spacing:0.15em; text-transform:uppercase;">Withdrawal Rate %</label>
+          <input type="number" step="any" class="key-input" value="${(cfg.eqWithdrawalRate*100).toFixed(2)}" onchange="updateEqWithdrawalRate(this.value)" ${cfg.includeEqWithdrawal?'':'disabled'}>
+        </div>
+        <div class="field">
+          <label style="font-size:8px; color:var(--text-faint); letter-spacing:0.15em; text-transform:uppercase;">EQ Portfolio Value <span style="color:var(--gold);">· live</span></label>
+          <input type="text" value="${fmtMoney(eqMv)}" readonly style="background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); font-family: inherit; font-size: 11px; padding: 6px 8px; outline: none;" title="Auto-synced with current EQ Portfolio from Positions tab">
+        </div>
+      </div>
+      <div style="font-size:9px; color:var(--text-faint); margin-top:10px; line-height:1.6;">
+        ${cfg.includeEqWithdrawal
+          ? `<span style="color:var(--gold);">●</span> Including <strong style="color:var(--green);">${fmtMoney(eqWithdrawal)}/yr</strong> · <strong style="color:var(--gold);">${fmtMoney(eqWithdrawal/12)}/mo</strong> hypothetical`
+          : 'Toggle ON to add a hypothetical 4% withdrawal from your EQ portfolio to the total.'}
+      </div>`;
+  }
+
+  // Source allocation donut
+  drawCashflowDonut(rowsForDonut(annualDvd, annualBondCoupons, eqWithdrawal));
+}
+
+function rowsForDonut(annualDvd, annualBondCoupons, eqWithdrawal) {
+  const items = [
+    { name: 'Dividends', value: annualDvd, color: '#9f7521' },         // bronze
+    { name: 'Bond Coupons', value: annualBondCoupons, color: '#21569f' }, // ocean
+  ];
+  (data.interestAccounts || []).forEach((a, i) => {
+    const amtUSD = toUSD(a.amount, a.currency);
+    const annual = amtUSD * a.annualYield;
+    if (annual > 0) items.push({ name: a.label, value: annual, color: ['#219f9f','#75219f','#9f218a','#369f21'][i % 4] });
+  });
+  if (data.cashFlowConfig.includeEqWithdrawal && eqWithdrawal > 0) {
+    items.push({ name: 'EQ Withdrawal', value: eqWithdrawal, color: '#9f2141' });
+  }
+  return items.filter(x => x.value > 0);
+}
+
+function drawCashflowDonut(items) {
+  const ctx = document.getElementById('cashflow-donut');
+  if (!ctx) return;
+  if (chartInstances.cashflowDonut) chartInstances.cashflowDonut.destroy();
+  if (items.length === 0) {
+    document.getElementById('cashflow-donut-legend').innerHTML = '<div style="color:var(--text-faint); padding:20px;">No cash flow sources yet</div>';
+    return;
+  }
+  const total = items.reduce((s,x) => s+x.value, 0);
+  chartInstances.cashflowDonut = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels: items.map(x => x.name), datasets: [{ data: items.map(x => x.value), backgroundColor: items.map(x => x.color), borderColor: '#0c0c0c', borderWidth: 2, hoverOffset: 10 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0a0a0a', borderColor: '#fbbf24', borderWidth: 1, padding: 10,
+          titleColor: '#fff', bodyColor: '#fbbf24',
+          callbacks: { label: c => `${c.label}: ${fmtMoney(c.parsed)}/yr (${(c.parsed/total*100).toFixed(1)}%)` }
+        }
+      }
+    }
+  });
+  const center = document.getElementById('cashflow-donut-center');
+  if (center) center.innerHTML = `<div class="dc-label">Annual</div><div class="dc-value" style="font-size:18px;">${fmtMoney(total)}</div><div class="dc-sub">${fmtMoney(total/12)}/mo</div>`;
+  document.getElementById('cashflow-donut-legend').innerHTML = items.map((x, i) => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${x.color}"></span>
+      <span class="legend-name">${x.name}<span class="pct">${((x.value/total)*100).toFixed(1)}%</span></span>
+      <span class="legend-val">${fmtMoney(x.value)}/yr</span>
+    </div>`).join('');
+}
+
+function updateInterestField(idx, field, val) {
+  if (!data.interestAccounts || !data.interestAccounts[idx]) return;
+  const acc = data.interestAccounts[idx];
+  if (field === 'label') acc.label = val;
+  else if (field === 'amount') acc.amount = parseFloat(val) || 0;
+  else if (field === 'annualYield') acc.annualYield = (parseFloat(val) || 0) / 100;
+  saveData(); renderCashflow();
+}
+
+function toggleInterestHidden(idx) {
+  if (!data.interestAccounts || !data.interestAccounts[idx]) return;
+  data.interestAccounts[idx].hidden = !data.interestAccounts[idx].hidden;
+  saveData(); renderCashflow();
+}
+
+function toggleEqWithdrawal(checked) {
+  if (!data.cashFlowConfig) data.cashFlowConfig = { includeEqWithdrawal: false, eqWithdrawalRate: 0.04 };
+  data.cashFlowConfig.includeEqWithdrawal = checked;
+  saveData(); renderCashflow();
+}
+
+function updateEqWithdrawalRate(val) {
+  if (!data.cashFlowConfig) data.cashFlowConfig = { includeEqWithdrawal: false, eqWithdrawalRate: 0.04 };
+  data.cashFlowConfig.eqWithdrawalRate = (parseFloat(val) || 0) / 100;
+  saveData(); renderCashflow();
+}
+
 function setManualPrice(key, val) {
   if (val === '' || val === null || isNaN(parseFloat(val))) delete manualPrices[key];
   else manualPrices[key] = parseFloat(val);
@@ -2720,7 +3643,7 @@ function renderEqProjected() {
 
   // Config inputs
   document.getElementById('eqproj-config').innerHTML = [
-    {key:'startingBalanceEUR', label:`Start Balance (€)${isAutoStart ? ' · auto' : ''}`, val:startBalEUR.toFixed(2), fmt:'num', cls:'starting'},
+    {key:'startingBalanceEUR', label:`Start Balance (€)${isAutoStart ? ' <span style="color:var(--gold);">· live</span>' : ' <span style="color:var(--text-faint);">· manual (clear to revert)</span>'}`, val:startBalEUR.toFixed(2), fmt:'num', cls:'starting'},
     {key:'monthlyContrib',     label:'Monthly Contribution (€)', val:cfg.monthlyContrib, fmt:'num'},
     {key:'annualReturn',       label:'Annual Return %',          val:(cfg.annualReturn*100).toFixed(2), fmt:'pct'},
     {key:'targetMonthlyEUR',   label:'Target Monthly Income (€)', val:cfg.targetMonthlyEUR, fmt:'num'},
@@ -3242,6 +4165,7 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById(activeTab).classList.add('active');
     if (activeTab === 'projections') setTimeout(() => renderProjections(), 50);
     if (activeTab === 'eqprojected') setTimeout(() => renderEqProjected(), 50);
+    if (activeTab === 'cashflow') setTimeout(() => renderCashflow(), 50);
     if (activeTab === 'dividends')   setTimeout(() => renderDividends(), 50);
   });
 });
