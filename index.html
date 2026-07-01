@@ -582,6 +582,10 @@
     <div class="portfolio-kpis cols-5" id="cr-kpis"></div>
     <div class="card" style="padding: 0"><div class="table-scroll"><table id="cr-table"></table></div></div>
 
+    <h2 class="section-title">Staking Rewards <span class="count" id="staking-count">—</span></h2>
+    <div class="portfolio-kpis cols-5" id="staking-kpis"></div>
+    <div class="card" style="padding: 0"><div class="table-scroll"><table id="staking-table"></table></div></div>
+
     <h2 class="section-title">Bonds Portfolio <span class="count" id="bd-count">—</span><button class="add-trade-btn secondary" onclick="toggleNewBondForm()">🆕 NEW POS</button><button class="add-trade-btn" onclick="toggleAddBondBuyForm()" style="margin-left:8px;">➕ BUY MORE</button></h2>
     <div id="bond-add-form-container"></div>
     <div class="portfolio-kpis cols-7" id="bd-kpis"></div>
@@ -596,7 +600,8 @@
       </div>
     </div>
 
-    <h2 class="section-title">Realized P&L <span class="count">Closed Transactions</span></h2>
+    <h2 class="section-title">Realized P&L <span class="count">Closed Transactions</span><button class="add-trade-btn secondary" onclick="toggleAddRealizedForm()">🆕 ADD REALIZED</button></h2>
+    <div id="realized-add-form-container"></div>
     <div class="card" style="padding: 0"><div class="table-scroll"><table id="closed-table"></table></div></div>
   </section>
 
@@ -1619,14 +1624,15 @@ function renderOverview() {
   const totalCouponsReceived = Object.values(data.couponsReceived || {}).reduce((s, m) => s + Object.values(m).reduce((a,b)=>a+b, 0), 0);
   const portfolioYieldOnMv = dv.sum === 0 ? 0 : annualDvd / dv.sum;
   const yieldOnCost = dvCb.sum === 0 ? 0 : annualDvd / dvCb.sum;
-  const passiveAnnual = annualDvd + annualCoupons;
+  const annualStakingOv = totalProjectedStakingUSD();
+  const passiveAnnual = annualDvd + annualCoupons + annualStakingOv;
 
   const kpis = [
     { label: 'Total Market Value', value: fmtMoney(totalMv), sub: fmtMoney(totalCb)+' cost' + (totalMissing ? ` · ${totalMissing} need price` : ''), cls: 'blue' },
     { label: 'Total UPL', value: fmtMoney(totalUpl), sub: fmtPct(totalReturnPct), cls: totalUpl>=0?'green':'red', subCls: totalUpl>=0?'green':'red' },
     { label: 'Realized P&L', value: fmtMoney(realizedPnl), sub: data.closed.length+' closed', cls: realizedPnl>=0?'green':'red' },
     { label: 'Lifetime P&L', value: fmtMoney(totalUpl + realizedPnl), sub: 'unrealized + realized', cls: (totalUpl+realizedPnl)>=0?'green':'red' },
-    { label: 'Annual Passive', value: fmtMoney(passiveAnnual), sub: fmtMoney(passiveAnnual/12)+' / mo · div+coupon', cls: 'green' },
+    { label: 'Annual Passive', value: fmtMoney(passiveAnnual), sub: fmtMoney(passiveAnnual/12)+' / mo · div+coup+stake', cls: 'green' },
     { label: 'Income Received', value: fmtMoney(totalDvdReceived + totalCouponsReceived), sub: 'div + coupon · all-time', cls: 'gold' },
     { label: 'Portfolio Yield', value: fmtPct(portfolioYieldOnMv), sub: 'YoC ' + fmtPct(yieldOnCost), cls: 'purple' },
     { label: 'Positions / Bonds', value: totalPositions + ' / ' + bonds.length, sub: (best ? `Best: ${best.p.symbol} ` : '') + (worst ? `· Worst: ${worst.p.symbol}` : ''), cls: '' }
@@ -2351,7 +2357,7 @@ function positionTable(list, listName, includeDvdCols = false) {
       <td class="num pos">${fmtMoney(annualInc)}</td>
       <td class="num">${fmtPct(y)}</td>
       <td class="num ${y!==null && yoc>=y?'pos':''}">${fmtPct(yoc)}</td>`;
-    row += `<td class="num"><button class="close-pos-btn" onclick="closePosition('${listName}', ${idx})" title="Close position">🗑</button></td>`;
+    row += `<td class="num"><button class="close-pos-btn" onclick="editPosition('${listName}', ${idx})" title="Edit position" style="background:transparent; border:1px solid var(--border-bright); color:var(--gold); margin-right:2px;">✏</button><button class="close-pos-btn" onclick="closePosition('${listName}', ${idx})" title="Close position">🗑</button></td>`;
     row += '</tr>';
     return row;
   }).join('');
@@ -2387,6 +2393,7 @@ function renderPositions() {
   document.getElementById('dvd-table').innerHTML = positionTable(data.dvd, 'dvd', true);
   document.getElementById('cr-table').innerHTML = positionTable(data.crypto, 'crypto');
   renderBondsTable();
+  renderStakingSection();
   renderCouponCalendar();
   const totalClosed = data.closed.reduce((s,t)=>s+t.pnl,0);
   document.getElementById('closed-table').innerHTML = `
@@ -2395,7 +2402,10 @@ function renderPositions() {
       <td class="l">${t.name}</td>
       <td class="l"><span class="pill">${t.country}</span></td>
       <td class="num ${cls(t.pnl)}"><input class="edit" type="number" step="any" value="${t.pnl.toFixed(2)}" onchange="updateClosedPnl(${i}, this.value)" style="text-align:right;"></td>
-      <td class="num"><button class="close-pos-btn" onclick="removeClosedPosition(${i})" title="Remove from Realized P&amp;L" style="font-size:8px; padding:1px 4px;">✕</button></td>
+      <td class="num">
+        <button class="close-pos-btn" onclick="editRealizedPosition(${i})" title="Edit realized" style="background:transparent; border:1px solid var(--border-bright); color:var(--gold); font-size:8px; padding:1px 4px; margin-right:2px;">✏</button>
+        <button class="close-pos-btn" onclick="removeClosedPosition(${i})" title="Remove from Realized P&amp;L" style="font-size:8px; padding:1px 4px;">✕</button>
+      </td>
     </tr>`).join('')}
     <tr class="total"><td class="l" colspan="2">Total</td><td class="num ${cls(totalClosed)}">${fmtMoney(totalClosed)}</td><td></td></tr></tbody>`;
 }
@@ -2824,6 +2834,111 @@ function submitBondEdit(idx) {
   render();
 }
 
+/* ===================== STAKING REWARDS SECTION =====================
+   Each crypto position can have `stakingAPY` (decimal, e.g. 0.065 = 6.5%).
+   Position's staking value = market value × APY (annualized).
+   Rendered on Positions tab (Staking Rewards section) and Cash Flow tab.
+*/
+function stakedCryptoList() {
+  return (data.crypto || []).filter(c => (c.stakingAPY || 0) > 0);
+}
+
+function totalProjectedStakingUSD() {
+  return (data.crypto || []).reduce((s, c) => {
+    const apy = c.stakingAPY || 0;
+    if (apy <= 0) return s;
+    const mv = marketValueUSD(c);
+    return s + (mv || 0) * apy;
+  }, 0);
+}
+
+function renderStakingSection() {
+  const staked = stakedCryptoList();
+  const cntEl = document.getElementById('staking-count');
+  const kpisEl = document.getElementById('staking-kpis');
+  const tableEl = document.getElementById('staking-table');
+  if (!tableEl) return;
+
+  // Count includes non-staked (to show all coins as editable)
+  const allCryptos = data.crypto || [];
+  if (cntEl) cntEl.textContent = `${staked.length} of ${allCryptos.length} staked`;
+
+  // KPIs: total staked value, total projected annual, monthly, weighted avg APY, coins staked
+  const totalStakedMV = staked.reduce((s, c) => s + (marketValueUSD(c) || 0), 0);
+  const totalAnnual = totalProjectedStakingUSD();
+  const totalMonthly = totalAnnual / 12;
+  const weightedAPY = totalStakedMV > 0
+    ? staked.reduce((s, c) => s + (marketValueUSD(c) || 0) * (c.stakingAPY || 0), 0) / totalStakedMV
+    : 0;
+
+  if (kpisEl) {
+    const kpis = [
+      { label: 'Staked Value', value: fmtMoney(totalStakedMV), sub: `${staked.length} coin${staked.length===1?'':'s'}` },
+      { label: 'Projected Annual', value: fmtMoney(totalAnnual), sub: 'at current APYs', cls: 'pos' },
+      { label: 'Projected Monthly', value: fmtMoney(totalMonthly) },
+      { label: 'Avg APY', value: fmtPct(weightedAPY), sub: 'weighted by value' },
+      { label: 'Non-Staked Coins', value: allCryptos.length - staked.length, sub: 'not earning yield' }
+    ];
+    kpisEl.innerHTML = kpis.map(k => `<div class="pk"><span class="l">${k.label}</span><span class="v ${k.cls||''}">${k.value}</span>${k.sub?`<span class="l" style="font-size:8px; color:var(--text-faint);">${k.sub}</span>`:''}</div>`).join('');
+  }
+
+  if (allCryptos.length === 0) {
+    tableEl.innerHTML = '<thead><tr><th class="l">Crypto Staking</th></tr></thead><tbody><tr><td class="l" style="padding:20px; color:var(--text-faint); text-align:center;">No crypto positions yet. Add crypto in the Crypto Portfolio section above.</td></tr></tbody>';
+    return;
+  }
+
+  let html = '<thead><tr>'
+    + '<th class="l">Symbol</th>'
+    + '<th class="l">Broker</th>'
+    + '<th>Position Value</th>'
+    + '<th title="Editable · 0 means not staked">APY %</th>'
+    + '<th>Projected Annual</th>'
+    + '<th>Projected Monthly</th>'
+    + '<th title="APY × position value ÷ 365">Daily Est.</th>'
+    + '<th>Status</th>'
+    + '</tr></thead><tbody>';
+
+  allCryptos.forEach((c, idx) => {
+    const mv = marketValueUSD(c);
+    const apy = c.stakingAPY || 0;
+    const projAnnual = (mv || 0) * apy;
+    const projMonthly = projAnnual / 12;
+    const projDaily = projAnnual / 365;
+    const isStaked = apy > 0;
+    html += `<tr ${isStaked ? '' : 'style="opacity:0.55;"'}>
+      <td class="l"><span class="symbol">${c.symbol}</span><br><span class="name">${c.name}</span></td>
+      <td class="l"><span class="pill">${c.broker}</span></td>
+      <td class="num">${mv !== null ? fmtMoney(mv) : '—'}</td>
+      <td class="num"><input class="edit ${isStaked?'override':'empty'}" type="number" step="any" value="${(apy*100).toFixed(2)}" onchange="updateStakingAPY(${idx}, this.value)" style="width:60px;"></td>
+      <td class="num ${isStaked?'pos':''}">${isStaked ? fmtMoney(projAnnual) : '—'}</td>
+      <td class="num">${isStaked ? fmtMoney(projMonthly) : '—'}</td>
+      <td class="num" style="font-size:9px;">${isStaked ? fmtMoney(projDaily) : '—'}</td>
+      <td class="l"><span class="pill" style="${isStaked?'background:rgba(0,255,65,0.15); color:var(--green);':'color:var(--text-faint);'}">${isStaked ? 'STAKED' : 'Not staked'}</span></td>
+    </tr>`;
+  });
+
+  // Total row
+  html += `<tr class="total">
+    <td class="l" colspan="2">Total Staked</td>
+    <td class="num">${fmtMoney(totalStakedMV)}</td>
+    <td class="num">${fmtPct(weightedAPY)}</td>
+    <td class="num pos">${fmtMoney(totalAnnual)}</td>
+    <td class="num">${fmtMoney(totalMonthly)}</td>
+    <td class="num">${fmtMoney(totalAnnual/365)}</td>
+    <td></td>
+  </tr></tbody>`;
+  tableEl.innerHTML = html;
+}
+
+function updateStakingAPY(idx, val) {
+  const c = data.crypto[idx];
+  if (!c) return;
+  const pct = parseFloat(val);
+  c.stakingAPY = (isNaN(pct) || pct < 0) ? 0 : pct / 100;
+  saveData();
+  render();
+}
+
 function editBondYahooUrl(idx) {
   const b = data.bonds[idx];
   if (!b) return;
@@ -3160,13 +3275,14 @@ function renderCashflow() {
   // Sources
   const annualDvd = data.dvd.reduce((s,p) => s + (p.dvdPerShare||0)*p.shares, 0);
   const annualBondCoupons = (data.bonds || []).reduce((s,b) => s + bondAnnualCoupon(b), 0);
+  const annualStaking = totalProjectedStakingUSD();
   const interestUSD = (data.interestAccounts || []).reduce((s,a) => {
     const amtUSD = toUSD(a.amount, a.currency);
     return s + amtUSD * a.annualYield;
   }, 0);
   const eqMv = data.eq.reduce((s,p) => { const mv = marketValueUSD(p); return s + (mv||0); }, 0);
   const eqWithdrawal = data.cashFlowConfig.includeEqWithdrawal ? eqMv * data.cashFlowConfig.eqWithdrawalRate : 0;
-  const totalAnnual = annualDvd + annualBondCoupons + interestUSD + eqWithdrawal;
+  const totalAnnual = annualDvd + annualBondCoupons + annualStaking + interestUSD + eqWithdrawal;
   const totalMonthly = totalAnnual / 12;
 
   // KPIs
@@ -3177,15 +3293,18 @@ function renderCashflow() {
       <div class="kpi green"><div class="label">Total Monthly</div><div class="value">${fmtMoney(totalMonthly)}</div><div class="sub-value">${fmtMoney(totalAnnual/52)}/wk</div></div>
       <div class="kpi"><div class="label">Annual Dividends</div><div class="value">${fmtMoney(annualDvd)}</div><div class="sub-value">${(annualDvd/totalAnnual*100||0).toFixed(1)}% of total</div></div>
       <div class="kpi"><div class="label">Annual Coupons</div><div class="value">${fmtMoney(annualBondCoupons)}</div><div class="sub-value">${(annualBondCoupons/totalAnnual*100||0).toFixed(1)}% of total</div></div>
+      <div class="kpi"><div class="label">Annual Staking</div><div class="value">${fmtMoney(annualStaking)}</div><div class="sub-value">${(annualStaking/totalAnnual*100||0).toFixed(1)}% of total · projected</div></div>
     `;
   }
 
   // Detailed table
   const tableHost = document.getElementById('cashflow-table');
   if (tableHost) {
+    const stakedCoins = stakedCryptoList();
     const rows = [
       { source: 'Dividends (Portfolio)', annual: annualDvd, basis: 'Annual div/share × shares', detail: data.dvd.length + ' stocks' },
       { source: 'Bond Coupons',          annual: annualBondCoupons, basis: 'Coupon rate × face × qty', detail: (data.bonds||[]).length + ' bonds' },
+      { source: 'Staking Rewards (Projected)', annual: annualStaking, basis: 'Position value × APY per coin', detail: stakedCoins.length + ' staked coin' + (stakedCoins.length===1?'':'s') },
       ...(data.interestAccounts || []).map(a => {
         const amtUSD = toUSD(a.amount, a.currency);
         return { source: a.label, annual: amtUSD * a.annualYield, basis: fmtMoney(amtUSD) + ' @ ' + fmtPct(a.annualYield), detail: a.currency + ' account' };
@@ -3277,18 +3396,19 @@ function renderCashflow() {
   }
 
   // Source allocation donut
-  drawCashflowDonut(rowsForDonut(annualDvd, annualBondCoupons, eqWithdrawal));
+  drawCashflowDonut(rowsForDonut(annualDvd, annualBondCoupons, annualStaking, eqWithdrawal));
 }
 
-function rowsForDonut(annualDvd, annualBondCoupons, eqWithdrawal) {
+function rowsForDonut(annualDvd, annualBondCoupons, annualStaking, eqWithdrawal) {
   const items = [
     { name: 'Dividends', value: annualDvd, color: '#9f7521' },         // bronze
     { name: 'Bond Coupons', value: annualBondCoupons, color: '#21569f' }, // ocean
+    { name: 'Staking Rewards', value: annualStaking, color: '#75219f' },  // grape
   ];
   (data.interestAccounts || []).forEach((a, i) => {
     const amtUSD = toUSD(a.amount, a.currency);
     const annual = amtUSD * a.annualYield;
-    if (annual > 0) items.push({ name: a.label, value: annual, color: ['#219f9f','#75219f','#9f218a','#369f21'][i % 4] });
+    if (annual > 0) items.push({ name: a.label, value: annual, color: ['#219f9f','#9f218a','#369f21','#809f21'][i % 4] });
   });
   if (data.cashFlowConfig.includeEqWithdrawal && eqWithdrawal > 0) {
     items.push({ name: 'EQ Withdrawal', value: eqWithdrawal, color: '#9f2141' });
@@ -3687,6 +3807,166 @@ function closePosition(listName, idx) {
   // Remove from list
   data[listName].splice(idx, 1);
   saveData();
+  render();
+}
+
+/* ===================== EDIT POSITION (active) ===================== */
+function editPosition(listName, idx) {
+  const pos = data[listName][idx];
+  if (!pos) return;
+  const container = document.getElementById(`${listName}-add-form-container`);
+  if (!container) return;
+  container.dataset.formType = 'edit';
+  const brokers = listName === 'crypto'
+    ? ['CoinBase','Binance','Revolut','Kraken','Other']
+    : ['IBKR','REV','Trading 212','eToro','Other'];
+  const currencies = listName === 'crypto' ? ['USD','EUR'] : ['USD','EUR','GBP'];
+  const sectors = ['Technology','Healthcare','Financials','Consumer Staples','Consumer Discretionary','Energy','Real Estate','Utilities','Industrials','Materials','Communication Services','US Large Cap','Emerging Markets','Global Small Cap','Other'];
+  const stakingHtml = listName === 'crypto'
+    ? `<div class="field"><label>Staking APY % (0 if none)</label><input type="number" step="any" id="ep-staking" value="${(pos.stakingAPY||0)*100}" placeholder="e.g. 6.5"></div>`
+    : '';
+  const cgHtml = listName === 'crypto'
+    ? `<div class="field"><label>CoinGecko ID</label><input type="text" id="ep-cgid" value="${pos.cgId||''}"></div>`
+    : '';
+  const sectorHtml = listName !== 'crypto'
+    ? `<div class="field"><label>Sector</label><select id="ep-sector">${sectors.map(s => `<option ${s===pos.sector?'selected':''}>${s}</option>`).join('')}</select></div>`
+    : '';
+  const dvdHtml = listName === 'dvd'
+    ? `<div class="field"><label>Annual Div/Share</label><input type="number" step="any" id="ep-divshare" value="${pos.dvdPerShare||0}"></div>`
+    : '';
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1fr 1fr 0.8fr 0.8fr auto auto;">
+      <div class="field" style="grid-column: 1 / -1;"><strong style="color:var(--gold); font-size:11px;">Edit position: ${pos.symbol} — ${pos.name}</strong></div>
+      <div class="field"><label>Symbol</label><input type="text" id="ep-symbol" value="${pos.symbol}" style="text-transform:uppercase;"></div>
+      <div class="field"><label>Name</label><input type="text" id="ep-name" value="${pos.name}"></div>
+      <div class="field"><label>Shares</label><input type="number" step="any" id="ep-shares" value="${pos.shares}"></div>
+      <div class="field"><label>Avg Cost</label><input type="number" step="any" id="ep-avgcost" value="${pos.avgCost}"></div>
+      <button class="save" onclick="submitEditPosition('${listName}', ${idx})">Save</button>
+      <button class="cancel" onclick="document.getElementById('${listName}-add-form-container').innerHTML='';document.getElementById('${listName}-add-form-container').dataset.formType='';">Cancel</button>
+
+      <div class="field"><label>Currency</label><select id="ep-currency">${currencies.map(c => `<option ${c===pos.currency?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Broker</label><select id="ep-broker">${brokers.map(b => `<option ${b===pos.broker?'selected':''}>${b}</option>`).join('')}</select></div>
+      ${sectorHtml}${cgHtml}${dvdHtml}${stakingHtml}
+      <div class="add-trade-preview" style="grid-column: 1 / -1;">Editing metadata directly · Shares and Avg Cost changes will affect cost basis and UPL.</div>
+    </div>`;
+  container.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function submitEditPosition(listName, idx) {
+  const pos = data[listName][idx];
+  if (!pos) return;
+  const newSym = document.getElementById('ep-symbol').value.trim().toUpperCase();
+  if (newSym !== pos.symbol && data[listName].some((p, i) => i !== idx && p.symbol === newSym)) {
+    alert(`Symbol ${newSym} already exists in this portfolio.`); return;
+  }
+  const oldSym = pos.symbol;
+  pos.symbol = newSym || pos.symbol;
+  pos.name = document.getElementById('ep-name').value.trim() || pos.name;
+  const shares = parseFloat(document.getElementById('ep-shares').value);
+  if (!isNaN(shares) && shares > 0) pos.shares = shares;
+  const avgCost = parseFloat(document.getElementById('ep-avgcost').value);
+  if (!isNaN(avgCost) && avgCost > 0) pos.avgCost = avgCost;
+  pos.currency = document.getElementById('ep-currency').value;
+  pos.broker = document.getElementById('ep-broker').value;
+  if (listName !== 'crypto') {
+    const secEl = document.getElementById('ep-sector');
+    if (secEl) pos.sector = secEl.value;
+  }
+  if (listName === 'crypto') {
+    const cgEl = document.getElementById('ep-cgid');
+    if (cgEl) pos.cgId = cgEl.value.trim().toLowerCase();
+    const stEl = document.getElementById('ep-staking');
+    if (stEl) pos.stakingAPY = (parseFloat(stEl.value) || 0) / 100;
+  }
+  if (listName === 'dvd') {
+    const dEl = document.getElementById('ep-divshare');
+    if (dEl) pos.dvdPerShare = parseFloat(dEl.value) || 0;
+    // Also update manualCost proportional to new shares
+    pos.manualShares = shares;
+    pos.manualCost = shares * avgCost;
+  }
+  // If symbol changed, migrate related keys (manual price, dripHistory, dividendsReceived)
+  if (newSym !== oldSym && newSym) {
+    const oldK = 'sym:' + oldSym + (pos.currency || '');
+    const newK = 'sym:' + newSym + (pos.currency || '');
+    if (manualPrices[oldK] !== undefined) { manualPrices[newK] = manualPrices[oldK]; delete manualPrices[oldK]; saveManual(); }
+    if (data.dripHistory && data.dripHistory[oldSym]) { data.dripHistory[newSym] = data.dripHistory[oldSym]; delete data.dripHistory[oldSym]; }
+    if (data.dividendsReceived) {
+      for (const ym in data.dividendsReceived) {
+        if (data.dividendsReceived[ym][oldSym] !== undefined) {
+          data.dividendsReceived[ym][newSym] = data.dividendsReceived[ym][oldSym];
+          delete data.dividendsReceived[ym][oldSym];
+        }
+      }
+    }
+  }
+  saveData();
+  document.getElementById(`${listName}-add-form-container`).innerHTML = '';
+  document.getElementById(`${listName}-add-form-container`).dataset.formType = '';
+  render();
+}
+
+/* ===================== REALIZED — ADD NEW + EDIT ===================== */
+function toggleAddRealizedForm() {
+  const container = document.getElementById('realized-add-form-container');
+  if (!container) return;
+  if (container.innerHTML.trim() && container.dataset.formType === 'newrealized') {
+    container.innerHTML = ''; container.dataset.formType = ''; return;
+  }
+  container.dataset.formType = 'newrealized';
+  const countries = ['US','EU','UK','JP','CN','CH','Other'];
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1.5fr 0.8fr 1fr auto auto;">
+      <div class="field"><label>Security Name *</label><input type="text" id="rn-name" placeholder="e.g. Apple Inc (AAPL)"></div>
+      <div class="field"><label>Country</label><select id="rn-country">${countries.map(c => `<option>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Net P&L (USD) *</label><input type="number" step="any" id="rn-pnl" placeholder="e.g. 250.00 or -125.50"></div>
+      <button class="save" onclick="submitAddRealized()">Add</button>
+      <button class="cancel" onclick="toggleAddRealizedForm()">Cancel</button>
+      <div class="add-trade-preview" style="grid-column: 1 / -1;">Add a historical closed trade directly to Realized P&L (bypasses closing an active position). Use for entries you traded before starting this dashboard.</div>
+    </div>`;
+}
+
+function submitAddRealized() {
+  const name = document.getElementById('rn-name').value.trim();
+  const country = document.getElementById('rn-country').value;
+  const pnl = parseFloat(document.getElementById('rn-pnl').value);
+  if (!name || isNaN(pnl)) { alert('Name and P&L are required.'); return; }
+  if (!data.closed) data.closed = [];
+  data.closed.unshift({ name, country, pnl, closedDate: new Date().toISOString().slice(0,10) });
+  saveData();
+  toggleAddRealizedForm();
+  render();
+}
+
+function editRealizedPosition(idx) {
+  const entry = data.closed[idx];
+  if (!entry) return;
+  const container = document.getElementById('realized-add-form-container');
+  if (!container) return;
+  container.dataset.formType = 'editrealized';
+  const countries = ['US','EU','UK','JP','CN','CH','Other'];
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1.5fr 0.8fr 1fr auto auto;">
+      <div class="field" style="grid-column: 1 / -1;"><strong style="color:var(--gold); font-size:11px;">Edit realized: ${entry.name}</strong></div>
+      <div class="field"><label>Security Name</label><input type="text" id="re-name" value="${entry.name.replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Country</label><select id="re-country">${countries.map(c => `<option ${c===entry.country?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Net P&L (USD)</label><input type="number" step="any" id="re-pnl" value="${entry.pnl}"></div>
+      <button class="save" onclick="submitEditRealized(${idx})">Save</button>
+      <button class="cancel" onclick="document.getElementById('realized-add-form-container').innerHTML='';document.getElementById('realized-add-form-container').dataset.formType='';">Cancel</button>
+    </div>`;
+  container.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function submitEditRealized(idx) {
+  const entry = data.closed[idx];
+  if (!entry) return;
+  entry.name = document.getElementById('re-name').value.trim() || entry.name;
+  entry.country = document.getElementById('re-country').value;
+  const pnl = parseFloat(document.getElementById('re-pnl').value);
+  if (!isNaN(pnl)) entry.pnl = pnl;
+  saveData();
+  document.getElementById('realized-add-form-container').innerHTML = '';
+  document.getElementById('realized-add-form-container').dataset.formType = '';
   render();
 }
 
@@ -4119,7 +4399,7 @@ function renderPersonBlock(name, person, key) {
       <td class="num">${p.mv !== null ? fmtMoney(p.mv) : '<span class="dash">—</span>'}</td>
       <td class="num ${cls(p.upl)}">${p.upl !== null ? fmtMoney(p.upl) : '<span class="dash">—</span>'}</td>
       <td class="num ${cls(p.ret)}">${p.ret !== null ? fmtPct(p.ret) : '<span class="dash">—</span>'}</td>
-      <td class="num"><button class="close-pos-btn" onclick="closeAnnaVasPosition('${key}', ${idx})" title="Close position">🗑</button></td>
+      <td class="num"><button class="close-pos-btn" onclick="editAnnaVasPosition('${key}', ${idx})" title="Edit position" style="background:transparent; border:1px solid var(--border-bright); color:var(--gold); margin-right:2px;">✏</button><button class="close-pos-btn" onclick="closeAnnaVasPosition('${key}', ${idx})" title="Close position">🗑</button></td>
     </tr>`;
   }).join('');
   const unrTotRet = (totalUnrCost === 0 || totalUpl === null) ? null : totalUpl/totalUnrCost;
@@ -4141,7 +4421,10 @@ function renderPersonBlock(name, person, key) {
       <td class="num">${r.closePrice ? fmtNum(r.closePrice, r.closePrice<1?6:2) : '<span class="dash">—</span>'}</td>
       <td><span class="pill">${r.currency}</span></td>
       <td class="num ${cls(r.rpl)}"><input class="edit" type="number" step="any" value="${(r.rpl||0).toFixed(2)}" onchange="updateAnnaVasRpl('${key}', ${idx}, this.value)" style="text-align:right;"></td>
-      <td class="num"><button class="close-pos-btn" onclick="removeAnnaVasRealized('${key}', ${idx})" title="Remove from Realized" style="font-size:8px; padding:1px 4px;">✕</button></td>
+      <td class="num">
+        <button class="close-pos-btn" onclick="editAnnaVasRealized('${key}', ${idx})" title="Edit realized" style="background:transparent; border:1px solid var(--border-bright); color:var(--gold); font-size:8px; padding:1px 4px; margin-right:2px;">✏</button>
+        <button class="close-pos-btn" onclick="removeAnnaVasRealized('${key}', ${idx})" title="Remove from Realized" style="font-size:8px; padding:1px 4px;">✕</button>
+      </td>
     </tr>`).join('');
   const realTot = `<tr class="total"><td class="l" colspan="7">Total Realized</td><td class="num ${cls(totalRpl)}">${fmtMoney(totalRpl)}</td><td></td></tr>`;
   return `
@@ -4158,7 +4441,8 @@ function renderPersonBlock(name, person, key) {
           <tbody>${unrRows}${unrTot}</tbody>
         </table>
       </div></div>
-      <h3 class="section-title" style="font-size:14px;">Realized Positions <span class="count">${person.realized.length} closed</span></h3>
+      <h3 class="section-title" style="font-size:14px;">Realized Positions <span class="count">${person.realized.length} closed</span><button class="add-trade-btn secondary" onclick="toggleAnnaVasAddRealized('${key}')">🆕 ADD REALIZED</button></h3>
+      <div id="annavas-${key}-realized-form-container"></div>
       <div class="card" style="padding:0"><div class="table-scroll">
         <table>
           <thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Name</th><th>Shares</th><th>Avg Cost</th><th>Close Price</th><th>Curr</th><th>RPL (USD)</th><th></th></tr></thead>
@@ -4383,6 +4667,140 @@ function removeAnnaVasRealized(personKey, idx) {
   if (!c2) return;
   data.annaVas[personKey].realized.splice(idx, 1);
   saveData(); render();
+}
+
+/* ===================== ANNA/VAS EDIT ACTIVE ===================== */
+function editAnnaVasPosition(personKey, idx) {
+  const pos = data.annaVas[personKey].unrealized[idx];
+  if (!pos) return;
+  const container = document.getElementById(`annavas-${personKey}-form-container`);
+  if (!container) return;
+  container.dataset.formType = 'edit';
+  const brokers = ['IBKR','REV','Trading 212','eToro','Other'];
+  const currencies = ['USD','EUR','GBP'];
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1fr 1fr 0.8fr 0.8fr auto auto;">
+      <div class="field" style="grid-column: 1 / -1;"><strong style="color:var(--gold); font-size:11px;">Edit ${personKey === 'anna' ? 'Anna' : 'Vas'} position: ${pos.symbol}</strong></div>
+      <div class="field"><label>Symbol</label><input type="text" id="av-e-symbol" value="${pos.symbol}" style="text-transform:uppercase;"></div>
+      <div class="field"><label>Name</label><input type="text" id="av-e-name" value="${pos.name}"></div>
+      <div class="field"><label>Shares</label><input type="number" step="any" id="av-e-shares" value="${pos.shares}"></div>
+      <div class="field"><label>Avg Cost</label><input type="number" step="any" id="av-e-avgcost" value="${pos.avgCost}"></div>
+      <button class="save" onclick="submitEditAnnaVas('${personKey}', ${idx})">Save</button>
+      <button class="cancel" onclick="document.getElementById('annavas-${personKey}-form-container').innerHTML='';document.getElementById('annavas-${personKey}-form-container').dataset.formType='';">Cancel</button>
+      <div class="field"><label>Currency</label><select id="av-e-currency">${currencies.map(c => `<option ${c===pos.currency?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Broker</label><select id="av-e-broker">${brokers.map(b => `<option ${b===pos.broker?'selected':''}>${b}</option>`).join('')}</select></div>
+      <div class="add-trade-preview" style="grid-column: 3 / -1;">Editing metadata · Shares/Cost changes affect UPL calculations.</div>
+    </div>`;
+  container.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function submitEditAnnaVas(personKey, idx) {
+  const pos = data.annaVas[personKey].unrealized[idx];
+  if (!pos) return;
+  pos.symbol = document.getElementById('av-e-symbol').value.trim().toUpperCase() || pos.symbol;
+  pos.name = document.getElementById('av-e-name').value.trim() || pos.name;
+  const shares = parseFloat(document.getElementById('av-e-shares').value);
+  if (!isNaN(shares) && shares > 0) pos.shares = shares;
+  const avgCost = parseFloat(document.getElementById('av-e-avgcost').value);
+  if (!isNaN(avgCost) && avgCost > 0) pos.avgCost = avgCost;
+  pos.currency = document.getElementById('av-e-currency').value;
+  pos.broker = document.getElementById('av-e-broker').value;
+  saveData();
+  document.getElementById(`annavas-${personKey}-form-container`).innerHTML = '';
+  document.getElementById(`annavas-${personKey}-form-container`).dataset.formType = '';
+  render();
+}
+
+/* ===================== ANNA/VAS ADD REALIZED ===================== */
+function toggleAnnaVasAddRealized(personKey) {
+  const container = document.getElementById(`annavas-${personKey}-realized-form-container`);
+  if (!container) return;
+  if (container.innerHTML.trim() && container.dataset.formType === 'newrealized') {
+    container.innerHTML = ''; container.dataset.formType = ''; return;
+  }
+  container.dataset.formType = 'newrealized';
+  const brokers = ['IBKR','REV','Trading 212','eToro','Other'];
+  const currencies = ['USD','EUR','GBP'];
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1fr 1fr 0.7fr 0.7fr 0.7fr auto auto;">
+      <div class="field"><label>Symbol *</label><input type="text" id="av-r-symbol" style="text-transform:uppercase;"></div>
+      <div class="field"><label>Name *</label><input type="text" id="av-r-name"></div>
+      <div class="field"><label>Shares</label><input type="number" step="any" id="av-r-shares" placeholder="optional"></div>
+      <div class="field"><label>Avg Cost</label><input type="number" step="any" id="av-r-avgcost" placeholder="optional"></div>
+      <div class="field"><label>Close Price</label><input type="number" step="any" id="av-r-closeprice" placeholder="optional"></div>
+      <button class="save" onclick="submitAnnaVasAddRealized('${personKey}')">Add</button>
+      <button class="cancel" onclick="toggleAnnaVasAddRealized('${personKey}')">Cancel</button>
+      <div class="field"><label>RPL (USD) *</label><input type="number" step="any" id="av-r-rpl" placeholder="e.g. 125.50 or -80"></div>
+      <div class="field"><label>Currency</label><select id="av-r-currency">${currencies.map(c => `<option>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Broker</label><select id="av-r-broker">${brokers.map(b => `<option>${b}</option>`).join('')}</select></div>
+      <div class="add-trade-preview" style="grid-column: 4 / -1;">RPL is required. Other fields optional for historical entries where you don't have exact details.</div>
+    </div>`;
+}
+
+function submitAnnaVasAddRealized(personKey) {
+  const symbol = document.getElementById('av-r-symbol').value.trim().toUpperCase();
+  const name = document.getElementById('av-r-name').value.trim();
+  const rpl = parseFloat(document.getElementById('av-r-rpl').value);
+  if (!symbol || !name || isNaN(rpl)) { alert('Symbol, name, and RPL are required.'); return; }
+  const entry = {
+    symbol, name, rpl,
+    broker: document.getElementById('av-r-broker').value,
+    currency: document.getElementById('av-r-currency').value,
+    shares: parseFloat(document.getElementById('av-r-shares').value) || 0,
+    avgCost: parseFloat(document.getElementById('av-r-avgcost').value) || null,
+    closePrice: parseFloat(document.getElementById('av-r-closeprice').value) || null,
+    closedDate: new Date().toISOString().slice(0,10)
+  };
+  data.annaVas[personKey].realized.unshift(entry);
+  saveData();
+  toggleAnnaVasAddRealized(personKey);
+  render();
+}
+
+function editAnnaVasRealized(personKey, idx) {
+  const entry = data.annaVas[personKey].realized[idx];
+  if (!entry) return;
+  const container = document.getElementById(`annavas-${personKey}-realized-form-container`);
+  if (!container) return;
+  container.dataset.formType = 'editrealized';
+  const brokers = ['IBKR','REV','Trading 212','eToro','Other'];
+  const currencies = ['USD','EUR','GBP'];
+  container.innerHTML = `
+    <div class="add-trade-form" style="grid-template-columns: 1fr 1fr 0.7fr 0.7fr 0.7fr auto auto;">
+      <div class="field" style="grid-column: 1 / -1;"><strong style="color:var(--gold); font-size:11px;">Edit realized: ${entry.symbol} — ${entry.name}</strong></div>
+      <div class="field"><label>Symbol</label><input type="text" id="av-re-symbol" value="${entry.symbol||''}" style="text-transform:uppercase;"></div>
+      <div class="field"><label>Name</label><input type="text" id="av-re-name" value="${(entry.name||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Shares</label><input type="number" step="any" id="av-re-shares" value="${entry.shares||0}"></div>
+      <div class="field"><label>Avg Cost</label><input type="number" step="any" id="av-re-avgcost" value="${entry.avgCost||''}"></div>
+      <div class="field"><label>Close Price</label><input type="number" step="any" id="av-re-closeprice" value="${entry.closePrice||''}"></div>
+      <button class="save" onclick="submitEditAnnaVasRealized('${personKey}', ${idx})">Save</button>
+      <button class="cancel" onclick="document.getElementById('annavas-${personKey}-realized-form-container').innerHTML='';document.getElementById('annavas-${personKey}-realized-form-container').dataset.formType='';">Cancel</button>
+      <div class="field"><label>RPL (USD)</label><input type="number" step="any" id="av-re-rpl" value="${entry.rpl||0}"></div>
+      <div class="field"><label>Currency</label><select id="av-re-currency">${currencies.map(c => `<option ${c===entry.currency?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Broker</label><select id="av-re-broker">${brokers.map(b => `<option ${b===entry.broker?'selected':''}>${b}</option>`).join('')}</select></div>
+    </div>`;
+  container.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function submitEditAnnaVasRealized(personKey, idx) {
+  const entry = data.annaVas[personKey].realized[idx];
+  if (!entry) return;
+  entry.symbol = document.getElementById('av-re-symbol').value.trim().toUpperCase() || entry.symbol;
+  entry.name = document.getElementById('av-re-name').value.trim() || entry.name;
+  const shares = parseFloat(document.getElementById('av-re-shares').value);
+  if (!isNaN(shares)) entry.shares = shares;
+  const avgCost = parseFloat(document.getElementById('av-re-avgcost').value);
+  entry.avgCost = isNaN(avgCost) ? null : avgCost;
+  const closePrice = parseFloat(document.getElementById('av-re-closeprice').value);
+  entry.closePrice = isNaN(closePrice) ? null : closePrice;
+  const rpl = parseFloat(document.getElementById('av-re-rpl').value);
+  if (!isNaN(rpl)) entry.rpl = rpl;
+  entry.currency = document.getElementById('av-re-currency').value;
+  entry.broker = document.getElementById('av-re-broker').value;
+  saveData();
+  document.getElementById(`annavas-${personKey}-realized-form-container`).innerHTML = '';
+  document.getElementById(`annavas-${personKey}-realized-form-container`).dataset.formType = '';
+  render();
 }
 
 document.querySelectorAll('.tab').forEach(btn => {
