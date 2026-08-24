@@ -2020,10 +2020,34 @@ function renderDripTable() {
   rows.sort((a,b) => b.costAccum - a.costAccum);
 
   const totalGain = totalDripValue > 0 ? totalDripValue - totalDripCost : null;
+  // Build the table with per-transaction detail rows underneath each summary row
+  const buildDetailRows = (r) => {
+    // Sort history newest first for display
+    const sorted = [...r.history].map((d, origIdx) => ({...d, _origIdx: origIdx})).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    return sorted.map(d => `
+      <tr class="drip-detail">
+        <td class="l" style="padding-left:24px; font-size:10px; color:var(--text-faint);">↳ ${d.date || '—'}</td>
+        <td class="num" style="font-size:10px;">
+          <input class="edit" type="date" value="${d.date || ''}" onchange="editDripField('${r.sym}', ${d._origIdx}, 'date', this.value)" style="width:110px; font-size:9px; padding:2px 4px;">
+        </td>
+        <td class="num" style="font-size:10px;">
+          <input class="edit" type="number" step="any" value="${d.shares}" onchange="editDripField('${r.sym}', ${d._origIdx}, 'shares', this.value)" style="width:80px;">
+        </td>
+        <td class="num" style="font-size:10px;">
+          <input class="edit" type="number" step="any" value="${d.price}" onchange="editDripField('${r.sym}', ${d._origIdx}, 'price', this.value)" style="width:80px;">
+        </td>
+        <td class="num" style="font-size:10px; color:var(--text-faint);">${fmtMoney(d.cost)}</td>
+        <td class="num" colspan="2" style="font-size:9px; color:var(--text-faint);">${d.shares} × ${fmtMoney(d.price)} = ${fmtMoney(d.cost)}</td>
+        <td class="num">
+          <button class="close-pos-btn" onclick="deleteDripEntry('${r.sym}', ${d._origIdx})" title="Delete this DRIP" style="font-size:8px; padding:1px 4px;">🗑</button>
+        </td>
+      </tr>`).join('');
+  };
+
   document.getElementById('drip-table').innerHTML = `
     <thead><tr>
       <th class="l">Symbol</th>
-      <th>Reinvests</th>
+      <th title="Click ▸ to show/hide individual DRIP transactions">Reinvests</th>
       <th>DRIP Shares</th>
       <th>Avg Reinvest Price</th>
       <th>Total Reinvested</th>
@@ -2032,8 +2056,8 @@ function renderDripTable() {
       <th>% of Position</th>
     </tr></thead>
     <tbody>${rows.map(r => `
-      <tr>
-        <td class="l"><span class="symbol">${r.sym}</span></td>
+      <tr class="drip-summary" style="cursor:pointer;" onclick="toggleDripDetail('${r.sym}')">
+        <td class="l"><span class="symbol">${r.sym}</span> <span id="drip-toggle-${r.sym}" style="color:var(--gold); font-size:9px; margin-left:4px;">▸</span></td>
         <td class="num">${r.count}</td>
         <td class="num">${fmtShares(r.sharesAccum)}</td>
         <td class="num">${fmtMoney(r.avgPrice)}</td>
@@ -2041,6 +2065,22 @@ function renderDripTable() {
         <td class="num">${r.currentValue !== null ? fmtMoney(r.currentValue) : '<span class="dash">—</span>'}</td>
         <td class="num ${cls(r.gain)}">${r.gain !== null ? fmtMoney(r.gain) : '<span class="dash">—</span>'}</td>
         <td class="num">${(r.pctPosition*100).toFixed(2)}%</td>
+      </tr>
+      <tr class="drip-detail-container" id="drip-detail-${r.sym}" style="display:none;">
+        <td colspan="8" style="padding:0; background:var(--bg-darker);">
+          <table style="width:100%; background:transparent;">
+            <thead><tr>
+              <th class="l" style="font-size:9px; padding-left:24px;">Date</th>
+              <th style="font-size:9px;">Date Edit</th>
+              <th style="font-size:9px;">Shares</th>
+              <th style="font-size:9px;">Reinvest Price</th>
+              <th style="font-size:9px;">Cost</th>
+              <th colspan="2" style="font-size:9px;">Calc</th>
+              <th style="font-size:9px;"></th>
+            </tr></thead>
+            <tbody>${buildDetailRows(r)}</tbody>
+          </table>
+        </td>
       </tr>`).join('')}
     <tr class="total">
       <td class="l">Total</td>
@@ -2052,6 +2092,82 @@ function renderDripTable() {
       <td class="num ${cls(totalGain)}">${totalGain !== null ? fmtMoney(totalGain) : '<span class="dash">—</span>'}</td>
       <td class="num"></td>
     </tr></tbody>`;
+}
+
+function toggleDripDetail(sym) {
+  const row = document.getElementById(`drip-detail-${sym}`);
+  const tog = document.getElementById(`drip-toggle-${sym}`);
+  if (!row) return;
+  const isHidden = row.style.display === 'none';
+  row.style.display = isHidden ? 'table-row' : 'none';
+  if (tog) tog.textContent = isHidden ? '▾' : '▸';
+}
+
+function editDripField(sym, idx, field, val) {
+  if (!data.dripHistory || !data.dripHistory[sym] || !data.dripHistory[sym][idx]) return;
+  const entry = data.dripHistory[sym][idx];
+  const pos = data.dvd.find(p => p.symbol === sym);
+  if (!pos) return;
+
+  // Reverse the old entry's impact on shares + avgCost first
+  const oldTotalCost = pos.shares * pos.avgCost;
+  const revertShares = pos.shares - entry.shares;
+  const revertCost = oldTotalCost - entry.cost;
+
+  // Update the field
+  if (field === 'date') {
+    entry.date = val;
+  } else if (field === 'shares') {
+    const newShares = parseFloat(val);
+    if (isNaN(newShares) || newShares <= 0) { alert('Shares must be > 0'); render(); return; }
+    entry.shares = newShares;
+    entry.cost = entry.shares * entry.price;
+  } else if (field === 'price') {
+    const newPrice = parseFloat(val);
+    if (isNaN(newPrice) || newPrice <= 0) { alert('Price must be > 0'); render(); return; }
+    entry.price = newPrice;
+    entry.cost = entry.shares * entry.price;
+  }
+
+  // Re-apply the updated entry (only if shares/price changed, not date)
+  if (field === 'shares' || field === 'price') {
+    const newTotalShares = revertShares + entry.shares;
+    const newTotalCost = revertCost + entry.cost;
+    if (newTotalShares > 0) {
+      pos.shares = newTotalShares;
+      pos.avgCost = newTotalCost / newTotalShares;
+    }
+  }
+
+  // Re-sort history by date
+  data.dripHistory[sym].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  saveData();
+  render();
+}
+
+function deleteDripEntry(sym, idx) {
+  if (!data.dripHistory || !data.dripHistory[sym] || !data.dripHistory[sym][idx]) return;
+  const entry = data.dripHistory[sym][idx];
+  const pos = data.dvd.find(p => p.symbol === sym);
+  if (!pos) return;
+  const c1 = confirm(`Delete DRIP entry: ${entry.shares} shares of ${sym} @ ${fmtMoney(entry.price)} on ${entry.date}?\n\nThis will REVERSE the effect on your position:\n- Remove ${entry.shares} shares from ${sym}\n- Recalculate avg cost accordingly\n\nUse this to correct mistakes only. Click OK to continue.`);
+  if (!c1) return;
+  const c2 = confirm(`FINAL CONFIRMATION: Delete this DRIP permanently?`);
+  if (!c2) return;
+
+  // Reverse the entry's impact
+  const oldTotalCost = pos.shares * pos.avgCost;
+  const newTotalShares = pos.shares - entry.shares;
+  const newTotalCost = oldTotalCost - entry.cost;
+  if (newTotalShares > 0) {
+    pos.shares = newTotalShares;
+    pos.avgCost = newTotalCost / newTotalShares;
+  }
+  // Remove from history
+  data.dripHistory[sym].splice(idx, 1);
+  if (data.dripHistory[sym].length === 0) delete data.dripHistory[sym];
+  saveData();
+  render();
 }
 
 function renderEditableDvdGrid(received) {
