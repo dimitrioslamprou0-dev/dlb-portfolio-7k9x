@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <style>
   :root {
     /* STYLE 3 — Institutional / Quant Terminal */
@@ -333,6 +334,23 @@
   .chart-year-filter button { background: var(--bg-card); border: 1px solid var(--border, #2a3040); color: var(--text-faint); font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 6px 16px; border-radius: 5px; cursor: pointer; transition: all .15s; }
   .chart-year-filter button:hover { color: var(--text); border-color: var(--gold); }
   .chart-year-filter button.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  .upload-box { border: 1px dashed var(--border-bright); background: var(--bg-card); padding: 16px; border-radius: 6px; margin: 10px 0 20px; }
+  .upload-box label { display: block; font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px; }
+  .upload-box select, .upload-box input[type="file"], .upload-box input[type="text"], .upload-box input[type="date"], .upload-box input[type="number"] {
+    background: var(--bg); border: 1px solid var(--border-bright); color: var(--text); font-family: inherit; font-size: 12px; padding: 7px 9px; border-radius: 4px; margin-right: 8px; margin-bottom: 8px;
+  }
+  .colmap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin: 12px 0; max-height: 260px; overflow-y: auto; }
+  .colmap-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--bg); padding: 6px 10px; border-radius: 4px; }
+  .colmap-row span { font-size: 11px; color: var(--text-faint); }
+  .scenario-btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .scenario-btn { background: var(--bg-card); border: 1px solid var(--border-bright); color: var(--text); font-family: inherit; font-size: 11px; font-weight: 600; padding: 8px 14px; border-radius: 5px; cursor: pointer; }
+  .scenario-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .scenario-btn.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  .news-item { padding: 10px 0; border-bottom: 1px solid var(--border-bright); }
+  .news-item:last-child { border-bottom: none; }
+  .news-item a { color: var(--text); text-decoration: none; font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .news-item a:hover { color: var(--gold); }
+  .news-item .news-meta { font-size: 10px; color: var(--text-faint); margin-top: 4px; text-transform: uppercase; letter-spacing: .05em; }
 
   .chart-wrap { background: var(--bg-card); border: 1px solid var(--border-bright); padding: 16px; height: 320px; position: relative; }
   .chart-wrap.tall { height: 360px; }
@@ -479,6 +497,11 @@
     <button class="tab" data-tab="projections"><span class="tab-num">05</span>Projected DVD</button>
     <button class="tab" data-tab="eqprojected"><span class="tab-num">06</span>EQ Projected</button>
     <button class="tab" data-tab="annavas"><span class="tab-num">07</span>Anna &amp; Vas</button>
+    <button class="tab" data-tab="journal"><span class="tab-num">08</span>Trade Journal</button>
+    <button class="tab" data-tab="newscal"><span class="tab-num">09</span>News &amp; Calendar</button>
+    <button class="tab" data-tab="scenario"><span class="tab-num">10</span>What-If</button>
+    <button class="tab" data-tab="milestones"><span class="tab-num">11</span>Milestones</button>
+    <button class="tab" data-tab="benchmark"><span class="tab-num">12</span>Benchmark</button>
   </nav>
 
   <section class="panel active" id="overview">
@@ -665,6 +688,73 @@
   </section>
 
   <section class="panel" id="annavas"><div id="annavas-body"></div></section>
+
+  <section class="panel" id="journal">
+    <div class="scenario-btn-row" id="journal-filter-bar"></div>
+    <div class="kpi-grid" id="journal-kpi"></div>
+    <h2 class="section-title">Options &amp; CFD Trade Journal <span class="count" id="journal-count">—</span>
+      <button class="add-trade-btn secondary" onclick="toggleJournalUpload()">📤 UPLOAD STATEMENT</button>
+      <button class="add-trade-btn" onclick="toggleJournalManualForm()" style="margin-left:8px;">➕ ADD TRADE</button>
+    </h2>
+    <div id="journal-upload-container"></div>
+    <div id="journal-manual-form-container"></div>
+    <div class="two-col" style="margin-top:16px;">
+      <div class="card"><h3>P&amp;L by Symbol + Side<small>e.g. NVDA CALL, NVDA Long</small></h3><div id="journal-symbol-bars"></div></div>
+      <div class="card"><h3>P&amp;L by Broker<small>Realized, Net</small></h3><div id="journal-broker-bars"></div></div>
+    </div>
+    <h2 class="section-title" style="margin-top:24px;">Realized P&amp;L by Month <span class="count">First trade → current</span></h2>
+    <div class="chart-wrap"><canvas id="journal-monthly-chart"></canvas></div>
+    <h2 class="section-title" style="margin-top:24px;">Trade Log <span class="count" id="journal-log-count">—</span></h2>
+    <div class="card" style="padding:0"><div class="table-scroll"><table id="journal-table"></table></div></div>
+  </section>
+
+  <section class="panel" id="newscal">
+    <h2 class="section-title">Economic Calendar <span class="count">Actual · Forecast · Previous — NFP, FOMC, CPI and other high-impact events</span></h2>
+    <div class="card">
+      <div class="tradingview-widget-container" style="min-height:650px;"><div id="tv-economic-calendar"></div></div>
+    </div>
+    <h2 class="section-title" style="margin-top:24px;">Holdings News <span class="count" id="news-feed-sub">Latest headlines for your positions</span></h2>
+    <div class="card"><div id="news-feed-list"></div></div>
+  </section>
+
+  <section class="panel" id="scenario">
+    <h2 class="section-title">Concentration by Underlying <span class="count">Across EQ + DVD + Crypto + Anna &amp; Vas</span></h2>
+    <div class="card"><div id="scenario-concentration-bars"></div></div>
+    <h2 class="section-title" style="margin-top:24px;">What-If Scenario <span class="count">Shock a sector or instrument, see the $ impact</span></h2>
+    <div class="card">
+      <div id="scenario-controls"></div>
+      <div class="kpi-grid" id="scenario-kpis" style="margin-top:16px;"></div>
+    </div>
+    <div class="chart-wrap" style="margin-top:16px;"><canvas id="scenario-chart"></canvas></div>
+  </section>
+
+  <section class="panel" id="milestones">
+    <h2 class="section-title">Net Worth Timeline <span class="count" id="milestones-count">—</span>
+      <button class="add-trade-btn secondary" onclick="recordNetWorthSnapshot()">📍 RECORD SNAPSHOT</button>
+      <button class="add-trade-btn" onclick="toggleSnapshotForm()" style="margin-left:8px;">➕ ADD PAST SNAPSHOT</button>
+      <button class="add-trade-btn" onclick="toggleMilestoneForm()" style="margin-left:8px;">🏷 ADD MILESTONE</button>
+    </h2>
+    <div id="snapshot-form-container"></div>
+    <div id="milestone-form-container"></div>
+    <div class="chart-wrap tall"><canvas id="networth-timeline-chart"></canvas></div>
+    <div class="card" style="padding:0; margin-top:20px;"><div class="table-scroll"><table id="snapshots-table"></table></div></div>
+  </section>
+
+  <section class="panel" id="benchmark">
+    <div class="kpi-grid" id="benchmark-kpi"></div>
+    <h2 class="section-title">Portfolio vs Benchmark <span class="count">Growth of 100, normalized</span></h2>
+    <div class="chart-wrap tall"><canvas id="benchmark-chart"></canvas></div>
+    <h2 class="section-title" style="margin-top:24px;">Return Attribution <span class="count">Price vs Dividends</span></h2>
+    <div class="two-col">
+      <div class="card"><h3>Attribution<small>Since first snapshot / cost basis</small></h3>
+        <div class="eq-donut-wrap">
+          <div class="eq-donut-container"><canvas id="attribution-donut"></canvas><div class="donut-center-label" id="attribution-donut-center"></div></div>
+          <div class="pie-legend" id="attribution-donut-legend"></div>
+        </div>
+      </div>
+      <div class="card" id="attribution-notes"></div>
+    </div>
+  </section>
 
   <footer>
     <span>DLB Portfolio Terminal v13.0 — Institutional</span>
@@ -929,7 +1019,14 @@ const DEFAULT_DATA = {
         { broker: 'REV', symbol: 'AVGO', name: 'Broadcom Inc',              shares: 9.2706162,   avgCost: 328.14, closePrice: 403.65, currency: 'USD', rpl: 700.02 }
       ]
     }
-  }
+  },
+  // Options & CFD Trade Journal — populated via statement upload (IBKR / V) or manual add
+  tradeJournal: [],
+  // Net worth snapshots for the Milestones/Timeline and Benchmark tabs. Recorded manually
+  // (there's no way to know historical net worth we didn't capture at the time).
+  netWorthSnapshots: [],
+  // Free-text milestone markers plotted on the net worth timeline (deposits, new positions, etc.)
+  milestones: []
 };
 
 const STORAGE_KEY = 'dlb_portfolio_v11';
@@ -982,6 +1079,9 @@ function loadData() {
         { id: 'usd-account', label: 'USD Savings',  amount: 0, annualYield: 0, currency: 'USD' }
       ];
       if (!loaded.cashFlowConfig) loaded.cashFlowConfig = { includeEqWithdrawal: false, eqWithdrawalRate: 0.04 };
+      if (!loaded.tradeJournal) loaded.tradeJournal = [];
+      if (!loaded.netWorthSnapshots) loaded.netWorthSnapshots = [];
+      if (!loaded.milestones) loaded.milestones = [];
       return loaded;
     }
   } catch(e) {}
@@ -5004,6 +5104,937 @@ function submitEditAnnaVasRealized(personKey, idx) {
   render();
 }
 
+/* ===================== OPTIONS & CFD TRADE JOURNAL ===================== */
+// Two real broker formats are supported natively:
+//  - IBKR: "Trade Confirmation Report" HTML export. This is a raw execution log (no
+//    realized P&L column) with per-exchange partial fills PLUS IBKR's own "Total ...
+//    (Bought)/(Sold)" rollup rows. We use the rollups for clean per-order quantities/cash
+//    flows (skipping the itemized per-exchange legs entirely, since they're subsets of the
+//    rollup and would double-count), then FIFO-match Opens against Closes ourselves per
+//    contract to build real round-trip trades with correct realized P&L.
+//  - V (Vantage-style MT4/5 "Closed Trades Report") CSV: each row is already a fully closed
+//    round-trip trade with its own P/L column, so no matching is needed — just read it.
+// A generic CSV column-mapper remains as a fallback for any other broker export.
+const JOURNAL_CANON_FIELDS = [
+  { key: 'symbol',      label: 'Symbol / Underlying', required: true },
+  { key: 'assetType',   label: 'Asset Type (option/cfd)', required: false },
+  { key: 'side',        label: 'Side (buy/sell/long/short)', required: false },
+  { key: 'qty',         label: 'Quantity', required: true },
+  { key: 'openDate',    label: 'Open / Trade Date', required: false },
+  { key: 'closeDate',   label: 'Close Date', required: false },
+  { key: 'entryPrice',  label: 'Entry Price', required: false },
+  { key: 'exitPrice',   label: 'Exit Price', required: false },
+  { key: 'fees',        label: 'Fees / Commission', required: false },
+  { key: 'realizedPnl', label: 'Realized P&L', required: true }
+];
+let journalPendingCsv = null; // { broker, headers, rows } awaiting column mapping confirmation
+let journalFilter = 'ALL';    // 'ALL' | 'V' | 'IBKR'
+
+function toggleJournalUpload() {
+  const el = document.getElementById('journal-upload-container');
+  if (el.innerHTML) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="upload-box">
+      <label>Broker</label>
+      <select id="journal-broker-select">
+        <option value="IBKR">IBKR — Trade Confirmation Report (.htm, parsed + FIFO-matched automatically)</option>
+        <option value="V">V — Closed Trades Report (.csv, parsed automatically)</option>
+        <option value="OTHER">Other CSV — map columns yourself</option>
+      </select>
+      <br>
+      <label>Statement File</label>
+      <input type="file" id="journal-file-input" accept=".csv,.txt,.htm,.html">
+      <button class="add-trade-btn" onclick="handleJournalFileUpload()">Parse File</button>
+      <div id="journal-upload-status" style="margin-top:10px; font-size:11px; color: var(--text-faint);"></div>
+    </div>`;
+}
+function toggleJournalManualForm() {
+  const el = document.getElementById('journal-manual-form-container');
+  if (el.innerHTML) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="upload-box">
+      <label>Broker</label><input type="text" id="jt-broker" placeholder="IBKR / V" style="width:100px;">
+      <label style="display:inline-block; margin-left:8px;">Asset</label>
+      <select id="jt-asset"><option value="option">Option</option><option value="cfd">CFD</option></select>
+      <br>
+      <label>Symbol</label><input type="text" id="jt-symbol" placeholder="NVDA" style="width:100px; text-transform:uppercase;">
+      <label>Side</label>
+      <select id="jt-side"><option value="Long">Long / Call</option><option value="Short">Short / Put</option></select>
+      <label>Qty</label><input type="number" step="any" id="jt-qty" style="width:80px;">
+      <br>
+      <label>Open Date</label><input type="date" id="jt-open">
+      <label>Close Date</label><input type="date" id="jt-close">
+      <br>
+      <label>Entry Price</label><input type="number" step="any" id="jt-entry" style="width:100px;">
+      <label>Exit Price</label><input type="number" step="any" id="jt-exit" style="width:100px;">
+      <label>Fees</label><input type="number" step="any" id="jt-fees" style="width:80px;">
+      <label>Realized P&L</label><input type="number" step="any" id="jt-pnl" style="width:110px;">
+      <br>
+      <button class="add-trade-btn" onclick="addManualTrade()">+ Add Trade</button>
+    </div>`;
+}
+function addManualTrade() {
+  const symbol = (document.getElementById('jt-symbol').value || '').trim().toUpperCase();
+  if (!symbol) return;
+  const trade = {
+    id: 'jt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    broker: (document.getElementById('jt-broker').value || '—').trim(),
+    assetType: document.getElementById('jt-asset').value,
+    symbol,
+    side: document.getElementById('jt-side').value,
+    qty: parseFloat(document.getElementById('jt-qty').value) || 0,
+    openDate: document.getElementById('jt-open').value || null,
+    closeDate: document.getElementById('jt-close').value || null,
+    entryPrice: parseFloat(document.getElementById('jt-entry').value) || null,
+    exitPrice: parseFloat(document.getElementById('jt-exit').value) || null,
+    fees: parseFloat(document.getElementById('jt-fees').value) || 0,
+    realizedPnl: parseFloat(document.getElementById('jt-pnl').value) || 0,
+    source: 'manual'
+  };
+  data.tradeJournal.push(trade);
+  saveData();
+  document.getElementById('journal-manual-form-container').innerHTML = '';
+  renderJournal();
+}
+function deleteJournalTrade(id) {
+  data.tradeJournal = data.tradeJournal.filter(t => t.id !== id);
+  saveData(); renderJournal();
+}
+function handleJournalFileUpload() {
+  const broker = document.getElementById('journal-broker-select').value;
+  const fileInput = document.getElementById('journal-file-input');
+  const statusEl = document.getElementById('journal-upload-status');
+  const file = fileInput.files[0];
+  if (!file) { statusEl.textContent = 'Choose a file first.'; return; }
+  statusEl.textContent = 'Reading file…';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    if (broker === 'IBKR') {
+      let trades = [];
+      try { trades = parseIBKRTradeConfirmation(text); }
+      catch(err) { statusEl.textContent = 'Could not parse this IBKR file: ' + err.message; return; }
+      if (!trades.length) {
+        statusEl.textContent = "Couldn't find any matched (opened + closed) option trades in this file. Still-open positions at the end of the statement period aren't counted as realized yet, so if everything in the window is still open, that's expected — try a wider date range.";
+        return;
+      }
+      importParsedTrades('IBKR', trades, statusEl);
+    } else if (broker === 'V') {
+      let trades = [];
+      try { trades = parseVantageClosedTrades(text); }
+      catch(err) { statusEl.textContent = 'Could not parse this V file: ' + err.message; return; }
+      if (!trades.length) { statusEl.textContent = 'No closed trades found in this file.'; return; }
+      importParsedTrades('V', trades, statusEl);
+    } else {
+      const parsed = Papa.parse(text, { skipEmptyLines: true });
+      const rows = parsed.data;
+      if (!rows.length) { statusEl.textContent = 'Could not read any rows from this file.'; return; }
+      journalPendingCsv = { broker, headers: rows[0], rows: rows.slice(1) };
+      renderColumnMapper(statusEl);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ---- IBKR Trade Confirmation Report (.htm) parser ----
+// Strategy: read the raw execution rows only to know each order's exact Trade Date/Time and
+// Code (O=Opening / C=Closing — the Type column's Buy/Sell plus IBKR's proceeds sign already
+// tell us direction, we don't need to separately track long/short). Use IBKR's own "Total ...
+// (Bought)/(Sold)" rollup row for the actual quantity/proceeds/comm/fee of that order (this
+// is what avoids double-counting the itemized per-exchange partial-fill rows). Then FIFO-match
+// Opens to Closes per exact contract to build real closed trades.
+function parseIBKRTradeConfirmation(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const tables = [...doc.querySelectorAll('table')];
+  const cellText = (el) => (el.textContent || '').replace(/\u00a0/g, ' ').trim();
+
+  // Locate the Trades table (13-col header) and the Financial Instrument Information table
+  // (gives us Description -> Underlying/Strike/Expiry/Type for building readable trade rows).
+  let tradesTable = null, infoTable = null;
+  for (const t of tables) {
+    const headerRow = t.querySelector('tr');
+    if (!headerRow) continue;
+    const headers = [...headerRow.querySelectorAll('th,td')].map(cellText);
+    if (headers[0] === 'Acct ID' && headers.includes('Trade Date/Time') && headers.includes('Code')) tradesTable = t;
+    if (headers[0] === 'Symbol' && headers.includes('Underlying') && headers.includes('Strike')) infoTable = t;
+  }
+  if (!tradesTable) throw new Error('Could not find the Trades table in this file (expected a column header starting with "Acct ID").');
+
+  const contractInfo = {}; // Description -> { underlying, expiry, type, strike }
+  if (infoTable) {
+    for (const tr of infoTable.querySelectorAll('tr')) {
+      const cells = [...tr.querySelectorAll('td,th')].map(cellText);
+      if (cells.length < 10 || cells[0] === 'Symbol') continue;
+      contractInfo[cells[1]] = { underlying: cells[3], expiry: cells[6], type: cells[8], strike: cells[9], multiplier: parseFloat(cells[5]) || 100 };
+    }
+  }
+
+  const legs = []; // { symbol(description), dateTime, side(Bought/Sold), code, qty, proceeds, comm, fee }
+  let lastRow = null; // most recent 13-cell individual execution row (for date/code context)
+  let currentSection = '';
+  for (const tr of tradesTable.querySelectorAll('tr')) {
+    const cells = [...tr.querySelectorAll('td,th')].map(cellText);
+    // Single-cell rows are section markers, but two different kinds appear: the asset-category
+    // header ("Equity and Index Options", "Forex") and a currency sub-header ("USD") nested
+    // under it. Only the category actually matters for filtering — a 3-letter all-caps token
+    // is a currency code, not a category, so it must not overwrite the category we're tracking.
+    if (cells.length === 1) { if (!/^[A-Z]{3}$/.test(cells[0])) currentSection = cells[0]; continue; }
+    if (cells.length === 13) {
+      if (cells[0] === 'Acct ID') continue;                                  // repeated column header
+      lastRow = { symbol: cells[1], dateTime: cells[2], type: cells[5], code: cells[12] };
+      continue;
+    }
+    if (cells.length === 8 && /^Total /.test(cells[0]) && /\((Bought|Sold)\)$/.test(cells[0])) {
+      if (!lastRow || currentSection !== 'Equity and Index Options') continue;  // skip Forex/other sections, only options
+      const side = /\(Bought\)$/.test(cells[0]) ? 'Bought' : 'Sold';
+      legs.push({
+        symbol: lastRow.symbol,
+        dateTime: lastRow.dateTime,
+        side,
+        code: lastRow.code,
+        qty: Math.abs(parseFloat(cells[1]) || 0),
+        proceeds: parseFloat(cells[3]) || 0,
+        comm: parseFloat(cells[4]) || 0,
+        fee: parseFloat(cells[5]) || 0
+      });
+    }
+    // bare "Total SYMBOL" rows (no Bought/Sold suffix) are a net-for-period summary — not
+    // needed since we FIFO-match ourselves, and re-including them would double count.
+  }
+
+  // Group legs by exact contract (Description string encodes strike+expiry, so this is
+  // unambiguous), then FIFO-match Opens (code contains 'O') to Closes (code contains 'C').
+  const byContract = {};
+  for (const leg of legs) (byContract[leg.symbol] = byContract[leg.symbol] || []).push(leg);
+
+  const trades = [];
+  for (const [symbol, contractLegs] of Object.entries(byContract)) {
+    const opens = contractLegs.filter(l => l.code.includes('O')).sort((a,b) => a.dateTime.localeCompare(b.dateTime))
+      .map(l => ({ ...l, remaining: l.qty }));
+    const closes = contractLegs.filter(l => l.code.includes('C')).sort((a,b) => a.dateTime.localeCompare(b.dateTime));
+    const info = contractInfo[symbol] || {};
+    const underlying = info.underlying || symbol.split(' ')[0];
+    const optType = info.type === 'C' ? 'CALL' : info.type === 'P' ? 'PUT' : '';
+    const mult = info.multiplier || 100;
+    let openIdx = 0;
+    for (const close of closes) {
+      let remainingToMatch = close.qty;
+      while (remainingToMatch > 0.0000001 && openIdx < opens.length) {
+        const open = opens[openIdx];
+        if (open.remaining <= 0.0000001) { openIdx++; continue; }
+        const matchedQty = Math.min(open.remaining, remainingToMatch);
+        const openFrac = matchedQty / open.qty;
+        const closeFrac = matchedQty / close.qty;
+        const realizedPnl = (open.proceeds * openFrac) + (close.proceeds * closeFrac) + (open.comm * openFrac) + (close.comm * closeFrac) + (open.fee * openFrac) + (close.fee * closeFrac);
+        trades.push({
+          id: 'jt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+          broker: 'IBKR', assetType: 'option',
+          symbol: underlying,
+          optionDetail: `${info.expiry || ''} ${info.strike || ''} ${info.type || ''}`.trim() || symbol,
+          side: open.side === 'Bought' ? 'CALL/PUT Long' : 'Short',
+          optionType: optType,
+          direction: open.side === 'Bought' ? 'LONG' : 'SHORT',
+          qty: matchedQty,
+          openDate: normalizeDate(open.dateTime),
+          closeDate: normalizeDate(close.dateTime),
+          entryPrice: open.qty ? Math.abs(open.proceeds / open.qty) / mult : null,
+          exitPrice: close.qty ? Math.abs(close.proceeds / close.qty) / mult : null,
+          fees: Math.abs((open.comm * openFrac) + (close.comm * closeFrac) + (open.fee * openFrac) + (close.fee * closeFrac)),
+          realizedPnl,
+          source: 'upload'
+        });
+        open.remaining -= matchedQty;
+        remainingToMatch -= matchedQty;
+        if (open.remaining <= 0.0000001) openIdx++;
+      }
+      // A close with no matching open in this file means the position was opened before the
+      // statement window — we still record the closing cash flow so it isn't silently lost,
+      // clearly flagged since it isn't a complete round-trip we can fully verify.
+      if (remainingToMatch > 0.0000001) {
+        const frac = remainingToMatch / close.qty;
+        trades.push({
+          id: 'jt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+          broker: 'IBKR', assetType: 'option',
+          symbol: underlying,
+          optionDetail: (`${info.expiry || ''} ${info.strike || ''} ${info.type || ''}`.trim() || symbol) + ' · entry outside statement window',
+          side: 'Short',
+          optionType: optType,
+          direction: 'UNKNOWN',
+          qty: remainingToMatch,
+          openDate: null,
+          closeDate: normalizeDate(close.dateTime),
+          entryPrice: null,
+          exitPrice: close.qty ? Math.abs(close.proceeds / close.qty) / mult : null,
+          fees: Math.abs(close.comm * frac + close.fee * frac),
+          realizedPnl: (close.proceeds * frac) + (close.comm * frac) + (close.fee * frac),
+          source: 'upload'
+        });
+      }
+    }
+  }
+  return trades;
+}
+
+// ---- V (Vantage-style MT4/5 "Closed Trades Report") CSV parser ----
+// Each row is already one fully closed trade — no FIFO matching needed. Order Type is
+// Buy/Sell (Long/Short). Net P&L = the report's own P/L column + Swap (fee/commission are
+// generally 0 or '--' on this broker's CFD accounts, but we fold them in defensively).
+function parseVantageClosedTrades(text) {
+  const rows = Papa.parse(text, { skipEmptyLines: true }).data;
+  // Find the real header row (first row after the title line that starts with "Order Number")
+  let headerIdx = rows.findIndex(r => r[0] === 'Order Number');
+  if (headerIdx === -1) throw new Error('Expected a "Order Number" header row — this may not be a Vantage Closed Trades Report.');
+  const headers = rows[headerIdx].map(h => String(h).trim());
+  const col = (name) => headers.indexOf(name);
+  const iInstr = col('Trading Instrument'), iType = col('Order Type'), iLot = col('Lot'),
+        iOpenPx = col('Opening Price'), iOpenT = col('Opening Time'), iClosePx = col('Closing Price'),
+        iCloseT = col('Closing Time'), iFee = col('Fee'), iComm = col('Commission'),
+        iSwap = col('Swap (Overnight Interest)'), iPnl = col('P/L');
+  const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+  const trades = [];
+  for (const r of rows.slice(headerIdx + 1)) {
+    if (!r[iInstr]) continue;
+    const side = (r[iType] || '').trim();
+    const pnl = num(r[iPnl]);
+    const swap = num(r[iSwap]);
+    const fee = num(r[iFee]);
+    const comm = num(r[iComm]);
+    trades.push({
+      id: 'jt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      broker: 'V', assetType: 'cfd',
+      symbol: r[iInstr].trim(),
+      side: side.toLowerCase() === 'buy' ? 'Long' : 'Short',
+      direction: side.toLowerCase() === 'buy' ? 'LONG' : 'SHORT',
+      qty: num(r[iLot]),
+      openDate: normalizeDate(r[iOpenT]),
+      closeDate: normalizeDate(r[iCloseT]),
+      entryPrice: num(r[iOpenPx]),
+      exitPrice: num(r[iClosePx]),
+      fees: Math.abs(fee) + Math.abs(comm),
+      realizedPnl: pnl + swap - Math.abs(fee) - Math.abs(comm),
+      source: 'upload'
+    });
+  }
+  return trades;
+}
+
+function renderColumnMapper(statusEl) {
+  const { headers } = journalPendingCsv;
+  statusEl.innerHTML = `
+    <div style="margin-top:10px;">
+      <div style="color: var(--gold); font-weight:700; margin-bottom:6px;">Map your columns (${headers.length} detected, ${journalPendingCsv.rows.length} rows)</div>
+      <div class="colmap-grid">
+        ${JOURNAL_CANON_FIELDS.map(f => `
+          <div class="colmap-row">
+            <span>${f.label}${f.required ? ' *' : ''}</span>
+            <select id="colmap-${f.key}">
+              <option value="">— skip —</option>
+              ${headers.map((h,i) => `<option value="${i}" ${guessColumn(h, f.key) ? 'selected' : ''}>${h}</option>`).join('')}
+            </select>
+          </div>`).join('')}
+      </div>
+      <button class="add-trade-btn" onclick="confirmColumnMapImport()">Import Mapped Rows</button>
+    </div>`;
+}
+function guessColumn(header, key) {
+  const h = (header||'').toLowerCase();
+  const guesses = {
+    symbol: ['symbol','ticker','instrument'],
+    assetType: ['asset','type','category'],
+    side: ['side','action','direction','buy/sell'],
+    qty: ['qty','quantity','units','size','lot'],
+    openDate: ['open date','trade date','date opened','entry date','opening time'],
+    closeDate: ['close date','date closed','exit date','closing time'],
+    entryPrice: ['entry price','open price','price open','opening price'],
+    exitPrice: ['exit price','close price','price close','closing price'],
+    fees: ['fee','commission','comm'],
+    realizedPnl: ['realized p','pnl','p&l','profit','p/l']
+  };
+  return (guesses[key]||[]).some(g => h.includes(g));
+}
+function confirmColumnMapImport() {
+  const { broker, rows } = journalPendingCsv;
+  const map = {};
+  JOURNAL_CANON_FIELDS.forEach(f => {
+    const v = document.getElementById(`colmap-${f.key}`).value;
+    if (v !== '') map[f.key] = parseInt(v, 10);
+  });
+  if (map.symbol === undefined || map.qty === undefined) {
+    alert('Symbol and Quantity are required — map those columns before importing.');
+    return;
+  }
+  const trades = rows.filter(r => r[map.symbol] && String(r[map.symbol]).trim()).map(r => ({
+    id: 'jt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    broker,
+    assetType: map.assetType !== undefined ? (String(r[map.assetType]||'').toLowerCase().includes('cfd') ? 'cfd' : 'option') : 'cfd',
+    symbol: String(r[map.symbol]).trim().toUpperCase(),
+    side: map.side !== undefined ? String(r[map.side]||'').trim() : '',
+    qty: map.qty !== undefined ? parseFloat(r[map.qty]) || 0 : 0,
+    openDate: map.openDate !== undefined ? normalizeDate(r[map.openDate]) : null,
+    closeDate: map.closeDate !== undefined ? normalizeDate(r[map.closeDate]) : null,
+    entryPrice: map.entryPrice !== undefined ? (parseFloat(r[map.entryPrice]) || null) : null,
+    exitPrice: map.exitPrice !== undefined ? (parseFloat(r[map.exitPrice]) || null) : null,
+    fees: map.fees !== undefined ? (parseFloat(r[map.fees]) || 0) : 0,
+    realizedPnl: map.realizedPnl !== undefined ? (parseFloat(r[map.realizedPnl]) || 0) : 0,
+    source: 'upload'
+  }));
+  importParsedTrades(broker, trades, document.getElementById('journal-upload-status'));
+}
+function normalizeDate(v) {
+  if (!v) return null;
+  const s = String(v).trim();
+  // European "DD/MM/YYYY HH:mm" (Vantage) needs explicit parsing — new Date() would read it
+  // as MM/DD in a US-locale browser and silently corrupt the date.
+  const eu = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (eu) return `${eu[3]}-${eu[2].padStart(2,'0')}-${eu[1].padStart(2,'0')}`;
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  return d.toISOString().slice(0,10);
+}
+function importParsedTrades(broker, trades, statusEl) {
+  // Dedupe against already-imported trades (same broker+symbol+dates+qty+pnl signature) so
+  // re-uploading the same statement (e.g. a monthly export with overlapping days) is safe.
+  const sigOf = (t) => `${t.broker}|${t.symbol}|${t.openDate}|${t.closeDate}|${t.qty}|${(t.realizedPnl||0).toFixed(2)}`;
+  const existingSig = new Set(data.tradeJournal.map(sigOf));
+  let added = 0;
+  for (const t of trades) {
+    const sig = sigOf(t);
+    if (existingSig.has(sig)) continue;
+    existingSig.add(sig);
+    data.tradeJournal.push(t);
+    added++;
+  }
+  saveData();
+  if (statusEl) statusEl.textContent = `✓ Imported ${added} trade${added===1?'':'s'} (${trades.length - added} duplicate${trades.length-added===1?'':'s'} skipped).`;
+  journalPendingCsv = null;
+  renderJournal();
+}
+
+function setJournalFilter(f) {
+  journalFilter = f;
+  renderJournal();
+}
+function filteredJournalTrades() {
+  const trades = data.tradeJournal || [];
+  if (journalFilter === 'V') return trades.filter(t => t.assetType === 'cfd');
+  if (journalFilter === 'IBKR') return trades.filter(t => t.assetType === 'option');
+  return trades;
+}
+function renderJournal() {
+  const allTrades = data.tradeJournal || [];
+  document.getElementById('journal-count').textContent = `${allTrades.length} trade${allTrades.length===1?'':'s'} total`;
+
+  const filterBar = document.getElementById('journal-filter-bar');
+  if (filterBar) {
+    filterBar.innerHTML = ['ALL','V','IBKR'].map(f => `<button class="scenario-btn ${journalFilter===f?'active':''}" onclick="setJournalFilter('${f}')">${f === 'IBKR' ? 'Options (IBKR)' : f === 'V' ? 'CFD (V)' : 'All'}</button>`).join('');
+  }
+  const trades = filteredJournalTrades();
+  document.getElementById('journal-log-count').textContent = `${trades.length} row${trades.length===1?'':'s'}`;
+
+  const totalPnl = trades.reduce((s,t) => s + (t.realizedPnl||0), 0);
+  const closed = trades.filter(t => t.realizedPnl);
+  const wins = closed.filter(t => t.realizedPnl > 0);
+  const losses = closed.filter(t => t.realizedPnl < 0);
+  const winRate = closed.length ? wins.length/closed.length : null;
+  const grossWin = wins.reduce((s,t) => s + t.realizedPnl, 0);
+  const grossLoss = Math.abs(losses.reduce((s,t) => s + t.realizedPnl, 0));
+  const profitFactor = grossLoss > 0 ? grossWin/grossLoss : (grossWin > 0 ? Infinity : null);
+  document.getElementById('journal-kpi').innerHTML = [
+    { label: 'Realized P&L (USD)', value: fmtMoney(totalPnl), cls: cls(totalPnl) },
+    { label: 'Win Rate', value: winRate !== null ? (winRate*100).toFixed(1)+'%' : '—', cls: '' },
+    { label: 'Trades Closed', value: String(closed.length), cls: '' },
+    { label: 'Profit Factor', value: profitFactor === null ? '—' : (profitFactor === Infinity ? '∞' : profitFactor.toFixed(2)), cls: cls(profitFactor === null ? null : profitFactor - 1) }
+  ].map(k => `<div class="kpi"><div class="label">${k.label}</div><div class="value ${k.cls}">${k.value}</div></div>`).join('');
+
+  // Per symbol + direction (e.g. "NVDA CALL" / "NVDA Long") breakdown
+  const bySymSide = {};
+  for (const t of trades) {
+    const sideLabel = t.assetType === 'option' ? (t.optionType || t.direction || t.side || '') : (t.direction || t.side || '');
+    const key = `${t.symbol} ${sideLabel}`.trim();
+    if (!bySymSide[key]) bySymSide[key] = { pnl: 0, count: 0 };
+    bySymSide[key].pnl += (t.realizedPnl||0);
+    bySymSide[key].count += 1;
+  }
+  const symSideList = Object.entries(bySymSide).sort((a,b) => b[1].pnl - a[1].pnl);
+  const maxAbsSymSide = Math.max(...symSideList.map(([,v]) => Math.abs(v.pnl)), 1);
+  document.getElementById('journal-symbol-bars').innerHTML = symSideList.length ? symSideList.map(([key,v]) => `
+    <div class="alloc-row no-ret">
+      <span class="alloc-label">${key} <span style="color:var(--text-faint); font-size:10px;">(${v.count} trade${v.count===1?'':'s'})</span></span>
+      <div class="alloc-bar"><div class="alloc-bar-fill" style="width:${(Math.abs(v.pnl)/maxAbsSymSide)*100}%; background:${v.pnl>=0?'#2f9f5a':'#9f2b2b'}"></div></div>
+      <span class="alloc-value ${cls(v.pnl)}">${fmtMoney(v.pnl)}</span>
+    </div>`).join('') : '<div class="dash" style="padding:12px;">No trades yet</div>';
+
+  // By broker (kept as the second bar chart, useful once both feeds are active)
+  const byBroker = {}; for (const t of trades) byBroker[t.broker] = (byBroker[t.broker]||0) + (t.realizedPnl||0);
+  const brokerList = Object.entries(byBroker).sort((a,b) => b[1]-a[1]);
+  const maxAbsBroker = Math.max(...brokerList.map(([,v]) => Math.abs(v)), 1);
+  document.getElementById('journal-broker-bars').innerHTML = brokerList.length ? brokerList.map(([b,val]) => `
+    <div class="alloc-row no-ret">
+      <span class="alloc-label">${b}</span>
+      <div class="alloc-bar"><div class="alloc-bar-fill" style="width:${(Math.abs(val)/maxAbsBroker)*100}%; background:${val>=0?'#2f9f5a':'#9f2b2b'}"></div></div>
+      <span class="alloc-value ${cls(val)}">${fmtMoney(val)}</span>
+    </div>`).join('') : '<div class="dash" style="padding:12px;">No trades yet</div>';
+
+  drawJournalMonthlyChart(trades);
+
+  const sorted = [...trades].sort((a,b) => (b.closeDate||b.openDate||'').localeCompare(a.closeDate||a.openDate||''));
+  document.getElementById('journal-table').innerHTML = `
+    <thead><tr><th class="l">Broker</th><th class="l">Symbol</th><th class="l">Detail</th><th class="l">Side</th><th>Qty</th><th class="l">Open</th><th class="l">Close</th><th>Entry</th><th>Exit</th><th>Fees</th><th>Realized P&L</th><th></th></tr></thead>
+    <tbody>${sorted.map(t => `<tr>
+      <td class="l">${t.broker}</td>
+      <td class="l">${t.symbol}</td>
+      <td class="l">${t.optionDetail || (t.assetType==='cfd' ? 'CFD' : '')}</td>
+      <td class="l">${t.optionType || t.direction || t.side || ''}</td>
+      <td class="num">${fmtShares(t.qty)}</td>
+      <td class="l">${t.openDate||'—'}</td>
+      <td class="l">${t.closeDate||'—'}</td>
+      <td class="num">${t.entryPrice!=null?fmtMoney(t.entryPrice):'—'}</td>
+      <td class="num">${t.exitPrice!=null?fmtMoney(t.exitPrice):'—'}</td>
+      <td class="num">${fmtMoney(t.fees||0)}</td>
+      <td class="num ${cls(t.realizedPnl)}">${fmtMoney(t.realizedPnl)}</td>
+      <td><button onclick="deleteJournalTrade('${t.id}')" style="background:transparent;border:none;color:var(--text-faint);cursor:pointer;">🗑</button></td>
+    </tr>`).join('')}</tbody>`;
+}
+function drawJournalMonthlyChart(trades) {
+  const ctx = document.getElementById('journal-monthly-chart');
+  if (!ctx) return;
+  if (chartInstances.journalMonthly) chartInstances.journalMonthly.destroy();
+  const dated = trades.filter(t => t.closeDate || t.openDate);
+  if (!dated.length) return;
+  const monthKey = (d) => d.slice(0,7); // YYYY-MM
+  const allKeys = dated.map(t => monthKey(t.closeDate || t.openDate));
+  const minKey = allKeys.reduce((a,b) => a < b ? a : b);
+  const nowKey = new Date().toISOString().slice(0,7);
+  const months = [];
+  let [y,m] = minKey.split('-').map(Number);
+  const [ny,nm] = nowKey.split('-').map(Number);
+  while (y < ny || (y === ny && m <= nm)) { months.push(`${y}-${String(m).padStart(2,'0')}`); m++; if (m>12) { m=1; y++; } }
+  const totals = {};
+  for (const t of dated) { const k = monthKey(t.closeDate || t.openDate); totals[k] = (totals[k]||0) + (t.realizedPnl||0); }
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const labels = months.map(k => { const [yy,mm] = k.split('-'); return monthNames[parseInt(mm)-1] + " '" + yy.slice(2); });
+  const values = months.map(k => totals[k] || 0);
+  chartInstances.journalMonthly = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Realized P&L', data: values, backgroundColor: values.map(v => v>=0?'rgba(47,159,90,0.75)':'rgba(159,43,43,0.75)'), borderRadius: 3 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 } }, grid: { display:false } },
+        y: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 }, callback: v => '$' + v }, grid: { color: 'rgba(31,37,49,0.6)' } }
+      }
+    }
+  });
+}
+
+/* ===================== NEWS & ECONOMIC CALENDAR ===================== */
+let newsCache = { ts: 0, items: [] };
+async function renderNewsAndCalendar() {
+  renderEconomicCalendarWidget();
+  const listEl = document.getElementById('news-feed-list');
+  if (!apiKeys.finnhub) {
+    listEl.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">Add a free Finnhub API key in ⚙ Settings to pull headlines for your actual holdings.</div>`;
+    return;
+  }
+  if (Date.now() - newsCache.ts < 10*60*1000 && newsCache.items.length) { renderNewsList(newsCache.items); return; }
+  listEl.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">Loading news…</div>`;
+  const symbols = [...new Set([...data.eq, ...data.dvd].map(p => p.symbol))].slice(0, 12);
+  const to = new Date().toISOString().slice(0,10);
+  const fromD = new Date(Date.now() - 5*24*60*60*1000).toISOString().slice(0,10);
+  const results = await Promise.allSettled(symbols.map(async sym => {
+    try {
+      const r = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${sym}&from=${fromD}&to=${to}&token=${apiKeys.finnhub}`);
+      if (!r.ok) return [];
+      const j = await r.json();
+      return (Array.isArray(j) ? j : []).slice(0, 4).map(a => ({ ...a, _symbol: sym }));
+    } catch(e) { return []; }
+  }));
+  let items = [];
+  results.forEach(r => { if (r.status === 'fulfilled') items = items.concat(r.value); });
+  items.sort((a,b) => (b.datetime||0) - (a.datetime||0));
+  items = items.slice(0, 30);
+  newsCache = { ts: Date.now(), items };
+  renderNewsList(items);
+}
+function renderNewsList(items) {
+  const listEl = document.getElementById('news-feed-list');
+  if (!items.length) { listEl.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">No recent headlines found for your holdings.</div>`; return; }
+  listEl.innerHTML = items.map(a => `
+    <div class="news-item">
+      <a href="${a.url}" target="_blank" rel="noopener">${(a.headline||'').replace(/</g,'&lt;')}</a>
+      <div class="news-meta">${a._symbol} · ${a.source||''} · ${a.datetime ? new Date(a.datetime*1000).toLocaleString('en-GB') : ''}</div>
+    </div>`).join('');
+}
+function renderEconomicCalendarWidget() {
+  const el = document.getElementById('tv-economic-calendar');
+  if (!el || el.dataset.loaded) return;
+  el.dataset.loaded = '1';
+  const script = document.createElement('script');
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    colorTheme: 'dark', isTransparent: true, width: '100%', height: 650,
+    locale: 'en', importanceFilter: '-1,0,1', countryFilter: 'us,eu,gb'
+  });
+  el.appendChild(script);
+}
+
+/* ===================== CONCENTRATION / WHAT-IF SCENARIO ===================== */
+function collectAllPositions() {
+  const list = [];
+  const add = (arr, tag) => (arr||[]).forEach(p => list.push({ ...p, _bucket: tag }));
+  add(data.eq, 'EQ'); add(data.dvd, 'DVD'); add(data.crypto, 'Crypto');
+  add(data.annaVas?.anna?.unrealized, 'Anna'); add(data.annaVas?.vas?.unrealized, 'Vas');
+  return list;
+}
+const SCENARIO_PRESETS = [
+  { key: 'tech-down-20', label: 'Tech -20%', match: p => p.sector === 'Technology' || ['NVDA','QDVE','PATH','PLTR','COIN','MU','CRWV','SNDK','AVGO','TMC'].includes(p.symbol), shock: -0.20 },
+  { key: 'broad-down-15', label: 'Broad Market -15%', match: () => true, shock: -0.15 },
+  { key: 'crypto-down-30', label: 'Crypto -30%', match: p => p._bucket === 'Crypto', shock: -0.30 },
+  { key: 'nvda-down-30', label: 'NVDA -30% (all accounts)', match: p => p.symbol === 'NVDA', shock: -0.30 },
+  { key: 'usd-up-5', label: 'USD +5% vs EUR', shockFx: 1.05 }
+];
+function renderScenario() {
+  const positions = collectAllPositions();
+  const bySymbol = {};
+  for (const p of positions) {
+    const mv = marketValueUSD(p);
+    if (mv === null) continue;
+    if (!bySymbol[p.symbol]) bySymbol[p.symbol] = { mv: 0, buckets: new Set() };
+    bySymbol[p.symbol].mv += mv;
+    bySymbol[p.symbol].buckets.add(p._bucket);
+  }
+  const totalMv = Object.values(bySymbol).reduce((s,v) => s+v.mv, 0);
+  const symList = Object.entries(bySymbol).sort((a,b) => b[1].mv - a[1].mv).slice(0, 15);
+  const maxMv = Math.max(...symList.map(([,v]) => v.mv), 1);
+  document.getElementById('scenario-concentration-bars').innerHTML = symList.length ? symList.map(([sym,v]) => `
+    <div class="alloc-row no-ret">
+      <span class="alloc-label">${sym} <span style="color:var(--text-faint); font-size:10px;">(${[...v.buckets].join('+')})</span></span>
+      <div class="alloc-bar"><div class="alloc-bar-fill" style="width:${(v.mv/maxMv)*100}%; background:#21569f"></div></div>
+      <span class="alloc-value">${fmtMoney(v.mv)}</span>
+      <span class="alloc-pct">${totalMv>0?((v.mv/totalMv)*100).toFixed(1):0}%</span>
+    </div>`).join('') : '<div class="dash" style="padding:12px;">No priced positions yet</div>';
+
+  const sectors = [...new Set(positions.map(p => p.sector).filter(Boolean))].sort();
+  const symbols = [...new Set(positions.map(p => p.symbol))].sort();
+  window._scenarioSectors = sectors;
+  window._scenarioSymbols = symbols;
+  window._scenarioPositions = positions;
+  window._scenarioBaseTotal = totalMv;
+
+  document.getElementById('scenario-controls').innerHTML = `
+    <div class="scenario-btn-row">${SCENARIO_PRESETS.map(s => `<button class="scenario-btn" onclick="runPresetScenario('${s.key}')">${s.label}</button>`).join('')}</div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-top:16px; padding-top:14px; border-top:1px solid var(--border-bright);">
+      <div>
+        <label style="display:block;font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Target</label>
+        <select id="scenario-target-type" onchange="updateScenarioTargetOptions()">
+          <option value="all">Entire Portfolio</option>
+          <option value="sector">Sector…</option>
+          <option value="symbol">Specific Instrument…</option>
+        </select>
+      </div>
+      <div id="scenario-target-value-wrap" style="display:none;">
+        <label style="display:block;font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Which</label>
+        <select id="scenario-target-value"></select>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Move %</label>
+        <input type="number" id="scenario-custom-pct" value="-10" step="1" style="width:90px;">
+      </div>
+      <button class="add-trade-btn" onclick="runCustomScenario()">Apply</button>
+    </div>`;
+  renderScenarioResult(null, totalMv, totalMv);
+  drawScenarioChart({ 'Total': { before: totalMv, after: totalMv } });
+}
+function updateScenarioTargetOptions() {
+  const type = document.getElementById('scenario-target-type').value;
+  const wrap = document.getElementById('scenario-target-value-wrap');
+  const sel = document.getElementById('scenario-target-value');
+  if (type === 'all') { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  const opts = type === 'sector' ? window._scenarioSectors : window._scenarioSymbols;
+  sel.innerHTML = opts.map(o => `<option value="${o}">${o}</option>`).join('');
+}
+function runPresetScenario(key) {
+  const s = SCENARIO_PRESETS.find(x => x.key === key);
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.toggle('active', b.textContent === s.label));
+  applyScenario(s);
+}
+function runCustomScenario() {
+  const type = document.getElementById('scenario-target-type').value;
+  const val = document.getElementById('scenario-target-value')?.value;
+  const pct = parseFloat(document.getElementById('scenario-custom-pct').value) || 0;
+  let match, label;
+  if (type === 'all') { match = () => true; label = `Entire Portfolio ${pct>=0?'+':''}${pct}%`; }
+  else if (type === 'sector') { match = p => p.sector === val; label = `${val || 'Sector'} ${pct>=0?'+':''}${pct}%`; }
+  else { match = p => p.symbol === val; label = `${val || 'Instrument'} ${pct>=0?'+':''}${pct}%`; }
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+  applyScenario({ key: 'custom', label, match, shock: pct/100 });
+}
+function applyScenario(s) {
+  const buckets = {};
+  let before = 0, after = 0;
+  for (const p of window._scenarioPositions) {
+    let mv = marketValueUSD(p);
+    if (mv === null) continue;
+    before += mv;
+    let shockedMv = mv;
+    if (s.shockFx && p.currency === 'EUR') shockedMv = shockedMv / s.shockFx;
+    if (s.shock && s.match && s.match(p)) shockedMv = shockedMv * (1 + s.shock);
+    after += shockedMv;
+    const b = p._bucket;
+    buckets[b] = buckets[b] || { before: 0, after: 0 };
+    buckets[b].before += mv;
+    buckets[b].after += shockedMv;
+  }
+  renderScenarioResult(s, before, after);
+  drawScenarioChart(buckets);
+}
+function renderScenarioResult(s, before, after) {
+  const delta = after - before;
+  const deltaPct = before ? delta/before : 0;
+  document.getElementById('scenario-kpis').innerHTML = [
+    { label: 'Current Value', value: fmtMoney(before), cls: '' },
+    { label: s ? s.label : 'Select a scenario', value: fmtMoney(after), cls: '' },
+    { label: 'Impact', value: fmtMoney(delta), cls: cls(delta) },
+    { label: 'Impact %', value: fmtPct(deltaPct), cls: cls(delta) }
+  ].map(k => `<div class="kpi"><div class="label">${k.label}</div><div class="value ${k.cls}">${k.value}</div></div>`).join('');
+}
+function drawScenarioChart(buckets) {
+  const ctx = document.getElementById('scenario-chart');
+  if (!ctx) return;
+  if (chartInstances.scenario) chartInstances.scenario.destroy();
+  const labels = Object.keys(buckets);
+  chartInstances.scenario = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: 'Before', data: labels.map(l => buckets[l].before), backgroundColor: 'rgba(139,148,165,0.35)', borderRadius: 3 },
+      { label: 'After', data: labels.map(l => buckets[l].after), backgroundColor: labels.map(l => buckets[l].after >= buckets[l].before ? 'rgba(47,159,90,0.8)' : 'rgba(159,43,43,0.8)'), borderRadius: 3 }
+    ] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 } } } },
+      scales: {
+        x: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 } }, grid: { display:false } },
+        y: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 }, callback: v => '$' + v }, grid: { color: 'rgba(31,37,49,0.6)' } }
+      }
+    }
+  });
+}
+
+/* ===================== MILESTONES / NET WORTH TIMELINE ===================== */
+function computeCurrentNetWorth() {
+  const eqUSD = data.eq.reduce((s,p) => s + (marketValueUSD(p)||0), 0);
+  const dvdUSD = data.dvd.reduce((s,p) => s + (marketValueUSD(p)||0), 0);
+  const cryptoUSD = data.crypto.reduce((s,p) => s + (marketValueUSD(p)||0), 0);
+  const bondsUSD = (data.bonds||[]).reduce((s,b) => s + (bondMarketValueUSD(b)||0), 0);
+  return { eqUSD, dvdUSD, cryptoUSD, bondsUSD, totalUSD: eqUSD+dvdUSD+cryptoUSD+bondsUSD };
+}
+// Called once per session on load (after prices are as fresh as they're going to get). A
+// static GitHub Pages site has no server-side cron, so "automatic" here means "opportunistic
+// on open" — the first time the dashboard is opened in a new calendar month, one snapshot is
+// recorded silently. Opening it more than once in the same month just updates that month's
+// snapshot rather than creating duplicates.
+function autoSnapshotIfNeeded() {
+  const monthKey = new Date().toISOString().slice(0,7); // YYYY-MM
+  const hasThisMonth = (data.netWorthSnapshots||[]).some(s => (s.date||'').slice(0,7) === monthKey);
+  if (hasThisMonth) return;
+  recordNetWorthSnapshot();
+  if (activeTab === 'benchmark') renderBenchmark();
+}
+function recordNetWorthSnapshot() {
+  const nw = computeCurrentNetWorth();
+  const today = new Date().toISOString().slice(0,10);
+  const existing = data.netWorthSnapshots.find(s => s.date === today);
+  if (existing) Object.assign(existing, nw, { date: today });
+  else data.netWorthSnapshots.push({ date: today, ...nw });
+  data.netWorthSnapshots.sort((a,b) => a.date.localeCompare(b.date));
+  saveData();
+  renderMilestones();
+}
+function toggleSnapshotForm() {
+  const el = document.getElementById('snapshot-form-container');
+  if (el.innerHTML) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="upload-box">
+      <label>Date</label><input type="date" id="snap-date">
+      <label>Total Net Worth (USD)</label><input type="number" step="any" id="snap-total" placeholder="e.g. 95000">
+      <label>Note</label><input type="text" id="snap-note" placeholder="Optional" style="width:180px;">
+      <br><button class="add-trade-btn" onclick="addPastSnapshot()">+ Add Snapshot</button>
+    </div>`;
+}
+function addPastSnapshot() {
+  const date = document.getElementById('snap-date').value;
+  const total = parseFloat(document.getElementById('snap-total').value);
+  const note = document.getElementById('snap-note').value.trim();
+  if (!date || isNaN(total)) return;
+  data.netWorthSnapshots.push({ date, totalUSD: total, note: note || undefined, manual: true });
+  data.netWorthSnapshots.sort((a,b) => a.date.localeCompare(b.date));
+  saveData();
+  document.getElementById('snapshot-form-container').innerHTML = '';
+  renderMilestones();
+}
+function toggleMilestoneForm() {
+  const el = document.getElementById('milestone-form-container');
+  if (el.innerHTML) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="upload-box">
+      <label>Date</label><input type="date" id="mile-date">
+      <label>Label</label><input type="text" id="mile-label" placeholder="e.g. Deployed $10K lump sum" style="width:260px;">
+      <br><button class="add-trade-btn" onclick="addMilestone()">+ Add Milestone</button>
+    </div>`;
+}
+function addMilestone() {
+  const date = document.getElementById('mile-date').value;
+  const label = document.getElementById('mile-label').value.trim();
+  if (!date || !label) return;
+  data.milestones.push({ date, label });
+  data.milestones.sort((a,b) => a.date.localeCompare(b.date));
+  saveData();
+  document.getElementById('milestone-form-container').innerHTML = '';
+  renderMilestones();
+}
+function deleteSnapshot(date) { data.netWorthSnapshots = data.netWorthSnapshots.filter(s => s.date !== date); saveData(); renderMilestones(); }
+function deleteMilestone(idx) { data.milestones.splice(idx, 1); saveData(); renderMilestones(); }
+function renderMilestones() {
+  const snaps = data.netWorthSnapshots || [];
+  document.getElementById('milestones-count').textContent = `${snaps.length} snapshot${snaps.length===1?'':'s'}`;
+  const ctx = document.getElementById('networth-timeline-chart');
+  if (chartInstances.networth) chartInstances.networth.destroy();
+  if (snaps.length) {
+    const labels = snaps.map(s => s.date);
+    const values = snaps.map(s => s.totalUSD);
+    const milestoneDates = new Set((data.milestones||[]).map(m => m.date));
+    const pointColors = labels.map(l => milestoneDates.has(l) ? '#e05252' : '#d4a574');
+    const pointRadii = labels.map(l => milestoneDates.has(l) ? 7 : 3);
+    chartInstances.networth = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ label: 'Net Worth (USD)', data: values, borderColor: '#d4a574', backgroundColor: 'rgba(212,165,116,0.15)', fill: true, tension: 0.25, pointRadius: pointRadii, pointBackgroundColor: pointColors }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => {
+            const m = (data.milestones||[]).find(m => m.date === c.label);
+            return m ? [`$${c.parsed.y.toLocaleString()}`, `🏷 ${m.label}`] : '$' + c.parsed.y.toLocaleString();
+          } } }
+        },
+        scales: {
+          x: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 } }, grid: { display:false } },
+          y: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 }, callback: v => '$' + v }, grid: { color: 'rgba(31,37,49,0.6)' } }
+        }
+      }
+    });
+  }
+  document.getElementById('snapshots-table').innerHTML = `
+    <thead><tr><th class="l">Date</th><th>Total (USD)</th><th class="l">Note</th><th></th></tr></thead>
+    <tbody>${[...snaps].reverse().map(s => `<tr>
+      <td class="l">${s.date}</td>
+      <td class="num">${fmtMoney(s.totalUSD)}</td>
+      <td class="l">${s.note||''}${s.manual?' <span style="color:var(--text-faint);">(manual)</span>':''}</td>
+      <td><button onclick="deleteSnapshot('${s.date}')" style="background:transparent;border:none;color:var(--text-faint);cursor:pointer;">🗑</button></td>
+    </tr>`).join('')}
+    ${(data.milestones||[]).map((m,i) => `<tr style="background:rgba(224,82,82,0.06);">
+      <td class="l">${m.date}</td><td class="num">—</td><td class="l">🏷 ${m.label}</td>
+      <td><button onclick="deleteMilestone(${i})" style="background:transparent;border:none;color:var(--text-faint);cursor:pointer;">🗑</button></td>
+    </tr>`).join('')}</tbody>`;
+}
+
+/* ===================== BENCHMARK & ATTRIBUTION ===================== */
+async function fetchYahooHistorical(symbol, fromTs, toTs) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${fromTs}&period2=${toTs}&interval=1d`;
+  const j = await proxyFetch(url, true);
+  const r = j?.chart?.result?.[0];
+  if (!r || !r.timestamp) return null;
+  const closesRaw = r.indicators?.quote?.[0]?.close || [];
+  const out = { dates: [], closes: [] };
+  for (let i=0;i<r.timestamp.length;i++) if (closesRaw[i] !== null && closesRaw[i] !== undefined) { out.dates.push(r.timestamp[i]); out.closes.push(closesRaw[i]); }
+  return out.closes.length ? out : null;
+}
+async function renderBenchmark() {
+  const snaps = data.netWorthSnapshots || [];
+  const kpiEl = document.getElementById('benchmark-kpi');
+  const ctx = document.getElementById('benchmark-chart');
+  if (chartInstances.benchmark) chartInstances.benchmark.destroy();
+  if (snaps.length < 2) {
+    kpiEl.innerHTML = `<div class="kpi"><div class="label">Status</div><div class="value" style="font-size:13px;">Record at least 2 snapshots on the Milestones tab to compare growth over time</div></div>`;
+  } else {
+    const first = snaps[0], last = snaps[snaps.length-1];
+    const portfolioGrowth = (last.totalUSD/first.totalUSD) - 1;
+    const fromTs = Math.floor(new Date(first.date).getTime()/1000);
+    const toTs = Math.floor(new Date(last.date).getTime()/1000) + 86400;
+    const hist = await fetchYahooHistorical('%5EGSPC', fromTs, toTs);
+    let spxGrowth = null, spxSeries = null;
+    const labels = snaps.map(s => s.date);
+    const portfolioSeries = snaps.map(s => (s.totalUSD/first.totalUSD)*100);
+    if (hist && hist.closes.length) {
+      const spxFirst = hist.closes[0];
+      spxGrowth = (hist.closes[hist.closes.length-1]/spxFirst) - 1;
+      spxSeries = labels.map(d => {
+        const targetTs = new Date(d).getTime();
+        let closestIdx = 0;
+        for (let i=0;i<hist.dates.length;i++) if (hist.dates[i]*1000 <= targetTs) closestIdx = i;
+        return (hist.closes[closestIdx]/spxFirst)*100;
+      });
+    }
+    kpiEl.innerHTML = [
+      { label: 'Your Portfolio Growth', value: fmtPct(portfolioGrowth), c: cls(portfolioGrowth) },
+      { label: 'S&P 500 Growth (same period)', value: spxGrowth !== null ? fmtPct(spxGrowth) : '—', c: cls(spxGrowth) },
+      { label: 'Alpha', value: spxGrowth !== null ? fmtPct(portfolioGrowth-spxGrowth) : '—', c: cls(spxGrowth!==null?portfolioGrowth-spxGrowth:null) },
+      { label: 'Period', value: `${first.date} → ${last.date}`, c: '' }
+    ].map(k => `<div class="kpi"><div class="label">${k.label}</div><div class="value ${k.c}">${k.value}</div></div>`).join('');
+    chartInstances.benchmark = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [
+        { label: 'Your Portfolio', data: portfolioSeries, borderColor: '#d4a574', backgroundColor: 'transparent', tension: 0.2 },
+        ...(spxSeries ? [{ label: 'S&P 500', data: spxSeries, borderColor: '#4a9999', backgroundColor: 'transparent', tension: 0.2 }] : [])
+      ] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 } } } },
+        scales: {
+          x: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 } }, grid: { display:false } },
+          y: { ticks: { color: '#8b94a5', font: { family:'JetBrains Mono', size:10 }, callback: v => v.toFixed(0) }, grid: { color: 'rgba(31,37,49,0.6)' } }
+        }
+      }
+    });
+  }
+  // Attribution: split cumulative gain across EQ + DVD into dividends received vs price appreciation
+  const allPos = [...data.eq, ...data.dvd];
+  const totalCost = allPos.reduce((s,p) => s + costBasisUSD(p), 0);
+  const totalMv = allPos.reduce((s,p) => s + (marketValueUSD(p)||0), 0);
+  const totalGain = totalMv - totalCost;
+  const totalDvdReceived = Object.values(data.dividendsReceived||{}).reduce((s,ym) => s + Object.values(ym).reduce((a,b)=>a+b,0), 0);
+  const priceAppreciation = totalGain - totalDvdReceived;
+  const attrCtx = document.getElementById('attribution-donut');
+  if (chartInstances.attribution) chartInstances.attribution.destroy();
+  const attrData = [
+    { name: 'Price Appreciation', value: Math.max(priceAppreciation,0), color: '#21569f' },
+    { name: 'Dividends Received', value: Math.max(totalDvdReceived,0), color: '#9f7521' }
+  ];
+  const attrTotal = attrData.reduce((s,d)=>s+d.value,0);
+  chartInstances.attribution = new Chart(attrCtx, {
+    type: 'doughnut',
+    data: { labels: attrData.map(d=>d.name), datasets: [{ data: attrData.map(d=>d.value), backgroundColor: attrData.map(d=>d.color), borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: true, cutout: '70%', plugins: { legend: { display: false } } }
+  });
+  document.getElementById('attribution-donut-center').innerHTML = `<div style="font-size:11px;color:var(--text-faint);">Total Gain</div><div style="font-size:16px;font-weight:700;">${fmtMoney(totalGain)}</div>`;
+  document.getElementById('attribution-donut-legend').innerHTML = attrData.map(d => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${d.color}"></span>
+      <span class="legend-name">${d.name}<span class="pct">${attrTotal>0?((d.value/attrTotal)*100).toFixed(1):0}%</span></span>
+      <span class="legend-val">${fmtMoney(d.value)}</span>
+    </div>`).join('');
+  document.getElementById('attribution-notes').innerHTML = `
+    <h3>How this is split<small>EQ + Dividend portfolios combined</small></h3>
+    <p style="font-size:12px; color:var(--text-faint); line-height:1.6; padding: 4px 0;">
+      Total unrealized gain = Market Value − Cost Basis across your EQ and Dividend portfolios (currently ${fmtMoney(totalGain)}).
+      Of that, ${fmtMoney(totalDvdReceived)} has already been paid out as dividends (all-time, net); the rest is price appreciation still sitting in the positions.
+      Crypto, Bonds, and Anna &amp; Vas aren't included here since they're not part of the dividend tracking this split relies on.
+    </p>`;
+}
+
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
@@ -5015,6 +6046,11 @@ document.querySelectorAll('.tab').forEach(btn => {
     if (activeTab === 'eqprojected') setTimeout(() => renderEqProjected(), 50);
     if (activeTab === 'cashflow') setTimeout(() => renderCashflow(), 50);
     if (activeTab === 'dividends')   setTimeout(() => renderDividends(), 50);
+    if (activeTab === 'journal')     setTimeout(() => renderJournal(), 50);
+    if (activeTab === 'newscal')     setTimeout(() => renderNewsAndCalendar(), 50);
+    if (activeTab === 'scenario')    setTimeout(() => renderScenario(), 50);
+    if (activeTab === 'milestones')  setTimeout(() => renderMilestones(), 50);
+    if (activeTab === 'benchmark')   setTimeout(() => renderBenchmark(), 50);
   });
 });
 
@@ -5050,12 +6086,13 @@ document.querySelectorAll('.tab').forEach(btn => {
     if (!apiKeys.finnhub && !apiKeys.twelve) {
       showBanner('<strong>Tip:</strong> Add a free Finnhub or Twelve Data API key in <strong>⚙ Settings</strong> for reliable stock prices.', false);
     }
-    refreshAll();
+    refreshAll().then(() => autoSnapshotIfNeeded());
   } else {
     const newest = Math.max(...Object.values(prices).map(p=>p.ts||0));
     document.getElementById('status').className = 'val warn';
     document.getElementById('status').textContent = 'Cached';
     document.getElementById('last-update').textContent = new Date(newest).toLocaleTimeString('en-GB');
+    autoSnapshotIfNeeded();
   }
 })();
 </script>
