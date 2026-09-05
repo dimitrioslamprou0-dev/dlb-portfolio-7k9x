@@ -692,10 +692,12 @@
   <section class="panel" id="journal">
     <div class="scenario-btn-row" id="journal-filter-bar"></div>
     <div id="journal-coverage" style="font-size:11px; color:var(--text-faint); margin-bottom:12px;"></div>
+    <div class="card" id="journal-diagnostic" style="margin-bottom:16px;"></div>
     <div class="kpi-grid" id="journal-kpi"></div>
     <h2 class="section-title">Options &amp; CFD Trade Journal <span class="count" id="journal-count">—</span>
       <button class="add-trade-btn secondary" onclick="toggleJournalUpload()">📤 UPLOAD STATEMENT</button>
       <button class="add-trade-btn" onclick="toggleJournalManualForm()" style="margin-left:8px;">➕ ADD TRADE</button>
+      <button class="add-trade-btn" onclick="clearJournalAll()" style="margin-left:8px; background:transparent; border:1px solid #9f2b2b; color:#e05252;">🗑 DELETE ALL HISTORY</button>
     </h2>
     <div id="journal-upload-container"></div>
     <div id="journal-manual-form-container"></div>
@@ -5204,14 +5206,16 @@ function deleteJournalTrade(id) {
 function clearJournalBroker(broker) {
   const count = data.tradeJournal.filter(t => t.broker === broker).length;
   if (!count) return;
-  if (!confirm(`Delete all ${count} ${broker} trade${count===1?'':'s'} from the journal? This can't be undone.`)) return;
+  if (!confirm(`Delete all ${count} ${broker} trade${count===1?'':'s'} from the journal?`)) return;
+  if (!confirm(`Really sure? This permanently deletes ${count} ${broker} trade${count===1?'':'s'} and can't be undone.`)) return;
   data.tradeJournal = data.tradeJournal.filter(t => t.broker !== broker);
   saveData(); renderJournal();
 }
 function clearJournalAll() {
   const count = data.tradeJournal.length;
   if (!count) return;
-  if (!confirm(`Delete all ${count} trades from the journal? This can't be undone.`)) return;
+  if (!confirm(`Delete ALL ${count} trades from the journal (every broker, including manual entries)?`)) return;
+  if (!confirm(`Really sure? This permanently deletes all ${count} trades and can't be undone. Do it?`)) return;
   data.tradeJournal = [];
   saveData(); renderJournal();
 }
@@ -5541,6 +5545,17 @@ function filteredJournalTrades() {
   if (journalFilter === 'IBKR') return trades.filter(t => t.assetType === 'option');
   return trades;
 }
+// Small colored badge for a trade's directional side — green for bullish positions
+// (Long / Call), red for bearish (Short / Put), neutral gray for anything else.
+function sideBadge(label) {
+  if (!label) return '<span class="dash">—</span>';
+  const isGreen = /^(CALL|LONG)/i.test(label);
+  const isRed = /^(PUT|SHORT)/i.test(label);
+  const bg = isGreen ? 'rgba(47,159,90,0.16)' : isRed ? 'rgba(159,43,43,0.16)' : 'rgba(139,148,165,0.14)';
+  const border = isGreen ? '#2f9f5a' : isRed ? '#9f2b2b' : 'var(--border-bright)';
+  const fg = isGreen ? '#4ecb7d' : isRed ? '#f07a7a' : 'var(--text-faint)';
+  return `<span style="display:inline-block; padding:2px 9px; border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.03em; white-space:nowrap; background:${bg}; border:1px solid ${border}; color:${fg};">${label.toUpperCase()}</span>`;
+}
 function renderJournal() {
   const allTrades = data.tradeJournal || [];
   document.getElementById('journal-count').textContent = `${allTrades.length} trade${allTrades.length===1?'':'s'} total`;
@@ -5571,6 +5586,30 @@ function renderJournal() {
     coverageEl.innerHTML = (parts.length ? parts.join(' &nbsp;·&nbsp; ') : 'No trades imported yet') + clearBtns + clearAllBtn;
   }
 
+  // Full transparency breakdown: exact trade count + P&L per broker AND per source
+  // (upload vs manual), always visible and computed from every trade the browser actually
+  // has stored right now — so any leftover/contaminated data is immediately visible instead
+  // of being hidden inside a single blended total.
+  const diagEl = document.getElementById('journal-diagnostic');
+  if (diagEl) {
+    const groups = {};
+    for (const t of allTrades) {
+      const key = `${t.broker} · ${t.source || 'unknown'}`;
+      if (!groups[key]) groups[key] = { count: 0, pnl: 0 };
+      groups[key].count++;
+      groups[key].pnl += (t.realizedPnl || 0);
+    }
+    const rows = Object.entries(groups).sort((a,b) => a[0].localeCompare(b[0]));
+    diagEl.innerHTML = rows.length ? `
+      <div style="font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:6px;">Raw breakdown (what's actually stored right now)</div>
+      <table style="width:100%; font-size:12px;">
+        <thead><tr><th class="l">Broker · Source</th><th>Trades</th><th>Sum P&amp;L</th></tr></thead>
+        <tbody>${rows.map(([key,g]) => `<tr><td class="l">${key}</td><td class="num">${g.count}</td><td class="num ${cls(g.pnl)}">${fmtMoney(g.pnl)}</td></tr>`).join('')}
+        <tr style="border-top:1px solid var(--border-bright); font-weight:700;"><td class="l">TOTAL</td><td class="num">${allTrades.length}</td><td class="num ${cls(allTrades.reduce((s,t)=>s+(t.realizedPnl||0),0))}">${fmtMoney(allTrades.reduce((s,t)=>s+(t.realizedPnl||0),0))}</td></tr>
+        </tbody>
+      </table>` : '<div style="font-size:12px; color:var(--text-faint);">No trades stored.</div>';
+  }
+
   const totalPnl = trades.reduce((s,t) => s + (t.realizedPnl||0), 0);
   const closed = trades.filter(t => t.realizedPnl);
   const wins = closed.filter(t => t.realizedPnl > 0);
@@ -5591,7 +5630,7 @@ function renderJournal() {
   for (const t of trades) {
     const sideLabel = t.assetType === 'option' ? (t.optionType || t.direction || t.side || '') : (t.direction || t.side || '');
     const key = `${t.symbol} ${sideLabel}`.trim();
-    if (!bySymSide[key]) bySymSide[key] = { pnl: 0, count: 0 };
+    if (!bySymSide[key]) bySymSide[key] = { pnl: 0, count: 0, symbol: t.symbol, sideLabel };
     bySymSide[key].pnl += (t.realizedPnl||0);
     bySymSide[key].count += 1;
   }
@@ -5599,7 +5638,7 @@ function renderJournal() {
   const maxAbsSymSide = Math.max(...symSideList.map(([,v]) => Math.abs(v.pnl)), 1);
   document.getElementById('journal-symbol-bars').innerHTML = symSideList.length ? symSideList.map(([key,v]) => `
     <div class="alloc-row no-ret">
-      <span class="alloc-label">${key} <span style="color:var(--text-faint); font-size:10px;">(${v.count} trade${v.count===1?'':'s'})</span></span>
+      <span class="alloc-label">${v.symbol} ${sideBadge(v.sideLabel)} <span style="color:var(--text-faint); font-size:10px;">(${v.count} trade${v.count===1?'':'s'})</span></span>
       <div class="alloc-bar"><div class="alloc-bar-fill" style="width:${(Math.abs(v.pnl)/maxAbsSymSide)*100}%; background:${v.pnl>=0?'#2f9f5a':'#9f2b2b'}"></div></div>
       <span class="alloc-value ${cls(v.pnl)}">${fmtMoney(v.pnl)}</span>
     </div>`).join('') : '<div class="dash" style="padding:12px;">No trades yet</div>';
@@ -5624,7 +5663,7 @@ function renderJournal() {
       <td class="l">${t.broker}</td>
       <td class="l">${t.symbol}</td>
       <td class="l">${t.optionDetail || (t.assetType==='cfd' ? 'CFD' : '')}</td>
-      <td class="l">${t.optionType || t.direction || t.side || ''}</td>
+      <td class="l">${sideBadge(t.optionType || t.direction || t.side || '')}</td>
       <td class="num">${fmtShares(t.qty)}</td>
       <td class="l">${t.openDate||'—'}</td>
       <td class="l">${t.closeDate||'—'}</td>
