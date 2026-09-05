@@ -324,6 +324,15 @@
   .proj-input.starting label { color: var(--gold); }
   .proj-input label { display: block; font-size: 8px; color: var(--text-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
   .proj-input input { width: 100%; background: transparent; border: none; color: var(--text); font-family: inherit; font-size: 15px; font-weight: 700; padding: 2px 0; outline: none; font-variant-numeric: tabular-nums; }
+  .proj-input input[readonly] { color: var(--gold); cursor: default; }
+  .proj-input .starting-row { display: flex; align-items: center; gap: 8px; }
+  .proj-input .starting-row input { flex: 1; }
+  .proj-lock-btn { flex-shrink: 0; background: transparent; border: 1px solid var(--border, #2a3040); color: var(--text-faint); font-size: 11px; padding: 3px 7px; border-radius: 4px; cursor: pointer; line-height: 1; }
+  .proj-lock-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .chart-year-filter { display: flex; gap: 8px; margin: 8px 0 14px; }
+  .chart-year-filter button { background: var(--bg-card); border: 1px solid var(--border, #2a3040); color: var(--text-faint); font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 6px 16px; border-radius: 5px; cursor: pointer; transition: all .15s; }
+  .chart-year-filter button:hover { color: var(--text); border-color: var(--gold); }
+  .chart-year-filter button.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
 
   .chart-wrap { background: var(--bg-card); border: 1px solid var(--border-bright); padding: 16px; height: 320px; position: relative; }
   .chart-wrap.tall { height: 360px; }
@@ -535,6 +544,7 @@
   <section class="panel" id="dividends">
     <div class="kpi-grid" id="dvd-kpi"></div>
     <h2 class="section-title">Monthly Dividend Income <span class="count">Bar Chart · Net USD</span></h2>
+    <div class="chart-year-filter" id="dvd-monthly-year-filter"></div>
     <div class="chart-wrap tall"><canvas id="dvd-monthly-chart"></canvas></div>
 
     <h2 class="section-title">Yearly Dividend Income <span class="count">Total Net per Year</span></h2>
@@ -947,6 +957,16 @@ let apiKeys = JSON.parse(localStorage.getItem(APIKEYS_KEY) || '{"finnhub":"","tw
 let syncConfig = JSON.parse(localStorage.getItem(SYNC_KEY) || '{"token":"","gistId":"","autoSync":false,"lastSync":null}');
 let activeTab = 'overview';
 let chartInstances = {};
+let dvdMonthlyChartYear = new Date().getFullYear();  // active year filter for Monthly Dividend Income chart
+
+// Number inputs scroll their value up/down when the mouse wheel is used over a focused
+// field — a well-known browser default that silently corrupts numeric fields (e.g. the
+// "auto" starting-balance fields below) when the user just scrolls the page. Blur any
+// focused number input as soon as a wheel event reaches it so scrolling never edits it.
+document.addEventListener('wheel', () => {
+  const el = document.activeElement;
+  if (el && el.tagName === 'INPUT' && el.type === 'number') el.blur();
+}, { passive: true });
 let syncTimer = null;  // debounce timer for auto-sync
 
 function loadData() {
@@ -1187,20 +1207,46 @@ async function syncLoadFromGist() {
 }
 
 /* ===================== PRICE FETCHING ===================== */
+// NOTE: corsproxy.io's API requires the target URL under an explicit "url=" query param
+// (https://corsproxy.io/?url=<encoded>). The old "?<encoded>" form (no "url=" key) is
+// silently rejected by their current backend, which was quietly killing this proxy for
+// every request — including the EU-listed ETFs (QDVE/VUAA/EIMI/WSML) that depend on
+// stooq/yahoo (both of which need a proxy, since neither sends CORS headers).
 const PROXIES = [
-  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+  url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
   url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-  url => 'https://api.codetabs.com/v1/proxy/?quest=' + url
+  url => 'https://api.codetabs.com/v1/proxy/?quest=' + url,
+  url => 'https://thingproxy.freeboard.io/fetch/' + url
 ];
+function fetchWithTimeout(url, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { cache: 'no-store', signal: controller.signal }).finally(() => clearTimeout(timer));
+}
 async function proxyFetch(url, asJson = true) {
-  try { const r = await fetch(url, { cache: 'no-store' }); if (r.ok) return asJson ? await r.json() : await r.text(); } catch(e) {}
-  for (const p of PROXIES) {
-    try {
-      const r = await fetch(p(url), { cache: 'no-store' });
-      if (r.ok) { const t = await r.text(); if (asJson) { try { return JSON.parse(t); } catch(e) { continue; } } return t; }
-    } catch(e) { continue; }
+  // Fast path: direct request (works when the endpoint sends CORS headers). Bounded so a
+  // hanging direct request can't stall the whole refresh — this was a big part of why
+  // refresh got much slower once more positions (Anna/Vas + bonds) were added: every
+  // stalled attempt used to be retried one proxy at a time, in sequence.
+  try {
+    const r = await fetchWithTimeout(url, 4000);
+    if (r.ok) return asJson ? await r.json() : await r.text();
+  } catch(e) {}
+  // Race all proxies in parallel instead of trying them one-by-one — first success wins.
+  // This is both faster (no serial wait through dead proxies) and more reliable (a single
+  // flaky/rate-limited proxy, e.g. corsproxy.io, no longer blocks the others).
+  const attempts = PROXIES.map(p => (async () => {
+    const r = await fetchWithTimeout(p(url), 8000);
+    if (!r.ok) throw new Error('bad status ' + r.status);
+    const t = await r.text();
+    if (asJson) return JSON.parse(t);
+    return t;
+  })());
+  try {
+    return await Promise.any(attempts);
+  } catch(e) {
+    return null;
   }
-  return null;
 }
 
 /* ===== BOND PRICE FETCHING (Yahoo HTML scrape) =====
@@ -1971,6 +2017,7 @@ function renderDividends() {
   const fullMonthTotals = {};
   for (const k of allMonthKeys) fullMonthTotals[k] = monthTotals[k] || 0;
 
+  renderDvdMonthlyYearFilter();
   drawMonthlyDvdChart(fullMonthTotals);
   drawYearlyDvdChart(monthTotals);
   renderEditableDvdGrid(received);
@@ -2219,15 +2266,27 @@ function addDvdRow() {
   document.getElementById('dvd-add-symbol').value = '';
   saveData(); renderDividends();
 }
+function renderDvdMonthlyYearFilter() {
+  const el = document.getElementById('dvd-monthly-year-filter');
+  if (!el) return;
+  const years = [2025, 2026, 2027];
+  el.innerHTML = years.map(y => `<button class="${dvdMonthlyChartYear === y ? 'active' : ''}" onclick="setDvdMonthlyChartYear(${y})">${y}</button>`).join('');
+}
+function setDvdMonthlyChartYear(year) {
+  dvdMonthlyChartYear = year;
+  renderDividends();
+}
 function drawMonthlyDvdChart(monthTotals) {
   const ctx = document.getElementById('dvd-monthly-chart');
   if (!ctx) return;
   if (chartInstances.dvd) chartInstances.dvd.destroy();
-  const sortedKeys = Object.keys(monthTotals).sort();
-  if (!sortedKeys.length) return;
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Filter to the selected year only, always showing all 12 months (zero-filled) so the
+  // chart doesn't shift shape depending on which months already have data.
+  const yearStr = String(dvdMonthlyChartYear);
+  const sortedKeys = monthNames.map((_, i) => `${yearStr}-${String(i + 1).padStart(2, '0')}`);
   const labels = sortedKeys.map(k => { const [y,m] = k.split('-'); return monthNames[parseInt(m)-1] + " '" + y.slice(2); });
-  const values = sortedKeys.map(k => monthTotals[k]);
+  const values = sortedKeys.map(k => monthTotals[k] || 0);
   const currentYear = String(new Date().getFullYear());
 
   // 2025 teal (kept) · 2026 bronze (Option A from Palette B)
@@ -4188,8 +4247,9 @@ function renderProjections() {
   const autoStartEUR = dvdMvUSD / data.fx.eurusd;
   const startBalEUR = (cfg.startingBalanceEUR !== null && cfg.startingBalanceEUR !== undefined && !isNaN(cfg.startingBalanceEUR)) ? cfg.startingBalanceEUR : autoStartEUR;
   const isAutoStart = cfg.startingBalanceEUR === null || cfg.startingBalanceEUR === undefined;
-  document.getElementById('proj-config').innerHTML = [
-    {key:'startingBalanceEUR', label:`Start Balance (€)${isAutoStart ? ' · auto' : ''}`, val:startBalEUR.toFixed(2), fmt:'num', cls:'starting'},
+  document.getElementById('proj-config').innerHTML =
+    startBalanceInputHtml('proj-config', 'updateProj', isAutoStart, startBalEUR) +
+    [
     {key:'years', label:'Years', val:cfg.years, fmt:'int'},
     {key:'annualDeposit', label:'Annual Deposit (€)', val:cfg.annualDeposit, fmt:'num'},
     {key:'dvdYield', label:'Dividend Yield %', val:(cfg.dvdYield*100).toFixed(2), fmt:'pct'},
@@ -4245,6 +4305,30 @@ function renderProjections() {
       <td class="num pos">${fmtMoney(finalRow.netDvd/12,'€')}</td>
     </tr></tbody>`;
 }
+// Shared "starting balance" field for the two projection panels (Dividend Projection &
+// EQ Projected/FIRE). Renders read-only + auto-synced to the live portfolio value by
+// default, with an explicit Override button — so it can never drift out of sync with the
+// real portfolio just from clicking/tabbing/scrolling through the form (which is what was
+// silently freezing it to a stale number before).
+function startBalanceInputHtml(gridId, updateFn, isAuto, val) {
+  const badge = isAuto
+    ? '<span style="color: var(--gold);">· live</span>'
+    : '<span style="color: var(--text-faint);">· manual override</span>';
+  const btn = isAuto
+    ? `<button type="button" class="proj-lock-btn" onclick="unlockStartBalance('${gridId}')" title="Override with a manual value">🔓 Override</button>`
+    : `<button type="button" class="proj-lock-btn" onclick="${updateFn}('startingBalanceEUR','num','')" title="Always match the live portfolio value">↺ Reset to live</button>`;
+  return `<div class="proj-input starting">
+    <label>Start Balance (€) ${badge}</label>
+    <div class="starting-row">
+      <input type="number" step="any" value="${val.toFixed(2)}" ${isAuto ? 'readonly' : ''} onchange="${updateFn}('startingBalanceEUR','num', this.value)">
+      ${btn}
+    </div>
+  </div>`;
+}
+function unlockStartBalance(gridId) {
+  const input = document.querySelector(`#${gridId} .starting input`);
+  if (input) { input.readOnly = false; input.focus(); input.select(); }
+}
 function updateProj(key, fmt, val) {
   if (key === 'startingBalanceEUR' && (val === '' || val === null)) { data.projection.startingBalanceEUR = null; saveData(); renderProjections(); return; }
   const v = parseFloat(val) || 0;
@@ -4267,8 +4351,9 @@ function renderEqProjected() {
   const isAutoStart = cfg.startingBalanceEUR === null || cfg.startingBalanceEUR === undefined;
 
   // Config inputs
-  document.getElementById('eqproj-config').innerHTML = [
-    {key:'startingBalanceEUR', label:`Start Balance (€)${isAutoStart ? ' <span style="color:var(--gold);">· live</span>' : ' <span style="color:var(--text-faint);">· manual (clear to revert)</span>'}`, val:startBalEUR.toFixed(2), fmt:'num', cls:'starting'},
+  document.getElementById('eqproj-config').innerHTML =
+    startBalanceInputHtml('eqproj-config', 'updateEqProj', isAutoStart, startBalEUR) +
+    [
     {key:'monthlyContrib',     label:'Monthly Contribution (€)', val:cfg.monthlyContrib, fmt:'num'},
     {key:'annualReturn',       label:'Annual Return %',          val:(cfg.annualReturn*100).toFixed(2), fmt:'pct'},
     {key:'targetMonthlyEUR',   label:'Target Monthly Income (€)', val:cfg.targetMonthlyEUR, fmt:'num'},
