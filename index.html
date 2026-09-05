@@ -691,6 +691,7 @@
 
   <section class="panel" id="journal">
     <div class="scenario-btn-row" id="journal-filter-bar"></div>
+    <div id="journal-coverage" style="font-size:11px; color:var(--text-faint); margin-bottom:12px;"></div>
     <div class="kpi-grid" id="journal-kpi"></div>
     <h2 class="section-title">Options &amp; CFD Trade Journal <span class="count" id="journal-count">—</span>
       <button class="add-trade-btn secondary" onclick="toggleJournalUpload()">📤 UPLOAD STATEMENT</button>
@@ -5497,20 +5498,21 @@ function normalizeDate(v) {
   return d.toISOString().slice(0,10);
 }
 function importParsedTrades(broker, trades, statusEl) {
-  // Dedupe against already-imported trades (same broker+symbol+dates+qty+pnl signature) so
-  // re-uploading the same statement (e.g. a monthly export with overlapping days) is safe.
-  const sigOf = (t) => `${t.broker}|${t.symbol}|${t.openDate}|${t.closeDate}|${t.qty}|${(t.realizedPnl||0).toFixed(2)}`;
-  const existingSig = new Set(data.tradeJournal.map(sigOf));
-  let added = 0;
-  for (const t of trades) {
-    const sig = sigOf(t);
-    if (existingSig.has(sig)) continue;
-    existingSig.add(sig);
-    data.tradeJournal.push(t);
-    added++;
-  }
+  // Re-uploading a statement REPLACES that broker's previously-uploaded trades rather than
+  // merging/deduping against them. This matters a lot in practice: if the parser logic ever
+  // changes (as it did — a comma-thousands-separator bug silently corrupted large IBKR
+  // trades) or the same statement is re-exported, signature-based dedup would leave the old,
+  // wrong numbers sitting in the journal alongside the new correct ones and silently net them
+  // together into a meaningless blended total. Manually-added trades are never touched.
+  const removed = data.tradeJournal.filter(t => t.broker === broker && t.source === 'upload').length;
+  data.tradeJournal = data.tradeJournal.filter(t => !(t.broker === broker && t.source === 'upload'));
+  data.tradeJournal.push(...trades);
   saveData();
-  if (statusEl) statusEl.textContent = `✓ Imported ${added} trade${added===1?'':'s'} (${trades.length - added} duplicate${trades.length-added===1?'':'s'} skipped).`;
+  if (statusEl) {
+    statusEl.textContent = removed
+      ? `✓ Replaced ${removed} previous ${broker} trade${removed===1?'':'s'} with ${trades.length} freshly parsed from this file.`
+      : `✓ Imported ${trades.length} trade${trades.length===1?'':'s'}.`;
+  }
   journalPendingCsv = null;
   renderJournal();
 }
@@ -5535,6 +5537,21 @@ function renderJournal() {
   }
   const trades = filteredJournalTrades();
   document.getElementById('journal-log-count').textContent = `${trades.length} row${trades.length===1?'':'s'}`;
+
+  // Statement coverage: latest position date per broker, so it's clear how current the
+  // imported data is (e.g. "IBKR data through Sep 2, 2026") rather than an unstated cutoff.
+  const coverageEl = document.getElementById('journal-coverage');
+  if (coverageEl) {
+    const byBrokerDates = {};
+    for (const t of allTrades) {
+      const d = t.closeDate || t.openDate;
+      if (!d) continue;
+      if (!byBrokerDates[t.broker] || d > byBrokerDates[t.broker]) byBrokerDates[t.broker] = d;
+    }
+    const parts = Object.entries(byBrokerDates).sort((a,b) => a[0].localeCompare(b[0]))
+      .map(([b,d]) => `${b} data through <strong>${new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}</strong>`);
+    coverageEl.innerHTML = parts.length ? parts.join(' &nbsp;·&nbsp; ') : '';
+  }
 
   const totalPnl = trades.reduce((s,t) => s + (t.realizedPnl||0), 0);
   const closed = trades.filter(t => t.realizedPnl);
