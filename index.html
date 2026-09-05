@@ -5201,6 +5201,20 @@ function deleteJournalTrade(id) {
   data.tradeJournal = data.tradeJournal.filter(t => t.id !== id);
   saveData(); renderJournal();
 }
+function clearJournalBroker(broker) {
+  const count = data.tradeJournal.filter(t => t.broker === broker).length;
+  if (!count) return;
+  if (!confirm(`Delete all ${count} ${broker} trade${count===1?'':'s'} from the journal? This can't be undone.`)) return;
+  data.tradeJournal = data.tradeJournal.filter(t => t.broker !== broker);
+  saveData(); renderJournal();
+}
+function clearJournalAll() {
+  const count = data.tradeJournal.length;
+  if (!count) return;
+  if (!confirm(`Delete all ${count} trades from the journal? This can't be undone.`)) return;
+  data.tradeJournal = [];
+  saveData(); renderJournal();
+}
 function handleJournalFileUpload() {
   const broker = document.getElementById('journal-broker-select').value;
   const fileInput = document.getElementById('journal-file-input');
@@ -5543,14 +5557,18 @@ function renderJournal() {
   const coverageEl = document.getElementById('journal-coverage');
   if (coverageEl) {
     const byBrokerDates = {};
+    const brokersPresent = new Set();
     for (const t of allTrades) {
+      brokersPresent.add(t.broker);
       const d = t.closeDate || t.openDate;
       if (!d) continue;
       if (!byBrokerDates[t.broker] || d > byBrokerDates[t.broker]) byBrokerDates[t.broker] = d;
     }
     const parts = Object.entries(byBrokerDates).sort((a,b) => a[0].localeCompare(b[0]))
       .map(([b,d]) => `${b} data through <strong>${new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}</strong>`);
-    coverageEl.innerHTML = parts.length ? parts.join(' &nbsp;·&nbsp; ') : '';
+    const clearBtns = [...brokersPresent].sort().map(b => `<button onclick="clearJournalBroker('${b}')" style="background:transparent;border:1px solid var(--border-bright);color:var(--text-faint);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px;">Clear ${b}</button>`).join('');
+    const clearAllBtn = allTrades.length ? `<button onclick="clearJournalAll()" style="background:transparent;border:1px solid var(--border-bright);color:var(--text-faint);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px;">Clear All</button>` : '';
+    coverageEl.innerHTML = (parts.length ? parts.join(' &nbsp;·&nbsp; ') : 'No trades imported yet') + clearBtns + clearAllBtn;
   }
 
   const totalPnl = trades.reduce((s,t) => s + (t.realizedPnl||0), 0);
@@ -5688,51 +5706,23 @@ function renderNewsList(items) {
       <div class="news-meta">${a._symbol} · ${a.source||''} · ${a.datetime ? new Date(a.datetime*1000).toLocaleString('en-GB') : ''}</div>
     </div>`).join('');
 }
-let calendarCache = { ts: 0, items: [] };
-// The TradingView embed widget doesn't reliably expose Actual/Forecast/Previous in its
-// compact form, so this is built directly from Finnhub's economic calendar endpoint
-// instead, which returns those as real fields — full control over what's shown.
+// Finnhub's economic calendar endpoint needs a paid tier (confirmed: returns HTTP 403 on a
+// free key), and Trading Economics' free "guest" tier restricts calendar access too — so
+// there's no genuinely free API-key route to Actual/Forecast/Previous. TradingView's public
+// embed widget is free and does support those columns; it just needs enough width to render
+// them, which this tab now gives it (full-width, not squeezed next to the news feed).
 function renderEconomicCalendarWidget() {
   const el = document.getElementById('tv-economic-calendar');
-  if (!el) return;
-  if (!apiKeys.finnhub) {
-    el.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">Add a free Finnhub API key in ⚙ Settings to show the calendar with Actual / Forecast / Previous values.</div>`;
-    return;
-  }
-  if (Date.now() - calendarCache.ts < 15*60*1000 && calendarCache.items.length) { renderCalendarTable(calendarCache.items); return; }
-  el.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">Loading economic calendar…</div>`;
-  const from = new Date(Date.now() - 3*24*60*60*1000).toISOString().slice(0,10);
-  const to = new Date(Date.now() + 10*24*60*60*1000).toISOString().slice(0,10);
-  fetch(`https://finnhub.io/api/v1/calendar/economic?from=${from}&to=${to}&token=${apiKeys.finnhub}`)
-    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(j => {
-      const MAJOR = ['US','EU','DE','FR','IT','GB','JP','CN'];
-      let items = (j.economicCalendar || j.events || [])
-        .filter(e => MAJOR.includes(e.country))
-        .sort((a,b) => (a.time||'').localeCompare(b.time||''));
-      calendarCache = { ts: Date.now(), items };
-      renderCalendarTable(items);
-    })
-    .catch(err => {
-      el.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">Couldn't load the economic calendar (${err.message}). This endpoint may need a paid Finnhub tier — <a href="https://www.tradingview.com/economic-calendar/" target="_blank" rel="noopener" style="color:var(--gold);">view it on TradingView instead</a>.</div>`;
-    });
-}
-function renderCalendarTable(items) {
-  const el = document.getElementById('tv-economic-calendar');
-  if (!el) return;
-  if (!items.length) { el.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">No events found for major economies in this window.</div>`; return; }
-  el.innerHTML = `<div class="table-scroll"><table>
-    <thead><tr><th class="l">Time</th><th class="l">Country</th><th class="l">Event</th><th>Actual</th><th>Forecast</th><th>Previous</th><th class="l">Impact</th></tr></thead>
-    <tbody>${items.map(e => `<tr>
-      <td class="l">${e.time ? new Date(e.time).toLocaleString('en-GB',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
-      <td class="l">${e.country||''}</td>
-      <td class="l">${e.event||''}</td>
-      <td class="num">${e.actual ?? '—'}</td>
-      <td class="num">${e.estimate ?? '—'}</td>
-      <td class="num">${e.prev ?? '—'}</td>
-      <td class="l">${e.impact||''}</td>
-    </tr>`).join('')}</tbody>
-  </table></div>`;
+  if (!el || el.dataset.loaded) return;
+  el.dataset.loaded = '1';
+  const script = document.createElement('script');
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    colorTheme: 'dark', isTransparent: true, width: '100%', height: 650,
+    locale: 'en', importanceFilter: '-1,0,1', countryFilter: 'us,eu,gb'
+  });
+  el.appendChild(script);
 }
 
 /* ===================== CONCENTRATION / WHAT-IF SCENARIO ===================== */
