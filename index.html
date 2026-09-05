@@ -5244,6 +5244,11 @@ function handleJournalFileUpload() {
 // is what avoids double-counting the itemized per-exchange partial-fill rows). Then FIFO-match
 // Opens to Closes per exact contract to build real closed trades.
 function parseIBKRTradeConfirmation(html) {
+  // IBKR formats large numbers with comma thousands-separators (e.g. "-1,194.00"). Plain
+  // parseFloat() silently stops at the comma and returns -1 instead of -1194 — a severe,
+  // silent truncation bug that only shows up on trades over $1,000. Every numeric cell from
+  // this report must go through this helper, never bare parseFloat.
+  const numIBKR = (v) => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? 0 : n; };
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const tables = [...doc.querySelectorAll('table')];
   const cellText = (el) => (el.textContent || '').replace(/\u00a0/g, ' ').trim();
@@ -5292,10 +5297,10 @@ function parseIBKRTradeConfirmation(html) {
         dateTime: lastRow.dateTime,
         side,
         code: lastRow.code,
-        qty: Math.abs(parseFloat(cells[1]) || 0),
-        proceeds: parseFloat(cells[3]) || 0,
-        comm: parseFloat(cells[4]) || 0,
-        fee: parseFloat(cells[5]) || 0
+        qty: Math.abs(numIBKR(cells[1])),
+        proceeds: numIBKR(cells[3]),
+        comm: numIBKR(cells[4]),
+        fee: numIBKR(cells[5])
       });
     }
     // bare "Total SYMBOL" rows (no Bought/Sold suffix) are a net-for-period summary — not
@@ -5390,7 +5395,7 @@ function parseVantageClosedTrades(text) {
         iOpenPx = col('Opening Price'), iOpenT = col('Opening Time'), iClosePx = col('Closing Price'),
         iCloseT = col('Closing Time'), iFee = col('Fee'), iComm = col('Commission'),
         iSwap = col('Swap (Overnight Interest)'), iPnl = col('P/L');
-  const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+  const num = (v) => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? 0 : n; };
   const trades = [];
   for (const r of rows.slice(headerIdx + 1)) {
     if (!r[iInstr]) continue;
@@ -5666,18 +5671,51 @@ function renderNewsList(items) {
       <div class="news-meta">${a._symbol} · ${a.source||''} · ${a.datetime ? new Date(a.datetime*1000).toLocaleString('en-GB') : ''}</div>
     </div>`).join('');
 }
+let calendarCache = { ts: 0, items: [] };
+// The TradingView embed widget doesn't reliably expose Actual/Forecast/Previous in its
+// compact form, so this is built directly from Finnhub's economic calendar endpoint
+// instead, which returns those as real fields — full control over what's shown.
 function renderEconomicCalendarWidget() {
   const el = document.getElementById('tv-economic-calendar');
-  if (!el || el.dataset.loaded) return;
-  el.dataset.loaded = '1';
-  const script = document.createElement('script');
-  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
-  script.async = true;
-  script.textContent = JSON.stringify({
-    colorTheme: 'dark', isTransparent: true, width: '100%', height: 650,
-    locale: 'en', importanceFilter: '-1,0,1', countryFilter: 'us,eu,gb'
-  });
-  el.appendChild(script);
+  if (!el) return;
+  if (!apiKeys.finnhub) {
+    el.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">Add a free Finnhub API key in ⚙ Settings to show the calendar with Actual / Forecast / Previous values.</div>`;
+    return;
+  }
+  if (Date.now() - calendarCache.ts < 15*60*1000 && calendarCache.items.length) { renderCalendarTable(calendarCache.items); return; }
+  el.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">Loading economic calendar…</div>`;
+  const from = new Date(Date.now() - 3*24*60*60*1000).toISOString().slice(0,10);
+  const to = new Date(Date.now() + 10*24*60*60*1000).toISOString().slice(0,10);
+  fetch(`https://finnhub.io/api/v1/calendar/economic?from=${from}&to=${to}&token=${apiKeys.finnhub}`)
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(j => {
+      const MAJOR = ['US','EU','DE','FR','IT','GB','JP','CN'];
+      let items = (j.economicCalendar || j.events || [])
+        .filter(e => MAJOR.includes(e.country))
+        .sort((a,b) => (a.time||'').localeCompare(b.time||''));
+      calendarCache = { ts: Date.now(), items };
+      renderCalendarTable(items);
+    })
+    .catch(err => {
+      el.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">Couldn't load the economic calendar (${err.message}). This endpoint may need a paid Finnhub tier — <a href="https://www.tradingview.com/economic-calendar/" target="_blank" rel="noopener" style="color:var(--gold);">view it on TradingView instead</a>.</div>`;
+    });
+}
+function renderCalendarTable(items) {
+  const el = document.getElementById('tv-economic-calendar');
+  if (!el) return;
+  if (!items.length) { el.innerHTML = `<div style="font-size:12px; color:var(--text-faint); padding:10px 0;">No events found for major economies in this window.</div>`; return; }
+  el.innerHTML = `<div class="table-scroll"><table>
+    <thead><tr><th class="l">Time</th><th class="l">Country</th><th class="l">Event</th><th>Actual</th><th>Forecast</th><th>Previous</th><th class="l">Impact</th></tr></thead>
+    <tbody>${items.map(e => `<tr>
+      <td class="l">${e.time ? new Date(e.time).toLocaleString('en-GB',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+      <td class="l">${e.country||''}</td>
+      <td class="l">${e.event||''}</td>
+      <td class="num">${e.actual ?? '—'}</td>
+      <td class="num">${e.estimate ?? '—'}</td>
+      <td class="num">${e.prev ?? '—'}</td>
+      <td class="l">${e.impact||''}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
 }
 
 /* ===================== CONCENTRATION / WHAT-IF SCENARIO ===================== */
