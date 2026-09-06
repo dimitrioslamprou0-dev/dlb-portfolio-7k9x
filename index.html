@@ -736,7 +736,7 @@
       <button class="add-trade-btn secondary" onclick="recordNetWorthSnapshot()">📍 RECORD SNAPSHOT</button>
       <button class="add-trade-btn" onclick="toggleSnapshotForm()" style="margin-left:8px;">➕ ADD PAST SNAPSHOT</button>
       <button class="add-trade-btn" onclick="toggleMilestoneForm()" style="margin-left:8px;">🏷 ADD MILESTONE</button>
-      <button class="add-trade-btn secondary" id="estimate-history-btn" onclick="estimateHistoricalSnapshots()" style="margin-left:8px;">📊 Reconstruct Jan 2026 → Today</button>
+      <button class="add-trade-btn secondary" id="estimate-history-btn" onclick="estimateHistoricalSnapshots()" style="margin-left:8px;">🔄 Redo Historical Reconstruction</button>
     </h2>
     <div id="snapshot-form-container"></div>
     <div id="milestone-form-container"></div>
@@ -5963,8 +5963,16 @@ function recordNetWorthSnapshot(tags) {
 // cheap historical bond-price source here), and anything before the file's own history began
 // can't be verified the same way — but there's no evidence composition was ever different.
 // Results are tagged "reconstructed" and never overwrite a real (manual or auto) snapshot.
-async function estimateHistoricalSnapshots() {
-  if (!confirm("Reconstruct month-end net worth from Jan 2026 to last month, using your actual holdings (verified unchanged since this file's first version) priced at real historical closes?\n\nBonds are priced flat at today's value each month (no cheap historical bond source). Continue?")) return;
+//
+// Runs automatically once in the background (see autoBackfillHistoryIfNeeded) — no button
+// needed. Previously this fetched each symbol/month sequentially through a CORS-proxy chain,
+// which could take 10+ minutes or effectively hang (22 stocks one-at-a-time, plus 7 cryptos ×
+// 8 months = 56 separate CoinGecko calls against a tightly rate-limited free API). Fixed by
+// fetching every symbol in parallel, and by pulling each crypto's whole date range in a
+// single call instead of one call per coin per month — turns ~80 sequential requests into
+// ~30 concurrent ones, typically done in well under a minute.
+async function estimateHistoricalSnapshots(silent) {
+  if (!silent && !confirm("Reconstruct month-end net worth from Jan 2026 to last month, using your actual holdings (verified unchanged since this file's first version) priced at real historical closes?\n\nBonds are priced flat at today's value each month (no cheap historical bond source). Continue?")) return;
   const btn = document.getElementById('estimate-history-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Reconstructing…'; }
   try {
@@ -5980,29 +5988,28 @@ async function estimateHistoricalSnapshots() {
       months.push({ y, m });
       m++; if (m > 12) { m = 1; y++; }
     }
-    if (!months.length) { alert('Nothing to backfill — we\'re still in the first month of the range.'); return; }
+    if (!months.length) { if (!silent) alert("Nothing to backfill — we're still in the first month of the range."); return; }
 
     const fromTs = Math.floor(new Date(2026, 0, 1).getTime() / 1000);
     const toTs = Math.floor(now.getTime() / 1000);
+
+    // All stock/ETF symbols fetched concurrently instead of one-at-a-time.
     const uniqueSymbols = [...new Set(positions.map(p => p.yahoo || p.symbol))];
-    const histBySymbol = {};
-    for (const sym of uniqueSymbols) {
-      try { histBySymbol[sym] = await fetchYahooHistorical(sym, fromTs, toTs); } catch(e) { histBySymbol[sym] = null; }
-      await new Promise(r => setTimeout(r, 250));
-    }
-    const cryptoHist = {};
-    for (const c of cryptoPositions) {
-      cryptoHist[c.cgId] = {};
-      for (const { y: yy, m: mm } of months) {
-        const dateStr = `${String(new Date(yy, mm, 0).getDate()).padStart(2,'0')}-${String(mm).padStart(2,'0')}-${yy}`;
-        try {
-          const j = await proxyFetch(`https://api.coingecko.com/api/v3/coins/${c.cgId}/history?date=${dateStr}`, true);
-          const price = j?.market_data?.current_price?.usd;
-          if (price) cryptoHist[c.cgId][`${yy}-${String(mm).padStart(2,'0')}`] = price;
-        } catch(e) {}
-        await new Promise(r => setTimeout(r, 400));
-      }
-    }
+    const histEntries = await Promise.all(uniqueSymbols.map(async sym => {
+      try { return [sym, await fetchYahooHistorical(sym, fromTs, toTs)]; }
+      catch(e) { return [sym, null]; }
+    }));
+    const histBySymbol = Object.fromEntries(histEntries);
+
+    // Each crypto's full date range in ONE call (not one call per coin per month), also concurrent.
+    const cryptoEntries = await Promise.all(cryptoPositions.map(async c => {
+      try {
+        const j = await proxyFetch(`https://api.coingecko.com/api/v3/coins/${c.cgId}/market_chart/range?vs_currency=usd&from=${fromTs}&to=${toTs}`, true);
+        const prices = j?.prices || []; // [[ms_timestamp, price], ...]
+        return [c.cgId, prices];
+      } catch(e) { return [c.cgId, []]; }
+    }));
+    const cryptoSeriesById = Object.fromEntries(cryptoEntries);
 
     let added = 0;
     for (const { y: yy, m: mm } of months) {
@@ -6021,7 +6028,9 @@ async function estimateHistoricalSnapshots() {
         total += toUSD(price * p.shares, p.currency);
       }
       for (const c of cryptoPositions) {
-        const price = cryptoHist[c.cgId]?.[monthKey];
+        const series = cryptoSeriesById[c.cgId] || [];
+        let price = null;
+        for (const [ts, px] of series) if (ts/1000 <= monthEndTs) price = px;
         if (price != null) total += toUSD(price * c.shares, c.priceCurrency || c.currency);
       }
       total += bondsFlatValue;
@@ -6033,10 +6042,21 @@ async function estimateHistoricalSnapshots() {
     data.netWorthSnapshots.sort((a,b) => a.date.localeCompare(b.date));
     saveData();
     renderMilestones();
-    alert(`Reconstructed ${added} month-end snapshot${added===1?'':'s'} from your verified-unchanged holdings priced at real historical closes.`);
+    if (!silent) alert(`Reconstructed ${added} month-end snapshot${added===1?'':'s'} from your verified-unchanged holdings priced at real historical closes.`);
+  } catch(e) {
+    if (!silent) alert('Reconstruction failed: ' + e.message + '. Your existing snapshots are untouched — try the button again, or check that a price API key is set in Settings.');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '📊 Reconstruct Jan 2026 → Today'; }
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Redo Historical Reconstruction'; }
   }
+}
+// Runs the reconstruction automatically, once, in the background — no button needed. Guarded
+// by a flag in localStorage (not in `data`, so it survives even if the reconstructed points
+// are later deleted) so it never re-runs and silently re-adds points someone removed on
+// purpose.
+async function autoBackfillHistoryIfNeeded() {
+  if (localStorage.getItem('dlb_history_backfilled_v1')) return;
+  localStorage.setItem('dlb_history_backfilled_v1', '1'); // set before starting — never retry-loop on failure
+  try { await estimateHistoricalSnapshots(true); } catch(e) { console.error('Auto history backfill failed:', e); }
 }
 function toggleSnapshotForm() {
   const el = document.getElementById('snapshot-form-container');
@@ -6281,13 +6301,14 @@ document.querySelectorAll('.tab').forEach(btn => {
     if (!apiKeys.finnhub && !apiKeys.twelve) {
       showBanner('<strong>Tip:</strong> Add a free Finnhub or Twelve Data API key in <strong>⚙ Settings</strong> for reliable stock prices.', false);
     }
-    refreshAll().then(() => autoSnapshotIfNeeded());
+    refreshAll().then(() => { autoSnapshotIfNeeded(); autoBackfillHistoryIfNeeded(); });
   } else {
     const newest = Math.max(...Object.values(prices).map(p=>p.ts||0));
     document.getElementById('status').className = 'val warn';
     document.getElementById('status').textContent = 'Cached';
     document.getElementById('last-update').textContent = new Date(newest).toLocaleTimeString('en-GB');
     autoSnapshotIfNeeded();
+    autoBackfillHistoryIfNeeded();
   }
 })();
 </script>
