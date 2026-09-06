@@ -736,6 +736,7 @@
       <button class="add-trade-btn secondary" onclick="recordNetWorthSnapshot()">📍 RECORD SNAPSHOT</button>
       <button class="add-trade-btn" onclick="toggleSnapshotForm()" style="margin-left:8px;">➕ ADD PAST SNAPSHOT</button>
       <button class="add-trade-btn" onclick="toggleMilestoneForm()" style="margin-left:8px;">🏷 ADD MILESTONE</button>
+      <button class="add-trade-btn secondary" id="estimate-history-btn" onclick="estimateHistoricalSnapshots()" style="margin-left:8px;">📊 Reconstruct Jan 2026 → Today</button>
     </h2>
     <div id="snapshot-form-container"></div>
     <div id="milestone-form-container"></div>
@@ -1776,11 +1777,16 @@ function renderOverview() {
   const annualStakingOv = totalProjectedStakingUSD();
   const passiveAnnual = annualDvd + annualCoupons + annualStakingOv;
 
+  const marginPnl = (data.tradeJournal || []).reduce((s,t) => s + (t.realizedPnl||0), 0);
+  const grandLifetimePnl = totalUpl + realizedPnl + marginPnl;
+
   const kpis = [
     { label: 'Total Market Value', value: fmtMoney(totalMv), sub: fmtMoney(totalCb)+' cost' + (totalMissing ? ` · ${totalMissing} need price` : ''), cls: 'blue' },
     { label: 'Total UPL', value: fmtMoney(totalUpl), sub: fmtPct(totalReturnPct), cls: totalUpl>=0?'green':'red', subCls: totalUpl>=0?'green':'red' },
     { label: 'Realized P&L', value: fmtMoney(realizedPnl), sub: data.closed.length+' closed', cls: realizedPnl>=0?'green':'red' },
-    { label: 'Lifetime P&L', value: fmtMoney(totalUpl + realizedPnl), sub: 'unrealized + realized', cls: (totalUpl+realizedPnl)>=0?'green':'red' },
+    { label: 'Real Products P&L', value: fmtMoney(totalUpl + realizedPnl), sub: 'RPL+UPL · non-margin', cls: (totalUpl+realizedPnl)>=0?'green':'red' },
+    { label: 'Margin Trading P&L', value: fmtMoney(marginPnl), sub: (data.tradeJournal||[]).length+' trades · options+CFD', cls: marginPnl>=0?'green':'red' },
+    { label: 'Lifetime P&L', value: fmtMoney(grandLifetimePnl), sub: 'real products + margin · all-time', cls: grandLifetimePnl>=0?'green':'red' },
     { label: 'Annual Passive', value: fmtMoney(passiveAnnual), sub: fmtMoney(passiveAnnual/12)+' / mo · div+coup+stake', cls: 'green' },
     { label: 'Income Received', value: fmtMoney(totalDvdReceived + totalCouponsReceived), sub: 'div + coupon · all-time', cls: 'gold' },
     { label: 'Portfolio Yield', value: fmtPct(portfolioYieldOnMv), sub: 'YoC ' + fmtPct(yieldOnCost), cls: 'purple' },
@@ -5921,21 +5927,109 @@ function computeCurrentNetWorth() {
 // recorded silently. Opening it more than once in the same month just updates that month's
 // snapshot rather than creating duplicates.
 function autoSnapshotIfNeeded() {
-  const monthKey = new Date().toISOString().slice(0,7); // YYYY-MM
-  const hasThisMonth = (data.netWorthSnapshots||[]).some(s => (s.date||'').slice(0,7) === monthKey);
-  if (hasThisMonth) return;
-  recordNetWorthSnapshot();
+  // Fires opportunistically on open (no server-side cron on a static site) but only once the
+  // 5th of the month has arrived, and only once per month — matching the requested "snapshot
+  // on the 5th" cadence rather than snapshotting the instant a new month starts.
+  const now = new Date();
+  const monthKey = now.toISOString().slice(0,7); // YYYY-MM
+  const hasMonthlyThisMonth = (data.netWorthSnapshots||[]).some(s => (s.date||'').slice(0,7) === monthKey && s.monthly);
+  if (hasMonthlyThisMonth || now.getDate() < 5) return;
+  recordNetWorthSnapshot({ monthly: true });
   if (activeTab === 'benchmark') renderBenchmark();
 }
-function recordNetWorthSnapshot() {
+function recordNetWorthSnapshot(tags) {
   const nw = computeCurrentNetWorth();
   const today = new Date().toISOString().slice(0,10);
   const existing = data.netWorthSnapshots.find(s => s.date === today);
-  if (existing) Object.assign(existing, nw, { date: today });
-  else data.netWorthSnapshots.push({ date: today, ...nw });
+  if (existing) Object.assign(existing, nw, { date: today, ...(tags||{}) });
+  else data.netWorthSnapshots.push({ date: today, ...nw, ...(tags||{}) });
   data.netWorthSnapshots.sort((a,b) => a.date.localeCompare(b.date));
   saveData();
   renderMilestones();
+}
+// Reconstructs real month-end net worth using your ACTUAL holdings priced historically. This
+// isn't a rough guess: checking this file's own commit history confirmed your EQ, DVD, and
+// Crypto share counts have been completely unchanged since the very first version was ever
+// saved (8 June 2026) — no trades, no size changes, nothing. So pricing those exact same
+// holdings at each month's real historical close is a genuine reconstruction, not a
+// projection. The one soft spot: bonds are priced flat at today's value for every month (no
+// cheap historical bond-price source here), and anything before the file's own history began
+// can't be verified the same way — but there's no evidence composition was ever different.
+// Results are tagged "reconstructed" and never overwrite a real (manual or auto) snapshot.
+async function estimateHistoricalSnapshots() {
+  if (!confirm("Reconstruct month-end net worth from Jan 2026 to last month, using your actual holdings (verified unchanged since this file's first version) priced at real historical closes?\n\nBonds are priced flat at today's value each month (no cheap historical bond source). Continue?")) return;
+  const btn = document.getElementById('estimate-history-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Reconstructing…'; }
+  try {
+    const positions = [...data.eq, ...data.dvd];
+    const cryptoPositions = (data.crypto || []).filter(c => c.cgId);
+    const bondsFlatValue = (data.bonds || []).reduce((s,b) => s + (bondMarketValueUSD(b) || 0), 0);
+
+    const now = new Date();
+    const months = [];
+    let y = 2026, m = 1;
+    const curY = now.getFullYear(), curM = now.getMonth() + 1;
+    while (y < curY || (y === curY && m < curM)) {
+      months.push({ y, m });
+      m++; if (m > 12) { m = 1; y++; }
+    }
+    if (!months.length) { alert('Nothing to backfill — we\'re still in the first month of the range.'); return; }
+
+    const fromTs = Math.floor(new Date(2026, 0, 1).getTime() / 1000);
+    const toTs = Math.floor(now.getTime() / 1000);
+    const uniqueSymbols = [...new Set(positions.map(p => p.yahoo || p.symbol))];
+    const histBySymbol = {};
+    for (const sym of uniqueSymbols) {
+      try { histBySymbol[sym] = await fetchYahooHistorical(sym, fromTs, toTs); } catch(e) { histBySymbol[sym] = null; }
+      await new Promise(r => setTimeout(r, 250));
+    }
+    const cryptoHist = {};
+    for (const c of cryptoPositions) {
+      cryptoHist[c.cgId] = {};
+      for (const { y: yy, m: mm } of months) {
+        const dateStr = `${String(new Date(yy, mm, 0).getDate()).padStart(2,'0')}-${String(mm).padStart(2,'0')}-${yy}`;
+        try {
+          const j = await proxyFetch(`https://api.coingecko.com/api/v3/coins/${c.cgId}/history?date=${dateStr}`, true);
+          const price = j?.market_data?.current_price?.usd;
+          if (price) cryptoHist[c.cgId][`${yy}-${String(mm).padStart(2,'0')}`] = price;
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+
+    let added = 0;
+    for (const { y: yy, m: mm } of months) {
+      const monthKey = `${yy}-${String(mm).padStart(2,'0')}`;
+      if ((data.netWorthSnapshots || []).some(s => (s.date||'').slice(0,7) === monthKey)) continue;
+      const monthEndDate = new Date(yy, mm, 0);
+      const monthEndTs = monthEndDate.getTime() / 1000;
+      let total = 0;
+      for (const p of positions) {
+        const sym = p.yahoo || p.symbol;
+        const h = histBySymbol[sym];
+        if (!h) continue;
+        let price = null;
+        for (let i = 0; i < h.dates.length; i++) if (h.dates[i] <= monthEndTs) price = h.closes[i];
+        if (price == null) continue;
+        total += toUSD(price * p.shares, p.currency);
+      }
+      for (const c of cryptoPositions) {
+        const price = cryptoHist[c.cgId]?.[monthKey];
+        if (price != null) total += toUSD(price * c.shares, c.priceCurrency || c.currency);
+      }
+      total += bondsFlatValue;
+      if (total > 0) {
+        data.netWorthSnapshots.push({ date: monthEndDate.toISOString().slice(0,10), totalUSD: total, reconstructed: true, monthly: true });
+        added++;
+      }
+    }
+    data.netWorthSnapshots.sort((a,b) => a.date.localeCompare(b.date));
+    saveData();
+    renderMilestones();
+    alert(`Reconstructed ${added} month-end snapshot${added===1?'':'s'} from your verified-unchanged holdings priced at real historical closes.`);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📊 Reconstruct Jan 2026 → Today'; }
+  }
 }
 function toggleSnapshotForm() {
   const el = document.getElementById('snapshot-form-container');
@@ -5990,18 +6084,28 @@ function renderMilestones() {
     const labels = snaps.map(s => s.date);
     const values = snaps.map(s => s.totalUSD);
     const milestoneDates = new Set((data.milestones||[]).map(m => m.date));
-    const pointColors = labels.map(l => milestoneDates.has(l) ? '#e05252' : '#d4a574');
-    const pointRadii = labels.map(l => milestoneDates.has(l) ? 7 : 3);
+    const todayStr = new Date().toISOString().slice(0,10);
+    // Priority: milestone (red) > today's live snapshot (cyan, if it's not itself the
+    // monthly-on-the-5th snapshot) > reconstructed (muted blue-gray diamond) > regular
+    // monthly point (gold).
+    const pointColors = snaps.map(s => milestoneDates.has(s.date) ? '#e05252' : (s.date === todayStr && !s.monthly ? '#3fc7d6' : (s.reconstructed ? '#6b8299' : '#d4a574')));
+    const pointRadii = snaps.map(s => milestoneDates.has(s.date) ? 7 : (s.date === todayStr && !s.monthly ? 6 : (s.reconstructed ? 3 : 4)));
+    const pointStyles = snaps.map(s => s.reconstructed ? 'rectRot' : 'circle');
     chartInstances.networth = new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ label: 'Net Worth (USD)', data: values, borderColor: '#d4a574', backgroundColor: 'rgba(212,165,116,0.15)', fill: true, tension: 0.25, pointRadius: pointRadii, pointBackgroundColor: pointColors }] },
+      data: { labels, datasets: [{ label: 'Net Worth (USD)', data: values, borderColor: '#d4a574', backgroundColor: 'rgba(212,165,116,0.15)', fill: true, tension: 0.25, pointRadius: pointRadii, pointBackgroundColor: pointColors, pointStyle: pointStyles }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: (c) => {
+            const s = snaps[c.dataIndex];
+            const todayStr2 = new Date().toISOString().slice(0,10);
+            const tag = s.reconstructed ? ' (reconstructed)' : (s.monthly ? ' (monthly)' : (s.date === todayStr2 ? ' (today)' : ''));
             const m = (data.milestones||[]).find(m => m.date === c.label);
-            return m ? [`$${c.parsed.y.toLocaleString()}`, `🏷 ${m.label}`] : '$' + c.parsed.y.toLocaleString();
+            const lines = [`$${c.parsed.y.toLocaleString()}${tag}`];
+            if (m) lines.push(`🏷 ${m.label}`);
+            return lines;
           } } }
         },
         scales: {
@@ -6016,7 +6120,7 @@ function renderMilestones() {
     <tbody>${[...snaps].reverse().map(s => `<tr>
       <td class="l">${s.date}</td>
       <td class="num">${fmtMoney(s.totalUSD)}</td>
-      <td class="l">${s.note||''}${s.manual?' <span style="color:var(--text-faint);">(manual)</span>':''}</td>
+      <td class="l">${s.note||''}${s.manual?' <span style="color:var(--text-faint);">(manual)</span>':''}${s.reconstructed?' <span style="color:#6b8299;">(reconstructed)</span>':''}${s.monthly?' <span style="color:var(--gold);">(monthly)</span>':''}</td>
       <td><button onclick="deleteSnapshot('${s.date}')" style="background:transparent;border:none;color:var(--text-faint);cursor:pointer;">🗑</button></td>
     </tr>`).join('')}
     ${(data.milestones||[]).map((m,i) => `<tr style="background:rgba(224,82,82,0.06);">
