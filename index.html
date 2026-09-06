@@ -1684,6 +1684,13 @@ function getPrice(pos) {
   return { price: null, currency: pos.priceCurrency || pos.currency, source: 'none', ts: null, livePrice: null, liveSource: null };
 }
 
+// Date.toISOString() is UTC-based, so near midnight it can silently roll to the "wrong" day
+// for anyone not in UTC (e.g. Cyprus at UTC+2/+3) — two visits within the same local day can
+// end up producing two different snapshot dates. This gives the actual local calendar date.
+function localDateStr(d) {
+  d = d || new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+}
 function toUSD(amount, currency) {
   if (amount === null || amount === undefined) return null;
   if (currency === 'USD') return amount;
@@ -5931,15 +5938,15 @@ function autoSnapshotIfNeeded() {
   // 5th of the month has arrived, and only once per month — matching the requested "snapshot
   // on the 5th" cadence rather than snapshotting the instant a new month starts.
   const now = new Date();
-  const monthKey = now.toISOString().slice(0,7); // YYYY-MM
+  const monthKey = localDateStr(now).slice(0,7); // YYYY-MM (local calendar month)
   const hasMonthlyThisMonth = (data.netWorthSnapshots||[]).some(s => (s.date||'').slice(0,7) === monthKey && s.monthly);
-  if (hasMonthlyThisMonth || now.getDate() < 5) return;
+  if (hasMonthlyThisMonth || Number(localDateStr(now).slice(8,10)) < 5) return;
   recordNetWorthSnapshot({ monthly: true });
   if (activeTab === 'benchmark') renderBenchmark();
 }
 function recordNetWorthSnapshot(tags) {
   const nw = computeCurrentNetWorth();
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateStr();
   const existing = data.netWorthSnapshots.find(s => s.date === today);
   if (existing) Object.assign(existing, nw, { date: today, ...(tags||{}) });
   else data.netWorthSnapshots.push({ date: today, ...nw, ...(tags||{}) });
@@ -6084,7 +6091,7 @@ function renderMilestones() {
     const labels = snaps.map(s => s.date);
     const values = snaps.map(s => s.totalUSD);
     const milestoneDates = new Set((data.milestones||[]).map(m => m.date));
-    const todayStr = new Date().toISOString().slice(0,10);
+    const todayStr = localDateStr();
     // Priority: milestone (red) > today's live snapshot (cyan, if it's not itself the
     // monthly-on-the-5th snapshot) > reconstructed (muted blue-gray diamond) > regular
     // monthly point (gold).
@@ -6100,7 +6107,7 @@ function renderMilestones() {
           legend: { display: false },
           tooltip: { callbacks: { label: (c) => {
             const s = snaps[c.dataIndex];
-            const todayStr2 = new Date().toISOString().slice(0,10);
+            const todayStr2 = localDateStr();
             const tag = s.reconstructed ? ' (reconstructed)' : (s.monthly ? ' (monthly)' : (s.date === todayStr2 ? ' (today)' : ''));
             const m = (data.milestones||[]).find(m => m.date === c.label);
             const lines = [`$${c.parsed.y.toLocaleString()}${tag}`];
