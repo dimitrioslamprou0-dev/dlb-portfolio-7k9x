@@ -736,7 +736,7 @@
       <button class="add-trade-btn secondary" onclick="recordNetWorthSnapshot()">📍 RECORD SNAPSHOT</button>
       <button class="add-trade-btn" onclick="toggleSnapshotForm()" style="margin-left:8px;">➕ ADD PAST SNAPSHOT</button>
       <button class="add-trade-btn" onclick="toggleMilestoneForm()" style="margin-left:8px;">🏷 ADD MILESTONE</button>
-      <button class="add-trade-btn secondary" id="estimate-history-btn" onclick="estimateHistoricalSnapshots()" style="margin-left:8px;">🔄 Redo Historical Reconstruction</button>
+      <button class="add-trade-btn secondary" id="estimate-history-btn" onclick="clearReconstructedSnapshots()" style="margin-left:8px;">🗑 Clear Reconstructed</button>
     </h2>
     <div id="snapshot-form-container"></div>
     <div id="milestone-form-container"></div>
@@ -1084,6 +1084,9 @@ function loadData() {
       ];
       if (!loaded.cashFlowConfig) loaded.cashFlowConfig = { includeEqWithdrawal: false, eqWithdrawalRate: 0.04 };
       if (!loaded.tradeJournal) loaded.tradeJournal = [];
+      // One-time migration: the CFD broker was renamed from "V" to "Va" (to make room for a
+      // second Vantage account, "Va2") after some trades were already imported under "V".
+      loaded.tradeJournal.forEach(t => { if (t.broker === 'V') t.broker = 'Va'; });
       if (!loaded.netWorthSnapshots) loaded.netWorthSnapshots = [];
       if (!loaded.milestones) loaded.milestones = [];
       return loaded;
@@ -1320,6 +1323,7 @@ const PROXIES = [
   url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
   url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
   url => 'https://api.codetabs.com/v1/proxy/?quest=' + url,
+  url => 'https://api.cors.lol/url=' + url,
   url => 'https://thingproxy.freeboard.io/fetch/' + url
 ];
 function fetchWithTimeout(url, timeoutMs) {
@@ -1464,8 +1468,8 @@ async function fetchStockPrice(pos) {
   if (pos.tdataSymbol && apiKeys.twelve && isUSStock) {
     const r = await fetchTwelveOne(pos.tdataSymbol, pos.tdataEx, pos.currency); if (r) return r;
   }
-  if (pos.stooq) { const r = await fetchStooqOne(pos.stooq, pos.currency); if (r) return r; }
   if (pos.yahoo) { const r = await fetchYahooOne(pos.yahoo); if (r) return r; }
+  if (pos.stooq) { const r = await fetchStooqOne(pos.stooq, pos.currency); if (r) return r; }
   return null;
 }
 async function fetchCrypto(ids) {
@@ -5144,7 +5148,6 @@ const JOURNAL_CANON_FIELDS = [
   { key: 'realizedPnl', label: 'Realized P&L', required: true }
 ];
 let journalPendingCsv = null; // { broker, headers, rows } awaiting column mapping confirmation
-let journalFilter = 'ALL';    // 'ALL' | 'V' | 'IBKR'
 
 function toggleJournalUpload() {
   const el = document.getElementById('journal-upload-container');
@@ -5154,7 +5157,8 @@ function toggleJournalUpload() {
       <label>Broker</label>
       <select id="journal-broker-select">
         <option value="IBKR">IBKR — Trade Confirmation Report (.htm, parsed + FIFO-matched automatically)</option>
-        <option value="V">V — Closed Trades Report (.csv, parsed automatically)</option>
+        <option value="Va">Va — Closed Trades Report (.csv, parsed automatically)</option>
+        <option value="Va2">Va2 — Closed Trades Report (.csv, parsed automatically)</option>
         <option value="OTHER">Other CSV — map columns yourself</option>
       </select>
       <br>
@@ -5169,7 +5173,7 @@ function toggleJournalManualForm() {
   if (el.innerHTML) { el.innerHTML = ''; return; }
   el.innerHTML = `
     <div class="upload-box">
-      <label>Broker</label><input type="text" id="jt-broker" placeholder="IBKR / V" style="width:100px;">
+      <label>Broker</label><input type="text" id="jt-broker" placeholder="IBKR / Va / Va2" style="width:110px;">
       <label style="display:inline-block; margin-left:8px;">Asset</label>
       <select id="jt-asset"><option value="option">Option</option><option value="cfd">CFD</option></select>
       <br>
@@ -5251,12 +5255,12 @@ function handleJournalFileUpload() {
         return;
       }
       importParsedTrades('IBKR', trades, statusEl);
-    } else if (broker === 'V') {
+    } else if (broker === 'Va' || broker === 'Va2') {
       let trades = [];
-      try { trades = parseVantageClosedTrades(text); }
-      catch(err) { statusEl.textContent = 'Could not parse this V file: ' + err.message; return; }
+      try { trades = parseVantageClosedTrades(text, broker); }
+      catch(err) { statusEl.textContent = `Could not parse this ${broker} file: ` + err.message; return; }
       if (!trades.length) { statusEl.textContent = 'No closed trades found in this file.'; return; }
-      importParsedTrades('V', trades, statusEl);
+      importParsedTrades(broker, trades, statusEl);
     } else {
       const parsed = Papa.parse(text, { skipEmptyLines: true });
       const rows = parsed.data;
@@ -5416,7 +5420,8 @@ function parseIBKRTradeConfirmation(html) {
 // Each row is already one fully closed trade — no FIFO matching needed. Order Type is
 // Buy/Sell (Long/Short). Net P&L = the report's own P/L column + Swap (fee/commission are
 // generally 0 or '--' on this broker's CFD accounts, but we fold them in defensively).
-function parseVantageClosedTrades(text) {
+function parseVantageClosedTrades(text, brokerLabel) {
+  brokerLabel = brokerLabel || 'Va';
   const rows = Papa.parse(text, { skipEmptyLines: true }).data;
   // Find the real header row (first row after the title line that starts with "Order Number")
   let headerIdx = rows.findIndex(r => r[0] === 'Order Number');
@@ -5438,7 +5443,7 @@ function parseVantageClosedTrades(text) {
     const comm = num(r[iComm]);
     trades.push({
       id: 'jt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-      broker: 'V', assetType: 'cfd',
+      broker: brokerLabel, assetType: 'cfd',
       symbol: r[iInstr].trim(),
       side: side.toLowerCase() === 'buy' ? 'Long' : 'Short',
       direction: side.toLowerCase() === 'buy' ? 'LONG' : 'SHORT',
@@ -5548,15 +5553,24 @@ function importParsedTrades(broker, trades, statusEl) {
   renderJournal();
 }
 
-function setJournalFilter(f) {
-  journalFilter = f;
+let journalActiveBrokers = null; // null = not yet initialized; Set of broker names once set
+function setJournalFilter(broker) {
+  const allBrokers = [...new Set((data.tradeJournal||[]).map(t => t.broker))];
+  if (!journalActiveBrokers) journalActiveBrokers = new Set(allBrokers);
+  if (broker === '__ALL__') {
+    journalActiveBrokers = new Set(allBrokers);
+  } else if (journalActiveBrokers.has(broker)) {
+    if (journalActiveBrokers.size > 1) journalActiveBrokers.delete(broker); // keep at least one selected
+  } else {
+    journalActiveBrokers.add(broker);
+  }
   renderJournal();
 }
 function filteredJournalTrades() {
   const trades = data.tradeJournal || [];
-  if (journalFilter === 'V') return trades.filter(t => t.assetType === 'cfd');
-  if (journalFilter === 'IBKR') return trades.filter(t => t.assetType === 'option');
-  return trades;
+  const allBrokers = [...new Set(trades.map(t => t.broker))];
+  if (!journalActiveBrokers) journalActiveBrokers = new Set(allBrokers);
+  return trades.filter(t => journalActiveBrokers.has(t.broker));
 }
 // Small colored badge for a trade's directional side — green for bullish positions
 // (Long / Call), red for bearish (Short / Put), neutral gray for anything else.
@@ -5575,7 +5589,15 @@ function renderJournal() {
 
   const filterBar = document.getElementById('journal-filter-bar');
   if (filterBar) {
-    filterBar.innerHTML = ['ALL','V','IBKR'].map(f => `<button class="scenario-btn ${journalFilter===f?'active':''}" onclick="setJournalFilter('${f}')">${f === 'IBKR' ? 'Options (IBKR)' : f === 'V' ? 'CFD (V)' : 'All'}</button>`).join('');
+    const allBrokers = [...new Set(allTrades.map(t => t.broker))].sort();
+    if (!journalActiveBrokers) journalActiveBrokers = new Set(allBrokers);
+    const allSelected = allBrokers.every(b => journalActiveBrokers.has(b));
+    // True multi-select: each broker toggles independently, so any combination — 1 of 3,
+    // 2 of 3, or all — can be active at once. "All" is a shortcut to select every broker.
+    filterBar.innerHTML = [
+      `<button class="scenario-btn ${allSelected?'active':''}" onclick="setJournalFilter('__ALL__')">All (${allBrokers.length})</button>`,
+      ...allBrokers.map(b => `<button class="scenario-btn ${journalActiveBrokers.has(b)?'active':''}" onclick="setJournalFilter('${b}')">${b}</button>`)
+    ].join('');
   }
   const trades = filteredJournalTrades();
   document.getElementById('journal-log-count').textContent = `${trades.length} row${trades.length===1?'':'s'}`;
@@ -6101,6 +6123,13 @@ function addMilestone() {
   renderMilestones();
 }
 function deleteSnapshot(date) { data.netWorthSnapshots = data.netWorthSnapshots.filter(s => s.date !== date); saveData(); renderMilestones(); }
+function clearReconstructedSnapshots() {
+  const count = data.netWorthSnapshots.filter(s => s.reconstructed).length;
+  if (!count) return;
+  if (!confirm(`Delete all ${count} reconstructed snapshot${count===1?'':'s'}? Real (manual/monthly-live) snapshots are kept.`)) return;
+  data.netWorthSnapshots = data.netWorthSnapshots.filter(s => !s.reconstructed);
+  saveData(); renderMilestones();
+}
 function deleteMilestone(idx) { data.milestones.splice(idx, 1); saveData(); renderMilestones(); }
 function renderMilestones() {
   const snaps = data.netWorthSnapshots || [];
