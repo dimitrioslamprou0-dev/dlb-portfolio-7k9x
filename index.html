@@ -5555,7 +5555,8 @@ function importParsedTrades(broker, trades, statusEl) {
 
 let journalActiveBrokers = null; // null = not yet initialized; Set of broker names once set
 function setJournalFilter(broker) {
-  const allBrokers = [...new Set((data.tradeJournal||[]).map(t => t.broker))];
+  const extra = [...new Set((data.tradeJournal||[]).map(t => t.broker))].filter(b => !KNOWN_JOURNAL_BROKERS.includes(b));
+  const allBrokers = [...KNOWN_JOURNAL_BROKERS, ...extra];
   if (!journalActiveBrokers) journalActiveBrokers = new Set(allBrokers);
   if (broker === '__ALL__') {
     journalActiveBrokers = new Set(allBrokers);
@@ -5583,20 +5584,28 @@ function sideBadge(label) {
   const fg = isGreen ? '#4ecb7d' : isRed ? '#f07a7a' : 'var(--text-faint)';
   return `<span style="display:inline-block; padding:2px 9px; border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.03em; white-space:nowrap; background:${bg}; border:1px solid ${border}; color:${fg};">${label.toUpperCase()}</span>`;
 }
+// Known brokers always shown as filter options, even with zero trades yet (so "Va2" is
+// visible and selectable before its first upload) — any other broker name (e.g. a custom
+// one typed into the manual-add form) still shows up automatically alongside these.
+const KNOWN_JOURNAL_BROKERS = ['IBKR', 'Va', 'Va2'];
 function renderJournal() {
   const allTrades = data.tradeJournal || [];
   document.getElementById('journal-count').textContent = `${allTrades.length} trade${allTrades.length===1?'':'s'} total`;
 
   const filterBar = document.getElementById('journal-filter-bar');
   if (filterBar) {
-    const allBrokers = [...new Set(allTrades.map(t => t.broker))].sort();
+    const extraBrokers = [...new Set(allTrades.map(t => t.broker))].filter(b => !KNOWN_JOURNAL_BROKERS.includes(b)).sort();
+    const allBrokers = [...KNOWN_JOURNAL_BROKERS, ...extraBrokers];
     if (!journalActiveBrokers) journalActiveBrokers = new Set(allBrokers);
     const allSelected = allBrokers.every(b => journalActiveBrokers.has(b));
     // True multi-select: each broker toggles independently, so any combination — 1 of 3,
     // 2 of 3, or all — can be active at once. "All" is a shortcut to select every broker.
     filterBar.innerHTML = [
-      `<button class="scenario-btn ${allSelected?'active':''}" onclick="setJournalFilter('__ALL__')">All (${allBrokers.length})</button>`,
-      ...allBrokers.map(b => `<button class="scenario-btn ${journalActiveBrokers.has(b)?'active':''}" onclick="setJournalFilter('${b}')">${b}</button>`)
+      `<button class="scenario-btn ${allSelected?'active':''}" onclick="setJournalFilter('__ALL__')">All</button>`,
+      ...allBrokers.map(b => {
+        const count = allTrades.filter(t => t.broker === b).length;
+        return `<button class="scenario-btn ${journalActiveBrokers.has(b)?'active':''}" onclick="setJournalFilter('${b}')">${b}${count ? ` (${count})` : ' — empty'}</button>`;
+      })
     ].join('');
   }
   const trades = filteredJournalTrades();
