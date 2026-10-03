@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     /* STYLE 3 — Institutional / Quant Terminal */
@@ -5157,13 +5158,13 @@ function toggleJournalUpload() {
       <label>Broker</label>
       <select id="journal-broker-select">
         <option value="IBKR">IBKR — Trade Confirmation Report (.htm, parsed + FIFO-matched automatically)</option>
-        <option value="Va">Va — Closed Trades Report (.csv, parsed automatically)</option>
-        <option value="Va2">Va2 — Closed Trades Report (.csv, parsed automatically)</option>
-        <option value="OTHER">Other CSV — map columns yourself</option>
+        <option value="Va">Va — Closed Trades Report (.csv or .xlsx, parsed automatically)</option>
+        <option value="Va2">Va2 — Closed Trades Report (.csv or .xlsx, parsed automatically)</option>
+        <option value="OTHER">Other CSV/Excel — map columns yourself</option>
       </select>
       <br>
       <label>Statement File</label>
-      <input type="file" id="journal-file-input" accept=".csv,.txt,.htm,.html">
+      <input type="file" id="journal-file-input" accept=".csv,.txt,.htm,.html,.xlsx">
       <button class="add-trade-btn" onclick="handleJournalFileUpload()">Parse File</button>
       <div id="journal-upload-status" style="margin-top:10px; font-size:11px; color: var(--text-faint);"></div>
     </div>`;
@@ -5236,6 +5237,23 @@ function clearJournalAll() {
   data.tradeJournal = [];
   saveData(); renderJournal();
 }
+// Shared handling for anything that isn't the IBKR .htm report — "input" is either raw
+// CSV/text (from a .csv/.txt upload) or an already-parsed array-of-rows (from a .xlsx
+// upload via SheetJS, since there's no text to re-parse there).
+function processNonIBKRJournalInput(broker, input, statusEl) {
+  if (broker === 'Va' || broker === 'Va2') {
+    let trades = [];
+    try { trades = parseVantageClosedTrades(input, broker); }
+    catch(err) { statusEl.textContent = `Could not parse this ${broker} file: ` + err.message; return; }
+    if (!trades.length) { statusEl.textContent = 'No closed trades found in this file.'; return; }
+    importParsedTrades(broker, trades, statusEl);
+  } else {
+    const rows = Array.isArray(input) ? input : Papa.parse(input, { skipEmptyLines: true }).data;
+    if (!rows.length) { statusEl.textContent = 'Could not read any rows from this file.'; return; }
+    journalPendingCsv = { broker, headers: rows[0], rows: rows.slice(1) };
+    renderColumnMapper(statusEl);
+  }
+}
 function handleJournalFileUpload() {
   const broker = document.getElementById('journal-broker-select').value;
   const fileInput = document.getElementById('journal-file-input');
@@ -5243,33 +5261,53 @@ function handleJournalFileUpload() {
   const file = fileInput.files[0];
   if (!file) { statusEl.textContent = 'Choose a file first.'; return; }
   statusEl.textContent = 'Reading file…';
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const text = e.target.result;
-    if (broker === 'IBKR') {
-      let trades = [];
-      try { trades = parseIBKRTradeConfirmation(text); }
-      catch(err) { statusEl.textContent = 'Could not parse this IBKR file: ' + err.message; return; }
-      if (!trades.length) {
-        statusEl.textContent = "Couldn't find any matched (opened + closed) option trades in this file. Still-open positions at the end of the statement period aren't counted as realized yet, so if everything in the window is still open, that's expected — try a wider date range.";
-        return;
-      }
-      importParsedTrades('IBKR', trades, statusEl);
-    } else if (broker === 'Va' || broker === 'Va2') {
-      let trades = [];
-      try { trades = parseVantageClosedTrades(text, broker); }
-      catch(err) { statusEl.textContent = `Could not parse this ${broker} file: ` + err.message; return; }
-      if (!trades.length) { statusEl.textContent = 'No closed trades found in this file.'; return; }
-      importParsedTrades(broker, trades, statusEl);
-    } else {
-      const parsed = Papa.parse(text, { skipEmptyLines: true });
-      const rows = parsed.data;
-      if (!rows.length) { statusEl.textContent = 'Could not read any rows from this file.'; return; }
-      journalPendingCsv = { broker, headers: rows[0], rows: rows.slice(1) };
-      renderColumnMapper(statusEl);
+  const isXlsx = /\.xlsx$/i.test(file.name);
+  if (isXlsx) {
+    // Excel files are a binary (zipped) format — reading them as text would silently
+    // produce garbage rows (and garbage dates). Parse the real workbook with SheetJS and
+    // hand the resulting rows straight to the same broker-specific logic as a CSV upload.
+    if (typeof XLSX === 'undefined') {
+      statusEl.textContent = 'Excel support failed to load (check your connection and refresh) — or export this report as CSV/HTML instead.';
+      return;
     }
-  };
-  reader.readAsText(file);
+    if (broker === 'IBKR') {
+      statusEl.textContent = 'IBKR statements should be uploaded as the .htm Trade Confirmation Report, not Excel.';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      let rows;
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        // raw:true + cellDates:true keeps real JS Date objects for date/time cells instead
+        // of formatted strings or Excel's numeric day-serials — normalizeDate() handles a
+        // Date object correctly, where a serial number or a locale-ambiguous string could
+        // silently land on the wrong month/day.
+        rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+      } catch(err) { statusEl.textContent = 'Could not read this Excel file: ' + err.message; return; }
+      processNonIBKRJournalInput(broker, rows, statusEl);
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      if (broker === 'IBKR') {
+        let trades = [];
+        try { trades = parseIBKRTradeConfirmation(text); }
+        catch(err) { statusEl.textContent = 'Could not parse this IBKR file: ' + err.message; return; }
+        if (!trades.length) {
+          statusEl.textContent = "Couldn't find any matched (opened + closed) option trades in this file. Still-open positions at the end of the statement period aren't counted as realized yet, so if everything in the window is still open, that's expected — try a wider date range.";
+          return;
+        }
+        importParsedTrades('IBKR', trades, statusEl);
+      } else {
+        processNonIBKRJournalInput(broker, text, statusEl);
+      }
+    };
+    reader.readAsText(file);
+  }
 }
 
 // ---- IBKR Trade Confirmation Report (.htm) parser ----
@@ -5420,9 +5458,13 @@ function parseIBKRTradeConfirmation(html) {
 // Each row is already one fully closed trade — no FIFO matching needed. Order Type is
 // Buy/Sell (Long/Short). Net P&L = the report's own P/L column + Swap (fee/commission are
 // generally 0 or '--' on this broker's CFD accounts, but we fold them in defensively).
-function parseVantageClosedTrades(text, brokerLabel) {
+function parseVantageClosedTrades(input, brokerLabel) {
   brokerLabel = brokerLabel || 'Va';
-  const rows = Papa.parse(text, { skipEmptyLines: true }).data;
+  // "input" is either raw CSV text (.csv upload) or an already-parsed array of rows (.xlsx
+  // upload, parsed with SheetJS before this function ever sees it — there's no text to
+  // re-parse there, and feeding the raw binary through Papa.parse is what used to silently
+  // corrupt the dates).
+  const rows = Array.isArray(input) ? input : Papa.parse(input, { skipEmptyLines: true }).data;
   // Find the real header row (first row after the title line that starts with "Order Number")
   let headerIdx = rows.findIndex(r => r[0] === 'Order Number');
   if (headerIdx === -1) throw new Error('Expected a "Order Number" header row — this may not be a Vantage Closed Trades Report.');
@@ -5524,6 +5566,14 @@ function confirmColumnMapImport() {
 }
 function normalizeDate(v) {
   if (!v) return null;
+  // A native Date object (SheetJS, with cellDates:true, gives these for Excel date/time
+  // cells) is already unambiguous — use it directly rather than round-tripping through
+  // String()/Date(), which re-parses in the browser's local timezone and can shift the
+  // date by a day right around midnight.
+  if (v instanceof Date) {
+    if (isNaN(v.getTime())) return null;
+    return v.toISOString().slice(0,10);
+  }
   const s = String(v).trim();
   // European "DD/MM/YYYY HH:mm" (Vantage) needs explicit parsing — new Date() would read it
   // as MM/DD in a US-locale browser and silently corrupt the date.
