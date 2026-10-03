@@ -5533,21 +5533,45 @@ function normalizeDate(v) {
   if (isNaN(d.getTime())) return s;
   return d.toISOString().slice(0,10);
 }
+// Identity of a trade for merge/dedup purposes — deliberately EXCLUDES price, fees and
+// realizedPnl. Those are exactly the fields a parser bug fix can correct on a re-upload of
+// the same statement, so keying on them would make a corrected re-upload look like a brand
+// new trade (duplicating it) instead of refreshing the existing record.
+function tradeSignature(t) {
+  return [t.broker, t.assetType, t.symbol, t.side, t.openDate, t.closeDate, t.qty].join('|');
+}
 function importParsedTrades(broker, trades, statusEl) {
-  // Re-uploading a statement REPLACES that broker's previously-uploaded trades rather than
-  // merging/deduping against them. This matters a lot in practice: if the parser logic ever
-  // changes (as it did — a comma-thousands-separator bug silently corrupted large IBKR
-  // trades) or the same statement is re-exported, signature-based dedup would leave the old,
-  // wrong numbers sitting in the journal alongside the new correct ones and silently net them
-  // together into a meaningless blended total. Manually-added trades are never touched.
-  const removed = data.tradeJournal.filter(t => t.broker === broker && t.source === 'upload').length;
-  data.tradeJournal = data.tradeJournal.filter(t => !(t.broker === broker && t.source === 'upload'));
-  data.tradeJournal.push(...trades);
+  // Merge new trades into this broker's existing upload history instead of wiping it.
+  // - A trade whose identity (symbol/side/open/close/qty) isn't already present is a new
+  //   trade from a new statement period → added.
+  // - A trade that matches an existing one exactly is the same trade reappearing (e.g. the
+  //   same statement re-uploaded, or overlapping date ranges between two uploads) → its
+  //   fields are refreshed in place (covers parser fixes changing price/P&L) rather than
+  //   duplicated.
+  // Manually-added trades (source !== 'upload') are never touched by this.
+  const existingUpload = data.tradeJournal.filter(t => t.broker === broker && t.source === 'upload');
+  const sigMap = new Map();
+  existingUpload.forEach(t => sigMap.set(tradeSignature(t), t));
+  let added = 0, updated = 0;
+  trades.forEach(nt => {
+    const sig = tradeSignature(nt);
+    const existing = sigMap.get(sig);
+    if (existing) {
+      const keepId = existing.id;
+      Object.assign(existing, nt, { id: keepId });
+      updated++;
+    } else {
+      data.tradeJournal.push(nt);
+      sigMap.set(sig, nt);
+      added++;
+    }
+  });
   saveData();
   if (statusEl) {
-    statusEl.textContent = removed
-      ? `✓ Replaced ${removed} previous ${broker} trade${removed===1?'':'s'} with ${trades.length} freshly parsed from this file.`
-      : `✓ Imported ${trades.length} trade${trades.length===1?'':'s'}.`;
+    const parts = [];
+    if (added) parts.push(`${added} new trade${added === 1 ? '' : 's'} added`);
+    if (updated) parts.push(`${updated} existing trade${updated === 1 ? '' : 's'} refreshed`);
+    statusEl.textContent = parts.length ? `✓ ${parts.join(', ')}.` : 'No new trades found in this file — nothing changed.';
   }
   journalPendingCsv = null;
   renderJournal();
