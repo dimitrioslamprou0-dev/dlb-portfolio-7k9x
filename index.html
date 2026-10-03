@@ -5474,7 +5474,16 @@ function parseVantageClosedTrades(input, brokerLabel) {
         iOpenPx = col('Opening Price'), iOpenT = col('Opening Time'), iClosePx = col('Closing Price'),
         iCloseT = col('Closing Time'), iFee = col('Fee'), iComm = col('Commission'),
         iSwap = col('Swap (Overnight Interest)'), iPnl = col('P/L');
-  const num = (v) => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? 0 : n; };
+  // Accounting-style negatives — "(33.12)" meaning -33.12 — show up on this report's P/L
+  // column. parseFloat() stops at the opening "(" and returns NaN for those, which silently
+  // zeroed them out instead of subtracting, overstating the total. Convert "(X)" -> "-X" first.
+  const num = (v) => {
+    let s = String(v).trim().replace(/,/g, '');
+    const paren = s.match(/^\((.*)\)$/);
+    if (paren) s = '-' + paren[1];
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
   const trades = [];
   for (const r of rows.slice(headerIdx + 1)) {
     if (!r[iInstr]) continue;
@@ -5575,10 +5584,18 @@ function normalizeDate(v) {
     return v.toISOString().slice(0,10);
   }
   const s = String(v).trim();
-  // European "DD/MM/YYYY HH:mm" (Vantage) needs explicit parsing — new Date() would read it
-  // as MM/DD in a US-locale browser and silently corrupt the date.
-  const eu = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (eu) return `${eu[3]}-${eu[2].padStart(2,'0')}-${eu[1].padStart(2,'0')}`;
+  // Slash-separated date (e.g. "6/24/2026 21:13"). This broker's CSV export actually uses
+  // US M/D/YYYY order — a day value over 12 used to be wrongly assumed to mean "European
+  // DD/MM" and swapped, which silently corrupted every date where the real day was ≤12
+  // (e.g. "7/2/2026" = July 2 got swapped into day=7/month=2 = February 7 — exactly the
+  // Jan/Feb/Mar corruption this caused). Only swap when the numbers THEMSELVES prove it's
+  // DD/MM (first group > 12, which is impossible as a month); otherwise trust M/D/YYYY.
+  const slash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (slash) {
+    const a = parseInt(slash[1], 10), b = parseInt(slash[2], 10);
+    const [month, day] = (a > 12 && b <= 12) ? [b, a] : [a, b];
+    return `${slash[3]}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
   const d = new Date(s);
   if (isNaN(d.getTime())) return s;
   return d.toISOString().slice(0,10);
